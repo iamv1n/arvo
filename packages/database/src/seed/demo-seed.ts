@@ -82,7 +82,7 @@ async function main() {
     await add(icici.id, day(6), 'NETFLIX.COM SUBSCRIPTION', '-649', TransactionType.EXPENSE, 'Streaming', 'Netflix');
     await add(icici.id, day(8), 'SPOTIFY INDIA', '-119', TransactionType.EXPENSE, 'Streaming', 'Spotify');
     await add(icici.id, day(11), 'AIRTEL FIBER BROADBAND', '-1178', TransactionType.EXPENSE, 'Internet', 'Airtel');
-    await add(hdfc.id, day(10), 'SIP ZERODHA COIN MF', '-15000', TransactionType.TRANSFER, 'Investments', 'Zerodha Coin');
+    await add(hdfc.id, day(10), 'SIP ZERODHA COIN MF', '-15000', TransactionType.TRANSFER, 'Mutual Funds & SIP', 'Zerodha Coin');
     await add(icici.id, day(15), 'CULT.FIT MEMBERSHIP', '-1499', TransactionType.EXPENSE, 'Fitness', 'Cult.fit');
 
     for (let i = 0; i < 9; i++) {
@@ -99,7 +99,7 @@ async function main() {
     await add(icici.id, day(18), 'THIRD WAVE COFFEE', `-${between(250, 600)}`, TransactionType.EXPENSE, 'Restaurants', 'Third Wave Coffee');
     await add(icici.id, day(21), 'INDIAN OIL FUEL', `-${between(1500, 2800)}`, TransactionType.EXPENSE, 'Fuel', 'Indian Oil');
     await add(cash.id, day(12), 'Chai and snacks', `-${between(80, 300)}`, TransactionType.EXPENSE, 'Restaurants');
-    await add(hdfc.id, day(25), 'ATM WITHDRAWAL', '-3000', TransactionType.TRANSFER);
+    await add(hdfc.id, day(25), 'ATM WITHDRAWAL', '-3000', TransactionType.TRANSFER, 'Cash Withdrawal');
     await add(cash.id, day(25), 'Cash from ATM', '3000', TransactionType.TRANSFER);
 
     if (m % 2 === 0) {
@@ -116,7 +116,12 @@ async function main() {
     if (m === 4) {
       await add(hdfc.id, day(19), 'APOLLO HOSPITAL', '-8600', TransactionType.EXPENSE, 'Medical', 'Apollo');
     }
-    await add(icici.id, day(27), 'LATE PAYMENT FEE + GST', '-590', TransactionType.FEE, 'Fees & Charges');
+    await add(icici.id, day(27), 'LATE PAYMENT FEE + GST', '-590', TransactionType.FEE, 'Late Payment Fee');
+    await add(hdfc.id, day(7), 'ACH DEBIT TATA CAPITAL CAR LOAN EMI', '-14250', TransactionType.EXPENSE, 'Car Loan EMI', 'Tata Capital');
+    await add(cash.id, day(9), 'Cigarettes', `-${between(150, 400)}`, TransactionType.EXPENSE, 'Cigarettes & Tobacco');
+    if (m % 2 === 1) {
+      await add(icici.id, day(20), 'LIVING LIQUIDZ WINES', `-${between(1800, 4200)}`, TransactionType.EXPENSE, 'Alcohol', 'Living Liquidz');
+    }
     await add(hdfc.id, day(lastDay), 'SAVINGS INTEREST', between(220, 480), TransactionType.INTEREST, 'Interest');
     await add(hdfc.id, day(26), 'UPI PAYMENT RAHUL', `-${between(300, 1500)}`, TransactionType.UNKNOWN);
 
