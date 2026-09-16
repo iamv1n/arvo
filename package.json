@@ -1,0 +1,34 @@
+{
+  "name": "arvo",
+  "private": true,
+  "description": "Arvo \u2014 local-first personal finance OS with a Web UI and MCP server",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e --concurrency=1",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "db:migrate": "pnpm --filter @arvo/database migration:run",
+    "db:generate": "pnpm --filter @arvo/database migration:generate",
+    "db:revert": "pnpm --filter @arvo/database migration:revert",
+    "db:up": "docker compose up -d postgres",
+    "format": "prettier --write .",
+    "db:seed": "pnpm --filter @arvo/database seed",
+    "test:browser": "pnpm --filter @arvo/e2e test:browser"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2",
+    "turbo": "^2.10.13",
+    "typescript": "5.9.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "typescript": "5.9.3"
+    }
+  }
+}
