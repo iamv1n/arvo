@@ -61,6 +61,7 @@ export default function DashboardPage() {
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} xl={6}>
           <StatCard
+            variant="hero"
             icon={<BankOutlined />}
             label="Net worth"
             loading={netWorth.isPending}
@@ -69,11 +70,12 @@ export default function DashboardPage() {
           />
         </Col>
         <Col xs={24} sm={12} xl={6}>
-          <StatCard icon={<ArrowDownOutlined />} label="Income" loading={summary.isPending} value={s && formatMoney(s.income, currency)} tone="positive" />
+          <StatCard icon={<ArrowDownOutlined />} iconTone="positive" label="Income" loading={summary.isPending} value={s && formatMoney(s.income, currency)} tone="positive" />
         </Col>
         <Col xs={24} sm={12} xl={6}>
           <StatCard
             icon={<ArrowUpOutlined />}
+            iconTone="negative"
             label="Expenses"
             loading={summary.isPending}
             value={s && formatMoney(s.expenses, currency)}
@@ -86,6 +88,7 @@ export default function DashboardPage() {
         <Col xs={24} sm={12} xl={6}>
           <StatCard
             icon={<WalletOutlined />}
+            iconTone="brand"
             label="Net cashflow"
             loading={summary.isPending}
             value={s && formatMoney(s.netCashflow, currency)}

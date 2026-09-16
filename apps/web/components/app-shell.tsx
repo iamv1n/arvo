@@ -17,7 +17,7 @@ import { MenuOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
-import styled from 'styled-components';
+import styled, { useTheme } from 'styled-components';
 import { useAuth } from '../lib/auth';
 import { ThemeToggle } from './theme-toggle';
 
@@ -35,23 +35,40 @@ const NAV = [
 const Brand = styled(Link)`
   display: flex;
   align-items: center;
-  gap: ${({ theme }) => theme.space[2]}px;
-  height: 64px;
+  gap: ${({ theme }) => theme.space[3]}px;
+  height: 72px;
   padding: 0 ${({ theme }) => theme.space[6]}px;
   font-size: ${({ theme }) => theme.typography.fontSize.xl}px;
-  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-  letter-spacing: -0.02em;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  letter-spacing: -0.03em;
   color: ${({ theme }) => theme.colors.textPrimary};
 
-  &::before {
-    content: '';
-    width: 10px;
-    height: 10px;
-    border-radius: ${({ theme }) => theme.radii.pill}px;
-    background: ${({ theme }) => theme.colors.brand};
+  &:hover {
+    color: ${({ theme }) => theme.colors.textPrimary};
   }
 `;
 
+export const LogoMark = styled.span`
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: ${({ theme }) => theme.radii.md}px;
+  background: ${({ theme }) => theme.colors.brandGradient};
+  box-shadow: ${({ theme }) => theme.shadows.brand};
+  color: ${({ theme }) => theme.colors.onBrand};
+  font-size: 18px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  letter-spacing: 0;
+
+  &::before {
+    content: 'A';
+  }
+`;
+
+
+
+// Note: Layout.Sider stays unstyled because its own "theme" prop would override the styled-components theme.
 const Bar = styled(Layout.Header)`
   position: sticky;
   top: 0;
@@ -59,8 +76,9 @@ const Bar = styled(Layout.Header)`
   display: flex;
   align-items: center;
   gap: ${({ theme }) => theme.space[3]}px;
-  padding: 0 ${({ theme }) => theme.space[6]}px;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.borderSubtle};
+  padding: 0 ${({ theme }) => theme.space[6]}px !important;
+  background: ${({ theme }) => (theme.mode === 'light' ? 'rgba(244, 246, 251, 0.85)' : 'rgba(9, 11, 20, 0.85)')} !important;
+  backdrop-filter: saturate(160%) blur(12px);
 `;
 
 const Content = styled(Layout.Content)`
@@ -82,6 +100,7 @@ const Center = styled.div`
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { status, user, logout } = useAuth();
+  const theme = useTheme();
   const router = useRouter();
   const pathname = usePathname();
   const screens = Grid.useBreakpoint();
@@ -114,8 +133,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <Layout style={{ minHeight: '100dvh' }}>
       {!isMobile && (
-        <Layout.Sider width={232} theme="light" style={{ position: 'sticky', top: 0, height: '100dvh' }}>
-          <Brand href="/dashboard">Arvo</Brand>
+        <Layout.Sider
+          width={248}
+          theme="light"
+          style={{ position: 'sticky', top: 0, height: '100dvh', borderInlineEnd: `1px solid ${theme.colors.borderSubtle}` }}
+        >
+          <Brand href="/dashboard">
+            <LogoMark aria-hidden />
+            Arvo
+          </Brand>
           {menu}
         </Layout.Sider>
       )}
@@ -137,8 +163,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                 ],
               }}
             >
-              <Avatar style={{ cursor: 'pointer' }} icon={<UserOutlined />}>
-                {user?.name.charAt(0).toUpperCase()}
+              <Avatar style={{ cursor: 'pointer', background: theme.colors.brandGradient, fontWeight: 600 }}>
+                {user?.name.charAt(0).toUpperCase() || <UserOutlined />}
               </Avatar>
             </Dropdown>
           </div>

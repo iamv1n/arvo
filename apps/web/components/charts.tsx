@@ -32,8 +32,8 @@ export function IncomeExpenseChart({ data, currency }: { data: MonthlyPoint[]; c
           }}
         />
         <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
-        <Bar dataKey="Income" fill={theme.colors.income} radius={[4, 4, 0, 0]} maxBarSize={28} />
-        <Bar dataKey="Expenses" fill={theme.colors.expense} radius={[4, 4, 0, 0]} maxBarSize={28} />
+        <Bar dataKey="Income" fill={theme.colors.income} radius={[6, 6, 0, 0]} maxBarSize={26} />
+        <Bar dataKey="Expenses" fill={theme.colors.expense} radius={[6, 6, 0, 0]} maxBarSize={26} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -41,8 +41,7 @@ export function IncomeExpenseChart({ data, currency }: { data: MonthlyPoint[]; c
 
 /** Categorical palette derived from theme tokens, ordered by visual distinctness. */
 function categoryColors(theme: ReturnType<typeof useTheme>): string[] {
-  const c = theme.colors;
-  return [c.brand, c.info, c.warning, c.expense, c.income, '#8b6cd9', '#d96cb0', '#6c9fd9', c.textMuted];
+  return theme.colors.chart;
 }
 
 export function CategoryDonut({ data, currency }: { data: CategorySpend[]; currency: string }) {

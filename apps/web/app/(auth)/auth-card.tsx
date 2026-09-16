@@ -2,7 +2,7 @@
 
 import { Card, Typography } from 'antd';
 import type { ReactNode } from 'react';
-import styled from 'styled-components';
+import styled, { useTheme } from 'styled-components';
 import { ThemeToggle } from '../../components/theme-toggle';
 
 const Page = styled.main`
@@ -11,7 +11,8 @@ const Page = styled.main`
   min-height: 100dvh;
   padding: ${({ theme }) => theme.space[6]}px;
   background:
-    radial-gradient(60rem 40rem at 10% -10%, ${({ theme }) => theme.colors.brandSubtle}, transparent 60%),
+    radial-gradient(50rem 36rem at 0% 0%, ${({ theme }) => theme.colors.brandSubtle}, transparent 60%),
+    radial-gradient(40rem 30rem at 100% 100%, ${({ theme }) => theme.colors.incomeSubtle}, transparent 60%),
     ${({ theme }) => theme.colors.bgCanvas};
 `;
 
@@ -31,21 +32,27 @@ const Wordmark = styled.div`
   letter-spacing: -0.02em;
 
   &::before {
-    content: '';
-    width: 11px;
-    height: 11px;
-    border-radius: 50%;
-    background: ${({ theme }) => theme.colors.brand};
+    content: 'A';
+    display: inline-grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: ${({ theme }) => theme.radii.md}px;
+    background: ${({ theme }) => theme.colors.brandGradient};
+    box-shadow: ${({ theme }) => theme.shadows.brand};
+    color: ${({ theme }) => theme.colors.onBrand};
+    font-size: 20px;
   }
 `;
 
 export function AuthCard({ title, children, footer }: { title: string; children: ReactNode; footer: ReactNode }) {
+  const theme = useTheme();
   return (
     <Page>
       <Corner>
         <ThemeToggle />
       </Corner>
-      <Card style={{ width: '100%', maxWidth: 400 }} styles={{ body: { padding: 32 } }}>
+      <Card style={{ width: '100%', maxWidth: 420, boxShadow: theme.shadows.lg }} styles={{ body: { padding: 36 } }}>
         <Wordmark>Arvo</Wordmark>
         <Typography.Paragraph type="secondary">{title}</Typography.Paragraph>
         {children}

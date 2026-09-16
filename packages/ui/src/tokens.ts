@@ -2,36 +2,58 @@
  * Arvo design tokens — the single source of truth for visual decisions.
  * antd's theme and the styled-components theme are both derived from these,
  * so components from either system stay visually consistent.
+ *
+ * Identity: a confident indigo-violet brand, emerald for money coming in, coral for money
+ * going out, on a cool, bright canvas with elevated white surfaces.
  */
 
 export type ColorMode = 'light' | 'dark';
 
 const palette = {
-  teal: { 50: '#eefbf8', 100: '#d5f5ee', 400: '#3cc3a8', 500: '#1ea88e', 600: '#128a75', 700: '#0f6e5f' },
-  gray: {
-    0: '#ffffff',
-    50: '#f7f8f8',
-    100: '#eef0f0',
-    200: '#dfe3e3',
-    300: '#c7cdcd',
-    500: '#7b8585',
-    600: '#5b6464',
-    700: '#3d4444',
-    800: '#262b2b',
-    850: '#1c2020',
-    900: '#141717',
-    950: '#0c0e0e',
+  indigo: {
+    50: '#f1f0ff',
+    100: '#e4e2ff',
+    200: '#cbc6ff',
+    400: '#8b82ff',
+    500: '#6c5cf6',
+    600: '#5a45e8',
+    700: '#4a36c9',
+    800: '#3b2c9e',
   },
-  green: { 500: '#1f9d55', 400: '#3fbf73' },
-  red: { 500: '#d64545', 400: '#ef6b6b' },
-  amber: { 500: '#d99a1e', 400: '#f0b43c' },
-  blue: { 500: '#3b7dd8', 400: '#6aa0ec' },
+  violet: { 500: '#9b5cf6', 400: '#b384ff' },
+  emerald: { 50: '#e7f8f1', 400: '#34d399', 500: '#12b76a', 600: '#079455', 700: '#067647' },
+  coral: { 50: '#fff0ee', 400: '#ff7a6b', 500: '#f04438', 600: '#d92d20' },
+  amber: { 50: '#fff8e6', 400: '#fdb022', 500: '#f79009', 600: '#dc6803' },
+  sky: { 50: '#ebf5ff', 400: '#53b1fd', 500: '#2e90fa', 600: '#1570ef' },
+  slate: {
+    0: '#ffffff',
+    25: '#fbfcfe',
+    50: '#f4f6fb',
+    100: '#eceff6',
+    200: '#e0e4ee',
+    300: '#cbd2e0',
+    400: '#98a2b8',
+    500: '#667085',
+    600: '#475467',
+    700: '#344054',
+    800: '#1d2939',
+    900: '#101828',
+  },
+  night: { 950: '#090b14', 900: '#0f1220', 850: '#151a2c', 800: '#1c2238', 700: '#2a3150', 600: '#3a4266' },
 } as const;
 
 export interface ColorTokens {
   brand: string;
   brandHover: string;
+  brandActive: string;
+  /** Tinted background for selected and highlighted brand elements. */
   brandSubtle: string;
+  /** Brand color for text and icons on the canvas; meets WCAG AA for small text. */
+  brandText: string;
+  /** CSS gradient for hero cards and emphasis surfaces. */
+  brandGradient: string;
+  /** Text on top of brand or gradient surfaces. */
+  onBrand: string;
   bgCanvas: string;
   bgSurface: string;
   bgSurfaceRaised: string;
@@ -43,77 +65,111 @@ export interface ColorTokens {
   textMuted: string;
   /** Money semantics: inflow, outflow, neutral transfer. */
   income: string;
+  incomeSubtle: string;
   expense: string;
+  expenseSubtle: string;
   transfer: string;
+  transferSubtle: string;
   success: string;
   warning: string;
+  warningSubtle: string;
   danger: string;
   info: string;
+  /** Categorical series colors for charts, ordered for distinctness. */
+  chart: string[];
 }
 
 export const colors: Record<ColorMode, ColorTokens> = {
   light: {
-    brand: palette.teal[600],
-    brandHover: palette.teal[500],
-    brandSubtle: palette.teal[50],
-    bgCanvas: palette.gray[50],
-    bgSurface: palette.gray[0],
-    bgSurfaceRaised: palette.gray[0],
-    bgMuted: palette.gray[100],
-    border: palette.gray[200],
-    borderSubtle: palette.gray[100],
-    textPrimary: palette.gray[900],
-    textSecondary: palette.gray[600],
-    textMuted: palette.gray[500],
-    income: palette.green[500],
-    expense: palette.red[500],
-    transfer: palette.blue[500],
-    success: palette.green[500],
-    warning: palette.amber[500],
-    danger: palette.red[500],
-    info: palette.blue[500],
+    brand: palette.indigo[600],
+    brandHover: palette.indigo[500],
+    brandActive: palette.indigo[700],
+    brandSubtle: palette.indigo[50],
+    brandText: palette.indigo[700],
+    brandGradient: `linear-gradient(135deg, ${palette.indigo[600]} 0%, ${palette.violet[500]} 100%)`,
+    onBrand: palette.slate[0],
+    bgCanvas: palette.slate[50],
+    bgSurface: palette.slate[0],
+    bgSurfaceRaised: palette.slate[0],
+    bgMuted: palette.slate[100],
+    border: palette.slate[200],
+    borderSubtle: palette.slate[100],
+    textPrimary: palette.slate[900],
+    textSecondary: palette.slate[600],
+    textMuted: palette.slate[500],
+    income: palette.emerald[600],
+    incomeSubtle: palette.emerald[50],
+    expense: palette.coral[600],
+    expenseSubtle: palette.coral[50],
+    transfer: palette.sky[600],
+    transferSubtle: palette.sky[50],
+    success: palette.emerald[600],
+    warning: palette.amber[600],
+    warningSubtle: palette.amber[50],
+    danger: palette.coral[600],
+    info: palette.sky[600],
+    chart: [palette.indigo[600], palette.emerald[500], palette.amber[500], palette.coral[500], palette.sky[500], palette.violet[500], '#ee46bc', '#15b79e', palette.slate[400]],
   },
   dark: {
-    brand: palette.teal[400],
-    brandHover: palette.teal[500],
-    brandSubtle: '#12302a',
-    bgCanvas: palette.gray[950],
-    bgSurface: palette.gray[900],
-    bgSurfaceRaised: palette.gray[850],
-    bgMuted: palette.gray[800],
-    border: palette.gray[700],
-    borderSubtle: palette.gray[800],
-    textPrimary: palette.gray[50],
-    textSecondary: palette.gray[300],
-    textMuted: palette.gray[500],
-    income: palette.green[400],
-    expense: palette.red[400],
-    transfer: palette.blue[400],
-    success: palette.green[400],
+    brand: palette.indigo[400],
+    brandHover: palette.indigo[200],
+    brandActive: palette.indigo[500],
+    brandSubtle: '#221d4d',
+    brandText: palette.indigo[200],
+    brandGradient: `linear-gradient(135deg, ${palette.indigo[600]} 0%, ${palette.violet[500]} 100%)`,
+    onBrand: palette.slate[0],
+    bgCanvas: palette.night[950],
+    bgSurface: palette.night[900],
+    bgSurfaceRaised: palette.night[850],
+    bgMuted: palette.night[800],
+    border: palette.night[700],
+    borderSubtle: palette.night[800],
+    textPrimary: palette.slate[50],
+    textSecondary: palette.slate[300],
+    textMuted: palette.slate[400],
+    income: palette.emerald[400],
+    incomeSubtle: '#0f2e24',
+    expense: palette.coral[400],
+    expenseSubtle: '#3a1a18',
+    transfer: palette.sky[400],
+    transferSubtle: '#10263d',
+    success: palette.emerald[400],
     warning: palette.amber[400],
-    danger: palette.red[400],
-    info: palette.blue[400],
+    warningSubtle: '#33260c',
+    danger: palette.coral[400],
+    info: palette.sky[400],
+    chart: [palette.indigo[400], palette.emerald[400], palette.amber[400], palette.coral[400], palette.sky[400], palette.violet[400], '#f670c7', '#2ed3b7', palette.slate[400]],
   },
 };
 
 /** 4px spacing scale. */
 export const space = { 0: 0, 1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24, 8: 32, 10: 40, 12: 48, 16: 64 } as const;
 
-export const radii = { sm: 4, md: 8, lg: 12, xl: 16, pill: 999 } as const;
+export const radii = { sm: 6, md: 10, lg: 14, xl: 20, pill: 999 } as const;
 
 export const typography = {
   fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
   /** Tabular figures keep columns of amounts aligned. */
   fontFamilyNumeric: "'Inter', ui-sans-serif, system-ui, sans-serif",
   fontFamilyMono: "ui-monospace, 'SF Mono', Menlo, Consolas, monospace",
-  fontSize: { xs: 12, sm: 13, md: 14, lg: 16, xl: 20, '2xl': 24, '3xl': 30, '4xl': 38 },
+  fontSize: { xs: 12, sm: 13, md: 14, lg: 16, xl: 20, '2xl': 26, '3xl': 32, '4xl': 40 },
   fontWeight: { regular: 400, medium: 500, semibold: 600, bold: 700 },
   lineHeight: { tight: 1.2, normal: 1.5 },
 } as const;
 
-export const shadows: Record<ColorMode, { sm: string; md: string }> = {
-  light: { sm: '0 1px 2px rgba(20,23,23,0.06)', md: '0 4px 16px rgba(20,23,23,0.08)' },
-  dark: { sm: '0 1px 2px rgba(0,0,0,0.4)', md: '0 4px 16px rgba(0,0,0,0.5)' },
+export const shadows: Record<ColorMode, { sm: string; md: string; lg: string; brand: string }> = {
+  light: {
+    sm: '0 1px 2px rgba(16, 24, 40, 0.05)',
+    md: '0 1px 2px rgba(16, 24, 40, 0.04), 0 6px 20px rgba(16, 24, 40, 0.06)',
+    lg: '0 12px 32px rgba(16, 24, 40, 0.10)',
+    brand: '0 6px 18px rgba(90, 69, 232, 0.28)',
+  },
+  dark: {
+    sm: '0 1px 2px rgba(0, 0, 0, 0.4)',
+    md: '0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.35)',
+    lg: '0 16px 40px rgba(0, 0, 0, 0.5)',
+    brand: '0 6px 20px rgba(108, 92, 246, 0.35)',
+  },
 };
 
 export const breakpoints = { sm: 576, md: 768, lg: 992, xl: 1200, xxl: 1600 } as const;
