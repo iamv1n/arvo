@@ -1,6 +1,6 @@
 'use client';
 
-import { CopyOutlined, DeleteOutlined, KeyOutlined, PlusOutlined } from '@ant-design/icons';
+import { ApiOutlined, CopyOutlined, DeleteOutlined, KeyOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Alert, App, Button, Card, Empty, Flex, Form, Input, Modal, Popconfirm, Select, Tabs, Tag, Typography } from 'antd';
 import { useState } from 'react';
@@ -45,6 +45,27 @@ function CopyableCode({ text }: { text: string }) {
       />
     </div>
   );
+}
+
+/**
+ * One-click install links for clients that accept an MCP server config (with headers) via deeplink.
+ * Formats follow each editor's MCP install URL handler.
+ */
+function installLinks(token: string) {
+  const headers = { Authorization: `Bearer ${token}` };
+  const toBase64 = (value: string) => btoa(unescape(encodeURIComponent(value)));
+  return [
+    {
+      key: 'cursor',
+      label: 'Add to Cursor',
+      href: `cursor://anysphere.cursor-deeplink/mcp/install?name=arvo&config=${encodeURIComponent(toBase64(JSON.stringify({ url: MCP_URL, headers })))}`,
+    },
+    {
+      key: 'vscode',
+      label: 'Add to VS Code',
+      href: `vscode:mcp/install?${encodeURIComponent(JSON.stringify({ name: 'arvo', type: 'http', url: MCP_URL, headers }))}`,
+    },
+  ];
 }
 
 function setupSnippets(token: string) {
@@ -106,7 +127,7 @@ export function AiConnections() {
 
   return (
     <Card
-      title="Connect AI assistants"
+      title="AI assistants"
       extra={
         <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreating(true)}>
           New token
@@ -185,7 +206,18 @@ export function AiConnections() {
           <Flex vertical gap={16}>
             <Alert type="warning" showIcon title="Copy it now. For your security it won't be shown again." />
             <CopyableCode text={created} />
-            <Typography.Text strong>Connect an assistant</Typography.Text>
+            <Typography.Text strong>One-click install</Typography.Text>
+            <Flex gap={8} wrap>
+              {installLinks(created).map((link) => (
+                <Button key={link.key} href={link.href} icon={<ApiOutlined />}>
+                  {link.label}
+                </Button>
+              ))}
+            </Flex>
+            <Typography.Text type="secondary" style={{ fontSize: 12, marginTop: -8 }}>
+              ChatGPT and Claude (web and desktop) connect with sign-in instead of a token; that option is coming soon.
+            </Typography.Text>
+            <Typography.Text strong>Or set it up manually</Typography.Text>
             <Tabs items={setupSnippets(created).map((s) => ({ key: s.key, label: s.label, children: <CopyableCode text={s.text} /> }))} />
           </Flex>
         )}
