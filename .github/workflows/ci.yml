@@ -1,0 +1,102 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: 24
+  JWT_SECRET: ci-only-secret-that-is-long-enough-for-validation-000
+  TURBO_TELEMETRY_DISABLED: 1
+
+jobs:
+  checks:
+    name: Lint, typecheck, unit tests, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+
+  api-e2e:
+    name: API integration tests (PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: arvo
+          POSTGRES_PASSWORD: arvo
+          POSTGRES_DB: arvo
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U arvo" --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      DATABASE_URL: postgres://arvo:arvo@localhost:5432/arvo
+      TEST_DATABASE_URL: postgres://arvo:arvo@localhost:5432/arvo_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:e2e
+
+  browser-e2e:
+    name: Browser end-to-end (Playwright)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: arvo
+          POSTGRES_PASSWORD: arvo
+          POSTGRES_DB: arvo
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U arvo" --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      DATABASE_URL: postgres://arvo:arvo@localhost:5432/arvo
+      NEXT_PUBLIC_API_URL: http://localhost:3301
+      CORS_ORIGIN: http://localhost:3300
+      STORAGE_PATH: /tmp/arvo-storage
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo run build --filter=@arvo/api... --filter=@arvo/web...
+      - run: pnpm db:migrate
+      - name: Start API and web
+        run: |
+          (cd apps/api && node dist/main.js > /tmp/api.log 2>&1 &)
+          (cd apps/web && pnpm start > /tmp/web.log 2>&1 &)
+          npx --yes wait-on --timeout 120000 http://localhost:3301/ready http://localhost:3300/login
+      - run: pnpm --filter @arvo/e2e exec playwright install --with-deps chromium
+      - run: pnpm --filter @arvo/e2e test:browser
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: |
+            e2e/test-results
+            /tmp/api.log
+            /tmp/web.log
