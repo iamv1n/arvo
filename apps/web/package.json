@@ -1,0 +1,35 @@
+{
+  "name": "@arvo/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Arvo web application",
+  "scripts": {
+    "dev": "next dev --port 3300",
+    "build": "next build",
+    "start": "next start --port 3300",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@arvo/types": "workspace:*",
+    "next": "^16.3.5",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "@arvo/ui": "workspace:*",
+    "@ant-design/cssinjs": "^2.1.2",
+    "@ant-design/icons": "^6.3.4",
+    "@ant-design/nextjs-registry": "^1.3.0",
+    "antd": "^6.6.4",
+    "styled-components": "^6.5.3",
+    "@tanstack/react-query": "^5.90.0",
+    "recharts": "^3.2.0",
+    "dayjs": "^1.11.18"
+  },
+  "devDependencies": {
+    "@arvo/config": "workspace:*",
+    "@types/node": "^22.19.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.2.0",
+    "typescript": "5.9.3"
+  }
+}
