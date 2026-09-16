@@ -1,0 +1,35 @@
+{
+  "name": "@arvo/database",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PostgreSQL persistence: TypeORM entities, migrations and Finance Core repositories",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "migration:run": "pnpm build && typeorm migration:run -d dist/data-source.js",
+    "migration:revert": "pnpm build && typeorm migration:revert -d dist/data-source.js",
+    "migration:generate": "node scripts/migration-generate.mjs",
+    "migration:show": "pnpm build && typeorm migration:show -d dist/data-source.js",
+    "seed": "pnpm build && node dist/seed/demo-seed.js"
+  },
+  "dependencies": {
+    "@arvo/finance-core": "workspace:*",
+    "@arvo/types": "workspace:*",
+    "pg": "^8.16.0",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^1.1.1",
+    "argon2": "^0.45.1"
+  },
+  "devDependencies": {
+    "@arvo/config": "workspace:*",
+    "@types/node": "^22.19.0",
+    "typescript": "5.9.3"
+  }
+}
