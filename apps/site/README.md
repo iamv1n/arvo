@@ -13,9 +13,10 @@ pnpm --filter @arvo/site dev   # http://localhost:3400
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `NEXT_PUBLIC_APP_URL` | `http://localhost:3300` | Base URL of the Arvo web app. The "Open Arvo" buttons link to `${NEXT_PUBLIC_APP_URL}/dashboard`. |
+| `NEXT_PUBLIC_SHOW_SELF_HOST` | unset | Set to `true` to publish the `/self-host` guide and list it in the sitemap. Otherwise the route returns 404. Nothing links to it yet. |
 | `NEXT_PUBLIC_SITE_URL` | `http://localhost:3400` | Public URL of this site. Used for `metadataBase`, canonical links, `/sitemap.xml` and `/robots.txt`. |
 
-Both variables are inlined at build time, so set them before `next build`.
+These variables are inlined at build time, so set them before `next build`.
 
 ## Build and deploy
 
@@ -33,7 +34,7 @@ On Vercel, import the repo, set the root directory to `apps/site`, and set `NEXT
 | Route | Contents |
 | --- | --- |
 | `/` | Landing page, including the planning tools section and the roadmap advisor section. |
-| `/self-host` | Installation, configuration, backups, architecture and troubleshooting. Technical detail lives here, not on the home page. |
+| `/self-host` | Hidden unless `NEXT_PUBLIC_SHOW_SELF_HOST=true`. Installation, configuration, backups, architecture and troubleshooting. Technical detail lives here, not on the home page. |
 | `/privacy`, `/terms`, `/disclaimer` | Legal pages. Contact details and the remaining `[License]` and `[Jurisdiction]` placeholders live in `lib/legal.ts`. |
 
 Figures in the planning tools section are computed by `lib/finance-examples.ts` (EMI, amortization with prepayment, avalanche/snowball payoff, SIP future value), not typed by hand.

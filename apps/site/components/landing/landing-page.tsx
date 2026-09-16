@@ -12,7 +12,7 @@ import { Features } from './features';
 import { Hero } from './hero';
 import { HowItWorks } from './how-it-works';
 import { McpSection, PrivacySection } from './mcp-privacy';
-import { Body, Container, Eyebrow, H3, Reveal, SectionHeading, SectionShell } from './primitives';
+import { Body, Container, H3, Reveal, SectionHeading, SectionShell } from './primitives';
 import { PlanningToolsSection } from './planning-tools';
 
 export const LandingGlobals = createGlobalStyle`
@@ -140,9 +140,8 @@ const navItems: { href: string; label: string; page?: boolean }[] = [
   { href: '#features', label: 'Features' },
   { href: '#planning-tools', label: 'Planning tools' },
   { href: '#advisor', label: 'Advisor' },
-  { href: '#mcp', label: 'AI assistants' },
+  { href: '#mcp', label: 'MCP' },
   { href: '#privacy', label: 'Privacy' },
-  { href: '/self-host', label: 'Self-host', page: true },
 ];
 
 /**
@@ -186,56 +185,6 @@ export function Nav({ base = '' }: { base?: string }) {
   );
 }
 
-/* ---------- Run it yourself ---------- */
-
-const Teaser = styled.div`
-  display: grid;
-  gap: ${({ theme }) => theme.space[6]}px;
-  align-items: center;
-  padding: ${({ theme }) => theme.space[10]}px ${({ theme }) => theme.space[6]}px;
-  border-radius: ${({ theme }) => theme.radii.xl}px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  background: ${({ theme }) => theme.colors.bgSurfaceRaised};
-  box-shadow: ${({ theme }) => theme.shadows.sm};
-  & h2 {
-    margin: 0 0 8px;
-    font-size: clamp(24px, 3vw, 32px);
-    letter-spacing: -0.02em;
-    color: ${({ theme }) => theme.colors.textPrimary};
-  }
-  & p {
-    max-width: 620px;
-  }
-  @media (min-width: ${({ theme }) => theme.breakpoints.md}px) {
-    grid-template-columns: 1fr auto;
-    padding: ${({ theme }) => theme.space[12]}px;
-  }
-`;
-
-function RunItYourself() {
-  return (
-    <SectionShell id="self-host" aria-labelledby="self-host-title" $muted>
-      <Container>
-        <Reveal>
-          <Teaser>
-            <div>
-              <Eyebrow>Run it yourself</Eyebrow>
-              <h2 id="self-host-title">Your computer, your data</h2>
-              <Body>
-                Arvo runs on your own computer or server, so your financial data never leaves it. Setting it up takes a few
-                minutes, and it is free and open source.
-              </Body>
-            </div>
-            <Button type="primary" size="large" href="/self-host" icon={<ArrowRightOutlined />} iconPlacement="end">
-              How to run Arvo
-            </Button>
-          </Teaser>
-        </Reveal>
-      </Container>
-    </SectionShell>
-  );
-}
-
 /* ---------- FAQ ---------- */
 
 const FaqWrap = styled.div`
@@ -274,7 +223,7 @@ const faqs = [
   },
   {
     q: 'Which AI assistants can I connect?',
-    a: 'AI assistants like Claude, ChatGPT and Gemini. They can only see your own account, through a few read-only views such as cash flow and spending summaries. Setup details are on the self-host page.',
+    a: 'AI assistants like Claude, ChatGPT and Gemini. They can only see your own account, through a few read-only views such as cash flow and spending summaries.',
   },
   {
     q: 'What is the personal finance manager, and is it available?',
@@ -395,7 +344,6 @@ export function LandingPage() {
         <AdvisorSection />
         <McpSection />
         <PrivacySection />
-        <RunItYourself />
         <Faq />
         <section aria-labelledby="cta-title" style={{ paddingBottom: 96 }}>
           <Container>
@@ -407,8 +355,8 @@ export function LandingPage() {
                   <Button type="primary" size="large" href={`${APP_URL}/dashboard`} icon={<ArrowRightOutlined />} iconPlacement="end">
                     Open Arvo
                   </Button>
-                  <Button size="large" href="/self-host">
-                    Self-host it
+                  <Button size="large" href="#features">
+                    Explore features
                   </Button>
                 </div>
               </CtaBand>
@@ -426,7 +374,6 @@ const footerLinks = [
   { href: '#planning-tools', label: 'Planning tools', anchor: true },
   { href: '#mcp', label: 'AI assistants', anchor: true },
   { href: '#faq', label: 'FAQ', anchor: true },
-  { href: '/self-host', label: 'Self-host' },
   { href: '/privacy', label: 'Privacy' },
   { href: '/terms', label: 'Terms' },
   { href: '/disclaimer', label: 'Disclaimer' },

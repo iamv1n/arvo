@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { CodeBlock } from '../../components/code-block';
 import { LegalSections, type LegalSection } from '../../components/legal/legal-sections';
 import { LegalShell } from '../../components/legal/legal-shell';
@@ -325,6 +326,8 @@ const sections: LegalSection[] = [
 ];
 
 export default function SelfHostPage() {
+  // Hidden until the self-hosting guide is ready to publish; set NEXT_PUBLIC_SHOW_SELF_HOST=true to enable.
+  if (process.env.NEXT_PUBLIC_SHOW_SELF_HOST !== 'true') notFound();
   return (
     <LegalShell
       eyebrow="Self-host"

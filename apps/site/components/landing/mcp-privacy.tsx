@@ -10,6 +10,7 @@ import {
   RobotOutlined,
 } from '@ant-design/icons';
 import styled, { css } from 'styled-components';
+import { CodeBlock } from '../code-block';
 import { dashFlow, fadeIn, fadeUp, growX, play, popIn, pulse, useInView } from './motion';
 import { Body, Container, H3, Pill, Reveal, SectionHeading, SectionShell } from './primitives';
 
@@ -107,7 +108,7 @@ const UserMsg = styled.div<{ $on: boolean; $d: number }>`
   padding: 10px 14px;
   border-radius: 14px 14px 4px 14px;
   background: ${({ theme }) => theme.colors.brand};
-  color: ${({ theme }) => theme.colors.bgSurface};
+  color: ${({ theme }) => theme.colors.onBrand};
 `;
 
 const ToolCall = styled.div<{ $on: boolean; $d: number }>`
@@ -139,7 +140,7 @@ const Json = styled.pre`
   margin: 0;
   padding: 10px 12px;
   overflow-x: auto;
-  font-family: ${({ theme }) => theme.typography.fontFamily};
+  font-family: ${({ theme }) => theme.typography.fontFamilyMono};
   font-size: 12px;
   line-height: 1.6;
   color: ${({ theme }) => theme.colors.textPrimary};
@@ -172,22 +173,45 @@ const Answer = styled.div<{ $on: boolean; $d: number }>`
   color: ${({ theme }) => theme.colors.textPrimary};
 `;
 
-const shared = [
-  { label: 'Period', value: 'August 2026' },
-  { label: 'Total spent', value: '₹1,12,000' },
-  { label: 'Rent', value: '₹38,000' },
-  { label: 'Travel', value: '₹21,400' },
-  { label: 'Based on', value: '127 transactions' },
+type Tok = [string, 'k' | 's' | 'n' | 'm' | 'p'];
+
+/** JSON result lines, pre-tokenized so they can stream in one by one with syntax colors. */
+const jsonLines: Tok[][] = [
+  [['{', 'p']],
+  [['  "period"', 'k'], [': ', 'p'], ['"2026-08"', 's'], [',', 'p']],
+  [['  "currency"', 'k'], [': ', 'p'], ['"INR"', 's'], [',', 'p']],
+  [['  "total_spent"', 'k'], [': ', 'p'], ['112000', 'n'], [',', 'p']],
+  [['  "by_category"', 'k'], [': [', 'p']],
+  [['    { ', 'p'], ['"name"', 'k'], [': ', 'p'], ['"Rent"', 's'], [', ', 'p'], ['"amount"', 'k'], [': ', 'p'], ['38000', 'n'], [' },', 'p']],
+  [['    { ', 'p'], ['"name"', 'k'], [': ', 'p'], ['"Travel"', 's'], [', ', 'p'], ['"amount"', 'k'], [': ', 'p'], ['21400', 'n'], [' },', 'p']],
+  [['    …', 'm']],
+  [['  ],', 'p']],
+  [['  "transactions_used"', 'k'], [': ', 'p'], ['127', 'n']],
+  [['}', 'p']],
 ];
 
-const tools = [
-  { name: 'Cash flow', desc: 'Income, expenses and what was left over for any month' },
-  { name: 'Spending summary', desc: 'Where your money went, by category, with the transactions behind it' },
-  { name: 'Can I afford it?', desc: 'A projection before a big purchase (coming soon)' },
+const tools: { name: string; desc: string; soon?: boolean }[] = [
+  { name: 'finance_get_spending_summary', desc: 'Spending by category and merchant for a period, with the transactions used' },
+  { name: 'finance_get_cashflow', desc: 'Income, expenses and net cash flow by month' },
+  { name: 'finance_compare_periods', desc: 'What changed between two periods, and by how much' },
+  { name: 'finance_get_recurring_expenses', desc: 'Subscriptions and other recurring charges' },
+  { name: 'finance_get_net_worth', desc: 'Assets, liabilities and net worth over time' },
+  { name: 'finance_get_financial_snapshot', desc: 'A one-call overview of balances, cash flow and top categories' },
+  { name: 'finance_simulate_purchase', desc: '“Can I afford it?” projection', soon: true },
 ];
+
+const mcpConfig = `{
+  "mcpServers": {
+    "arvo": {
+      "url": "https://your-arvo-host/mcp",
+      "headers": { "Authorization": "Bearer arvo_pat_…" }
+    }
+  }
+}`;
 
 export function McpSection() {
   const [ref, on] = useInView<HTMLDivElement>(0.3);
+  const answerDelay = 1100 + jsonLines.length * 120 + 300;
   return (
     <SectionShell id="mcp" aria-labelledby="mcp-title" $muted>
       <Container>
@@ -195,38 +219,50 @@ export function McpSection() {
           <div>
             <SectionHeading
               id="mcp-title"
-              eyebrow="AI assistants"
+              eyebrow="MCP server"
               title="Connect the AI assistant you already use"
-              lead="Connect AI assistants like Claude, ChatGPT or Gemini to Arvo. They can look up your finances through a few safe, read-only views, only for your account, and never get direct access to your data."
+              lead="Arvo speaks the Model Context Protocol. Connected assistants call finance tools that return computed, structured results for your account only, never raw database access."
             />
             <Reveal>
-              <ToolList aria-label="What a connected assistant can look up">
+              <ToolList aria-label="Arvo MCP tools">
                 {tools.map((t) => (
                   <li key={t.name}>
-                    <strong>{t.name}</strong>
-                    <span>{t.desc}</span>
+                    <code>{t.name}</code>
+                    <span>
+                      {t.desc}
+                      {t.soon ? ' · coming soon' : ''}
+                    </span>
                   </li>
                 ))}
               </ToolList>
               <Clients>
+                {['Claude', 'ChatGPT', 'Gemini'].map((c) => (
+                  <Pill key={c} $tone="muted">
+                    <RobotOutlined aria-hidden /> {c}
+                  </Pill>
+                ))}
                 <Pill $tone="muted">
-                  <RobotOutlined aria-hidden /> Claude
-                </Pill>
-                <Pill $tone="muted">
-                  <RobotOutlined aria-hidden /> ChatGPT
-                </Pill>
-                <Pill $tone="muted">
-                  <RobotOutlined aria-hidden /> Gemini
+                  <ApiOutlined aria-hidden /> any MCP client
                 </Pill>
               </Clients>
+              <ConfigWrap>
+                <p>
+                  <Pill $tone="warning">Coming soon</Pill> Connect with a personal access token:
+                </p>
+                <CodeBlock code={mcpConfig} label="mcp config (json)" shell={false} />
+              </ConfigWrap>
             </Reveal>
           </div>
-          <Terminal ref={ref} role="group" aria-label="Example: an AI assistant asks Arvo for a spending summary and answers using the figures Arvo shares">
+          <Terminal
+            ref={ref}
+            role="group"
+            aria-label="Example: an AI client calls the finance_get_spending_summary tool on Arvo's MCP server and answers using the JSON result"
+          >
             <TermBar>
               <i aria-hidden />
-              <span>AI assistant</span>
+              <span>AI client</span>
               <span>
-                <ApiOutlined aria-hidden /> connected to Arvo
+                <ApiOutlined aria-hidden /> connected to arvo-mcp
               </span>
             </TermBar>
             <TermBody>
@@ -235,21 +271,29 @@ export function McpSection() {
               </UserMsg>
               <ToolCall $on={on} $d={600}>
                 <ToolHead>
-                  <span>Arvo shared</span>
-                  <code>Spending summary</code>
+                  <span>Calling tool</span>
+                  <code>finance_get_spending_summary</code>
+                  <span>{'{ "period": "2026-08" }'}</span>
                 </ToolHead>
-                <Json as="div" aria-label="Figures Arvo shared">
-                  {shared.map((row, i) => (
-                    <JsonLine key={row.label} $on={on} $d={1100 + i * 120}>
-                      <span className="m">{row.label}: </span>
-                      <span className="n">{row.value}</span>
+                <Json aria-label="Structured tool result">
+                  {jsonLines.map((line, i) => (
+                    <JsonLine key={i} $on={on} $d={1100 + i * 120}>
+                      {line.map(([text, cls], j) =>
+                        cls === 'p' ? (
+                          <span key={j}>{text}</span>
+                        ) : (
+                          <span key={j} className={cls}>
+                            {text}
+                          </span>
+                        ),
+                      )}
                     </JsonLine>
                   ))}
                 </Json>
               </ToolCall>
-              <Answer $on={on} $d={1100 + shared.length * 120 + 300}>
+              <Answer $on={on} $d={answerDelay}>
                 You spent <strong>₹1,12,000</strong> in August. Rent was the largest category at ₹38,000, followed by Travel at
-                ₹21,400. That&apos;s based on 127 transactions in Arvo.
+                ₹21,400. That&apos;s based on 127 transactions Arvo computed.
               </Answer>
             </TermBody>
           </Terminal>
@@ -258,6 +302,19 @@ export function McpSection() {
     </SectionShell>
   );
 }
+
+const ConfigWrap = styled.div`
+  margin-top: ${({ theme }) => theme.space[6]}px;
+  & > p {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 0 0 10px;
+    font-size: 14px;
+    color: ${({ theme }) => theme.colors.textSecondary};
+  }
+`;
 
 /* ================= Privacy ================= */
 

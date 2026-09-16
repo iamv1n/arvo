@@ -380,8 +380,8 @@ export function Hero() {
                 <Button type="primary" size="large" href={`${APP_URL}/dashboard`} icon={<ArrowRightOutlined />} iconPlacement="end">
                   Open Arvo
                 </Button>
-                <Button size="large" href="/self-host" icon={<CloudServerOutlined />}>
-                  Self-host it
+                <Button size="large" href="#how-it-works">
+                  See how it works
                 </Button>
               </Ctas>
             </Anim>
