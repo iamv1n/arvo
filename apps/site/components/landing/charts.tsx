@@ -36,6 +36,8 @@ export function IncomeExpenseBars({ on, compact = false }: { on: boolean; compac
     <svg
       viewBox={`0 0 ${w} ${h}`}
       width="100%"
+      height={compact ? undefined : '100%'}
+      preserveAspectRatio="xMidYMid meet"
       role="img"
       aria-label="Bar chart of monthly income versus expenses, April to September; income stays above expenses every month"
     >
@@ -142,7 +144,7 @@ export function NetWorthLine({ on }: { on: boolean }) {
   const area = `${d} L${x(pts.length - 1)} ${h - 18} L${x(0)} ${h - 18} Z`;
   const gid = `nw-${theme.mode}`;
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} width="100%" role="img" aria-label="Line chart of net worth rising steadily over twelve months">
+    <svg viewBox={`0 0 ${w} ${h}`} width="100%" height="100%" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Line chart of net worth rising steadily over twelve months">
       <defs>
         <linearGradient id={gid} x1="0" x2="0" y1="0" y2="1">
           <stop offset="0%" stopColor={theme.colors.brand} stopOpacity={0.28} />

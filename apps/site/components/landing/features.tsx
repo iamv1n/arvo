@@ -337,8 +337,31 @@ const ChartGrid = styled.div`
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
-    grid-template-columns: 1.2fr 0.9fr 1.2fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+  /* Equal-height cards with the chart in a fixed-height area and the legend pinned to the bottom. */
+  align-items: stretch;
+  & > * {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+`;
+
+/** Fixed-height area so all analytics charts render at the same size. */
+const ChartArea = styled.div<{ $h?: number }>`
+  height: ${({ $h = 200 }) => $h}px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  & > svg {
+    max-width: 100%;
+  }
+`;
+
+const Spacer = styled.div`
+  flex: 1;
 `;
 
 const LegendRow = styled.div`
@@ -378,7 +401,10 @@ function Analytics() {
           <strong>Income vs expenses</strong>
           <span>Last 6 months</span>
         </PanelHead>
-        <IncomeExpenseBars on={on} />
+        <ChartArea>
+          <IncomeExpenseBars on={on} />
+        </ChartArea>
+        <Spacer />
         <LegendRow>
           <span>
             <i style={{ background: theme.colors.income }} /> Income
@@ -393,9 +419,10 @@ function Analytics() {
           <strong>Spending by category</strong>
           <span>Sep</span>
         </PanelHead>
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <CategoryDonut on={on} size={150} />
-        </div>
+        <ChartArea>
+          <CategoryDonut on={on} size={170} />
+        </ChartArea>
+        <Spacer />
         <LegendRow>
           {categories.map((c) => (
             <span key={c.name}>
@@ -404,13 +431,21 @@ function Analytics() {
           ))}
         </LegendRow>
       </Panel>
-      <Panel style={{ gridColumn: undefined }}>
+      <Panel>
         <PanelHead>
           <strong>Net worth</strong>
           <span>Assets − liabilities</span>
         </PanelHead>
         <BigNum>₹14,52,380</BigNum>
-        <NetWorthLine on={on} />
+        <ChartArea $h={160}>
+          <NetWorthLine on={on} />
+        </ChartArea>
+        <Spacer />
+        <LegendRow>
+          <span>
+            <i style={{ background: theme.colors.brand }} /> Net worth, last 12 months
+          </span>
+        </LegendRow>
       </Panel>
     </ChartGrid>
   );
@@ -539,7 +574,7 @@ function ScenarioIllustration() {
         <strong>“Can I afford a ₹70,000 purchase?”</strong>
         <Pill $tone="warning">Coming soon</Pill>
       </PanelHead>
-      <svg viewBox={`0 0 ${w} ${h}`} width="100%" role="img" aria-label="Projected cash balance over six months with and without a ₹70,000 purchase; with the purchase the balance dips but stays above the safety buffer and recovers">
+      <svg viewBox={`0 0 ${w} ${h}`} width="100%" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Projected cash balance over six months with and without a ₹70,000 purchase; with the purchase the balance dips but stays above the safety buffer and recovers">
         <Buffer $on={on} x1={0} x2={w} y1={y(30)} y2={y(30)} stroke={theme.colors.warning} strokeDasharray="5 5" />
         <text x={w - 4} y={y(30) + 14} textAnchor="end" fontSize={10} fill={theme.colors.textSecondary}>
           Safety buffer

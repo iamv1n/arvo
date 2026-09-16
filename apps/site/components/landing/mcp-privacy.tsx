@@ -19,43 +19,48 @@ import { Body, Container, H3, Pill, Reveal, SectionHeading, SectionShell } from 
 const McpGrid = styled.div`
   display: grid;
   gap: ${({ theme }) => theme.space[10]}px;
-  align-items: start;
+  align-items: center;
   @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
     grid-template-columns: 0.9fr 1.1fr;
     gap: ${({ theme }) => theme.space[16]}px;
   }
 `;
 
-const ToolList = styled.ul`
+const ToolChips = styled.ul`
   list-style: none;
   margin: 0;
   padding: 0;
-  display: grid;
-  gap: ${({ theme }) => theme.space[3]}px;
-  & li {
-    display: grid;
-    gap: 2px;
-    padding: 12px 14px;
-    border-radius: ${({ theme }) => theme.radii.md}px;
-    border: 1px solid ${({ theme }) => theme.colors.border};
-    background: ${({ theme }) => theme.colors.bgSurfaceRaised};
-  }
-  & code {
-    font-family: ${({ theme }) => theme.typography.fontFamilyMono};
-    font-size: 13px;
-    color: ${({ theme }) => theme.colors.brand};
-  }
-  & span {
-    font-size: 13px;
-    color: ${({ theme }) => theme.colors.textSecondary};
-  }
-`;
-
-const Clients = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: ${({ theme }) => theme.space[5]}px;
+  & li {
+    padding: 4px 10px;
+    border-radius: ${({ theme }) => theme.radii.md}px;
+    border: 1px solid ${({ theme }) => theme.colors.border};
+    background: ${({ theme }) => theme.colors.bgSurfaceRaised};
+    font-family: ${({ theme }) => theme.typography.fontFamilyMono};
+    font-size: 12.5px;
+    color: ${({ theme }) => theme.colors.brandText};
+  }
+  & li.soon {
+    border-style: dashed;
+    color: ${({ theme }) => theme.colors.textMuted};
+  }
+`;
+
+const Clients = styled.p`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin: ${({ theme }) => theme.space[5]}px 0 0;
+  font-size: 14px;
+  color: ${({ theme }) => theme.colors.textSecondary};
+  & span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
 `;
 
 const Terminal = styled.div`
@@ -65,10 +70,6 @@ const Terminal = styled.div`
   background: ${({ theme }) => theme.colors.bgSurfaceRaised};
   box-shadow: ${({ theme }) => theme.shadows.md};
   min-width: 0;
-  @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
-    position: sticky;
-    top: 88px;
-  }
 `;
 
 const TermBar = styled.div`
@@ -179,29 +180,23 @@ const Answer = styled.div<{ $on: boolean; $d: number }>`
 
 type Tok = [string, 'k' | 's' | 'n' | 'm' | 'p'];
 
-/** JSON result lines, pre-tokenized so they can stream in one by one with syntax colors. */
+/** Short JSON result, pre-tokenized so lines can stream in one by one with syntax colors. */
 const jsonLines: Tok[][] = [
   [['{', 'p']],
   [['  "period"', 'k'], [': ', 'p'], ['"2026-08"', 's'], [',', 'p']],
-  [['  "currency"', 'k'], [': ', 'p'], ['"INR"', 's'], [',', 'p']],
   [['  "total_spent"', 'k'], [': ', 'p'], ['112000', 'n'], [',', 'p']],
-  [['  "by_category"', 'k'], [': [', 'p']],
-  [['    { ', 'p'], ['"name"', 'k'], [': ', 'p'], ['"Rent"', 's'], [', ', 'p'], ['"amount"', 'k'], [': ', 'p'], ['38000', 'n'], [' },', 'p']],
-  [['    { ', 'p'], ['"name"', 'k'], [': ', 'p'], ['"Travel"', 's'], [', ', 'p'], ['"amount"', 'k'], [': ', 'p'], ['21400', 'n'], [' },', 'p']],
-  [['    …', 'm']],
-  [['  ],', 'p']],
+  [['  "top"', 'k'], [': [', 'p'], ['{ "Rent": 38000 }', 'n'], [', ', 'p'], ['{ "Travel": 21400 }', 'n'], ['],', 'p']],
   [['  "transactions_used"', 'k'], [': ', 'p'], ['127', 'n']],
   [['}', 'p']],
 ];
 
-const tools: { name: string; desc: string; soon?: boolean }[] = [
-  { name: 'finance_get_spending_summary', desc: 'Spending by category and merchant for a period, with the transactions used' },
-  { name: 'finance_get_cashflow', desc: 'Income, expenses and net cash flow by month' },
-  { name: 'finance_compare_periods', desc: 'What changed between two periods, and by how much' },
-  { name: 'finance_get_recurring_expenses', desc: 'Subscriptions and other recurring charges' },
-  { name: 'finance_get_net_worth', desc: 'Assets, liabilities and net worth over time' },
-  { name: 'finance_get_financial_snapshot', desc: 'A one-call overview of balances, cash flow and top categories' },
-  { name: 'finance_simulate_purchase', desc: '“Can I afford it?” projection', soon: true },
+const toolNames = [
+  'finance_get_spending_summary',
+  'finance_get_cashflow',
+  'finance_compare_periods',
+  'finance_get_recurring_expenses',
+  'finance_get_net_worth',
+  'finance_get_financial_snapshot',
 ];
 
 const mcpConfig = `{
@@ -212,6 +207,32 @@ const mcpConfig = `{
     }
   }
 }`;
+
+const ConfigToggle = styled.details`
+  margin-top: ${({ theme }) => theme.space[5]}px;
+  & summary {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: ${({ theme }) => theme.colors.brandText};
+  }
+  & summary::-webkit-details-marker {
+    display: none;
+  }
+  & summary::before {
+    content: '▸';
+    transition: transform ${({ theme }) => theme.motion.fast};
+  }
+  &[open] summary::before {
+    transform: rotate(90deg);
+  }
+  &[open] summary {
+    margin-bottom: 10px;
+  }
+`;
 
 export function McpSection() {
   const [ref, on] = useInView<HTMLDivElement>(0.3);
@@ -226,36 +247,32 @@ export function McpSection() {
               compact
               eyebrow="MCP server"
               title="Connect the AI assistant you already use"
-              lead="Arvo speaks the Model Context Protocol. Connected assistants call finance tools that return computed, structured results for your account only, never raw database access."
+              lead="Assistants call Arvo's finance tools over the Model Context Protocol and get computed results for your account only."
             />
             <Reveal>
-              <ToolList aria-label="Arvo MCP tools">
-                {tools.map((t) => (
-                  <li key={t.name}>
-                    <code>{t.name}</code>
-                    <span>
-                      {t.desc}
-                      {t.soon ? ' · coming soon' : ''}
-                    </span>
-                  </li>
+              <ToolChips aria-label="Arvo MCP tools">
+                {toolNames.map((t) => (
+                  <li key={t}>{t}</li>
                 ))}
-              </ToolList>
+                <li className="soon">simulate_purchase · soon</li>
+              </ToolChips>
               <Clients>
+                Works with
                 {['Claude', 'ChatGPT', 'Gemini'].map((c) => (
-                  <Pill key={c} $tone="muted">
+                  <span key={c}>
                     <RobotOutlined aria-hidden /> {c}
-                  </Pill>
+                  </span>
                 ))}
-                <Pill $tone="muted">
+                <span>
                   <ApiOutlined aria-hidden /> any MCP client
-                </Pill>
+                </span>
               </Clients>
-              <ConfigWrap>
-                <p>
-                  <Pill $tone="warning">Coming soon</Pill> Connect with a personal access token:
-                </p>
+              <ConfigToggle>
+                <summary>
+                  Show config <Pill $tone="warning">Coming soon</Pill>
+                </summary>
                 <CodeBlock code={mcpConfig} label="mcp config (json)" shell={false} />
-              </ConfigWrap>
+              </ConfigToggle>
             </Reveal>
           </div>
           <Terminal
@@ -298,7 +315,7 @@ export function McpSection() {
               </ToolCall>
               <Answer $on={on} $d={answerDelay}>
                 You spent <strong>₹1,12,000</strong> in August. Rent was the largest category at ₹38,000, followed by Travel at
-                ₹21,400. That&apos;s based on 127 transactions Arvo computed.
+                ₹21,400, based on 127 transactions.
               </Answer>
             </TermBody>
           </Terminal>
@@ -307,19 +324,6 @@ export function McpSection() {
     </SectionShell>
   );
 }
-
-const ConfigWrap = styled.div`
-  margin-top: ${({ theme }) => theme.space[6]}px;
-  & > p {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin: 0 0 10px;
-    font-size: 14px;
-    color: ${({ theme }) => theme.colors.textSecondary};
-  }
-`;
 
 /* ================= Privacy ================= */
 

@@ -11,7 +11,7 @@ import { Body, Container, Pill, Reveal, SectionHeading, SectionShell } from './p
 const Grid = styled.div`
   display: grid;
   gap: ${({ theme }) => theme.space[10]}px;
-  align-items: start;
+  align-items: center;
   @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
     grid-template-columns: 0.9fr 1.1fr;
     gap: ${({ theme }) => theme.space[16]}px;
@@ -23,12 +23,19 @@ const Points = styled.ul`
   margin: ${({ theme }) => theme.space[5]}px 0 0;
   padding: 0;
   display: grid;
-  gap: ${({ theme }) => theme.space[4]}px;
+  gap: ${({ theme }) => theme.space[5]}px ${({ theme }) => theme.space[6]}px;
+  @media (min-width: ${({ theme }) => theme.breakpoints.sm}px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
   & li {
     display: grid;
     grid-template-columns: 36px 1fr;
     gap: 12px;
     align-items: start;
+  }
+  & p {
+    font-size: 14px;
+    line-height: 1.55;
   }
   & .icon {
     width: 36px;
@@ -294,27 +301,22 @@ export function AdvisorSection() {
               compact
               eyebrow="On the roadmap"
               title="Your personal finance manager"
-              lead="A planned advisor that finds savings, tracks subscriptions and budgets, and helps you plan goals. Arvo calculates the numbers; the AI only explains them."
+              lead="A planned advisor that finds savings and helps you plan. Arvo calculates the numbers; the AI only explains them."
             />
             <Reveal>
-              <div>
-                <Pill $tone="warning">Coming soon · not available yet</Pill>
-              </div>
+              <Pill $tone="warning">Coming soon · not available yet</Pill>
               <Points>
                 <Point icon={<CalculatorOutlined />} title="Numbers you can check">
-                  Savings opportunities, merchant creep, spikes, fees, subscription price changes, budget pacing, goal
-                  contributions and affordability checks are calculated from your transactions using clear, fixed rules.
+                  Savings, subscriptions, budget pacing and goals, calculated from your transactions with fixed rules.
                 </Point>
                 <Point icon={<RobotOutlined />} title="AI explains, never calculates">
-                  The advisor reads those results, explains them in plain language and drafts plans. It does not
-                  produce figures of its own, and every answer shows the data it used.
+                  It explains the results and drafts plans, and shows the data it used.
                 </Point>
-                <Point icon={<SafetyCertificateOutlined />} title="You approve before anything is saved">
-                  Budgets, goals and rules the advisor drafts arrive as suggestions. They are only saved when you
-                  approve them, and it never moves money.
+                <Point icon={<SafetyCertificateOutlined />} title="You approve first">
+                  Drafted budgets, goals and rules are saved only when you approve. It never moves money.
                 </Point>
                 <Point icon={<CheckCircleFilled />} title="Weekly briefing">
-                  A short summary of what changed, what is pacing over and what needs a decision.
+                  What changed, what is pacing over, and what needs a decision.
                 </Point>
               </Points>
               <Body style={{ marginTop: 20, fontSize: 13 }}>
