@@ -174,6 +174,7 @@ export const toRecurring = (e: RecurringSeriesEntity): RecurringSeriesRecord => 
   lastSeen: e.lastSeen,
   nextExpected: e.nextExpected,
   occurrences: e.occurrences,
+  priceIncreased: e.priceIncreased,
   confidence: Number(e.confidence),
   status: e.status,
   isDismissed: e.isDismissed,

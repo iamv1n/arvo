@@ -193,3 +193,50 @@ export interface ImportRow {
   issues: { field: string; code: string; message: string }[];
   transactionId: string | null;
 }
+
+export interface PeriodComparison {
+  currency: string;
+  current: { from: string; to: string; income: string; expenses: string; netCashflow: string; transactionCount: number };
+  previous: { from: string; to: string; income: string; expenses: string; netCashflow: string; transactionCount: number };
+  change: { income: string; expenses: string; netCashflow: string; expensesPercent: number | null };
+  categoryChanges: { categoryId: string | null; name: string; current: string; previous: string; change: string; changePercent: number | null }[];
+  largestExpenses: Transaction[];
+}
+
+export interface MerchantSpend {
+  merchantId: string | null;
+  name: string;
+  amount: string;
+  transactionCount: number;
+}
+
+export interface RecurringSeries {
+  id: string;
+  label: string;
+  merchantId: string | null;
+  categoryId: string | null;
+  accountId: string;
+  currency: string;
+  frequency: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
+  expectedAmount: string;
+  monthlyCost: string;
+  lastAmount: string;
+  previousAmount: string | null;
+  lastSeen: string;
+  nextExpected: string;
+  occurrences: number;
+  priceIncreased: boolean;
+  confidence: number;
+  status: 'ACTIVE' | 'STOPPED';
+  isDismissed: boolean;
+  transactionIds: string[];
+}
+
+export interface RecurringOverview {
+  currency: string;
+  asOf: string;
+  series: RecurringSeries[];
+  monthlyTotal: string;
+  annualTotal: string;
+  priceIncreases: number;
+}

@@ -13,7 +13,7 @@ import { StatCard } from '../../../components/stat-card';
 import { useAuth } from '../../../lib/auth';
 import { formatDate, formatMoney } from '../../../lib/format';
 import { PERIOD_OPTIONS, periodRange, type PeriodKey } from '../../../lib/periods';
-import { useAccounts, useCategories, useMonthly, useNetWorth, useSummary, useTransactions } from '../../../lib/queries';
+import { useAccounts, useCategories, useMonthly, useNetWorth, useRecurring, useSummary, useTransactions } from '../../../lib/queries';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -29,6 +29,7 @@ export default function DashboardPage() {
   const accounts = useAccounts();
   const categories = useCategories();
   const recent = useTransactions({ limit: 8 });
+  const recurring = useRecurring();
 
   const categoryName = useMemo(() => new Map((categories.data ?? []).map((c) => [c.id, c.name])), [categories.data]);
   const accountName = useMemo(() => new Map((accounts.data ?? []).map((a) => [a.id, a.name])), [accounts.data]);
@@ -76,7 +77,10 @@ export default function DashboardPage() {
             label="Expenses"
             loading={summary.isPending}
             value={s && formatMoney(s.expenses, currency)}
-            hint={s && `${s.transactionCount} transactions`}
+            hint={
+              s &&
+              `${s.transactionCount} transactions${recurring.data && Number(recurring.data.monthlyTotal) > 0 ? ` · ${formatMoney(recurring.data.monthlyTotal, currency, { compact: true })}/mo recurring` : ''}`
+            }
           />
         </Col>
         <Col xs={24} sm={12} xl={6}>

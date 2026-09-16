@@ -1,7 +1,9 @@
 'use client';
 
 import {
+  BarChartOutlined,
   BankOutlined,
+  SyncOutlined,
   DashboardOutlined,
   LogoutOutlined,
   SettingOutlined,
@@ -24,6 +26,8 @@ const NAV = [
   { key: '/accounts', icon: <BankOutlined />, label: 'Accounts' },
   { key: '/transactions', icon: <UnorderedListOutlined />, label: 'Transactions' },
   { key: '/transfers', icon: <SwapOutlined />, label: 'Transfers' },
+  { key: '/analytics', icon: <BarChartOutlined />, label: 'Analytics' },
+  { key: '/recurring', icon: <SyncOutlined />, label: 'Recurring' },
   { key: '/imports', icon: <UploadOutlined />, label: 'Imports' },
   { key: '/settings', icon: <SettingOutlined />, label: 'Settings' },
 ];

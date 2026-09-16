@@ -167,6 +167,8 @@ export interface RecurringSeriesRecord {
   lastSeen: string;
   nextExpected: string;
   occurrences: number;
+  /** Latest charge is higher than a previously stable price. */
+  priceIncreased: boolean;
   confidence: number;
   status: 'ACTIVE' | 'STOPPED';
   isDismissed: boolean;

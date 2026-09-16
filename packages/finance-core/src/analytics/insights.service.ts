@@ -46,6 +46,8 @@ export interface RecurringOverview {
   /** Sum of monthlyCost over active, not dismissed series. */
   monthlyTotal: string;
   annualTotal: string;
+  /** Active series whose price went up. */
+  priceIncreases: number;
 }
 
 /** The structured monthly picture AI and dashboards build on. */
@@ -199,7 +201,8 @@ export class InsightsService {
     const monthly = series
       .filter((s) => s.status === 'ACTIVE' && !s.isDismissed)
       .reduce((sum, s) => sum + parseMoney(s.monthlyCost), 0n);
-    return { currency, asOf, series, monthlyTotal: formatMoney(monthly), annualTotal: formatMoney(monthly * 12n) };
+    const priceIncreases = series.filter((s) => s.status === 'ACTIVE' && !s.isDismissed && s.priceIncreased).length;
+    return { currency, asOf, series, monthlyTotal: formatMoney(monthly), annualTotal: formatMoney(monthly * 12n), priceIncreases };
   }
 
   async setRecurringDismissed(userId: string, id: string, isDismissed: boolean): Promise<RecurringSeriesRecord> {

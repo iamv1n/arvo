@@ -10,7 +10,11 @@ import { descriptionPatternKey } from '../rules/categorizer';
  *    changing reference numbers still group) when there is no merchant.
  * 2. A group needs at least MIN_OCCURRENCES charges whose median interval matches a known
  *    frequency and whose intervals mostly fall inside that frequency's window.
- * 3. Confidence = 0.45 × interval regularity + 0.35 × amount similarity + 0.20 × history depth.
+ * 3. At least half of the charges must be within ±20% of the typical amount, so variable
+ *    spending (fuel, cabs, coffee) is not mistaken for a subscription or bill.
+ * 4. Confidence = 0.45 × interval regularity + 0.35 × amount similarity + 0.20 × history depth.
+ * 5. A price increase is flagged only when earlier charges were stable (within ±5%) and the
+ *    latest charge is higher than the one before it.
  * Same input always yields the same series, in the same order.
  */
 
@@ -29,8 +33,8 @@ interface FrequencySpec {
 }
 
 const FREQUENCIES: FrequencySpec[] = [
-  { frequency: 'WEEKLY', minDays: 5, maxDays: 9, months: null, days: 7, perMonth: [52n, 12n] },
-  { frequency: 'BIWEEKLY', minDays: 12, maxDays: 17, months: null, days: 14, perMonth: [26n, 12n] },
+  { frequency: 'WEEKLY', minDays: 6, maxDays: 8, months: null, days: 7, perMonth: [52n, 12n] },
+  { frequency: 'BIWEEKLY', minDays: 13, maxDays: 16, months: null, days: 14, perMonth: [26n, 12n] },
   { frequency: 'MONTHLY', minDays: 26, maxDays: 35, months: 1, days: null, perMonth: [1n, 1n] },
   { frequency: 'QUARTERLY', minDays: 80, maxDays: 100, months: 3, days: null, perMonth: [1n, 3n] },
   { frequency: 'YEARLY', minDays: 350, maxDays: 380, months: 12, days: null, perMonth: [1n, 12n] },
@@ -108,11 +112,16 @@ export function detectRecurring(
     const amounts = charges.map((c) => absMoney(parseMoney(c.amount)));
     const expected = medianUnits(amounts.slice(-3));
     const similar = amounts.filter((a) => within(a, expected, 20n)).length / amounts.length;
+    if (similar < 0.5) continue;
     const depth = Math.min(1, charges.length / 6);
     const confidence = round2(0.45 * regular + 0.35 * similar + 0.2 * depth);
     if (confidence < MIN_CONFIDENCE) continue;
 
     const last = charges[charges.length - 1];
+    const earlier = amounts.slice(0, -1);
+    const earlierReference = medianUnits(earlier);
+    const priceIncreased =
+      amounts[amounts.length - 1] > earlier[earlier.length - 1] && earlier.every((a) => within(a, earlierReference, 5n));
     const nextExpected = addInterval(last.date, spec);
     // Stopped when the next charge is overdue by more than half an interval.
     const overdueDays = toDay(options.asOf) - toDay(nextExpected);
@@ -141,6 +150,7 @@ export function detectRecurring(
       lastSeen: last.date,
       nextExpected,
       occurrences: charges.length,
+      priceIncreased,
       confidence,
       status,
       transactionIds: charges.map((c) => c.id),

@@ -74,6 +74,9 @@ export class RecurringSeriesEntity {
   @Column({ type: 'integer' })
   occurrences!: number;
 
+  @Column({ name: 'price_increased', type: 'boolean', default: false })
+  priceIncreased!: boolean;
+
   @Column({ type: 'numeric', precision: 3, scale: 2 })
   confidence!: string;
 

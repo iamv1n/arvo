@@ -195,3 +195,58 @@ describe('Analytics over HTTP (e2e)', () => {
     expect((await other.get('/analytics/summary?from=2026-08-01&to=2026-08-31')).body.income).toBe('0.00');
   });
 });
+
+describe('Insights over HTTP (e2e)', () => {
+  let app: INestApplication;
+  beforeAll(async () => (app = await createTestApp()));
+  afterAll(() => app.close());
+
+  it('compares periods, ranks merchants, detects recurring charges and builds a snapshot', async () => {
+    const user = await registerUser(app);
+    const bank = (await user.post('/accounts', { name: 'Bank', type: 'BANK', openingBalance: '50000' })).body;
+    const categories = (await user.get('/categories')).body.items as { id: string; name: string }[];
+    const streaming = categories.find((c) => c.name === 'Streaming')!;
+    const add = (date: string, amount: string, description: string, extra: Record<string, unknown> = {}) =>
+      user.post('/transactions', { accountId: bank.id, date, description, amount, type: 'EXPENSE', ...extra }).expect(201);
+
+    const today = new Date();
+    const month = (offset: number) => {
+      const d = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() + offset, 1));
+      return d.toISOString().slice(0, 7);
+    };
+    for (const offset of [-3, -2, -1, 0]) {
+      await add(`${month(offset)}-01`, '-649', 'NETFLIX.COM', { merchantName: 'Netflix', categoryId: streaming.id });
+    }
+    await add(`${month(-1)}-10`, '-2000', 'SWIGGY', { merchantName: 'Swiggy' });
+    await add(`${month(0)}-01`, '-9000', 'CROMA TV', { merchantName: 'Croma' });
+
+    const last = (m: string) => new Date(Date.UTC(Number(m.slice(0, 4)), Number(m.slice(5, 7)), 0)).toISOString().slice(0, 10);
+    const compare = await user
+      .get(`/analytics/compare?from=${month(0)}-01&to=${last(month(0))}&previousFrom=${month(-1)}-01&previousTo=${last(month(-1))}`)
+      .expect(200);
+    expect(compare.body.change).toMatchObject({ expenses: '7000.00' });
+    expect(compare.body.largestExpenses[0]).toMatchObject({ amount: '-9000.00' });
+
+    const merchants = await user.get(`/analytics/merchants?from=${month(-3)}-01&to=${last(month(0))}`).expect(200);
+    expect(merchants.body.items.map((m: { name: string; amount: string }) => [m.name, m.amount])).toEqual([
+      ['Croma', '9000.00'],
+      ['Netflix', '2596.00'],
+      ['Swiggy', '2000.00'],
+    ]);
+
+    const recurring = await user.get('/analytics/recurring').expect(200);
+    expect(recurring.body.series).toHaveLength(1);
+    expect(recurring.body.series[0]).toMatchObject({ label: 'Netflix', frequency: 'MONTHLY', monthlyCost: '649.00', status: 'ACTIVE' });
+    expect(recurring.body.series[0]).not.toHaveProperty('userId');
+    expect(recurring.body.monthlyTotal).toBe('649.00');
+
+    const dismissed = await user.patch(`/analytics/recurring/${recurring.body.series[0].id}`, { isDismissed: true }).expect(200);
+    expect(dismissed.body.isDismissed).toBe(true);
+    expect((await user.get('/analytics/recurring')).body.monthlyTotal).toBe('0.00');
+    const other = await registerUser(app);
+    await other.patch(`/analytics/recurring/${recurring.body.series[0].id}`, { isDismissed: false }).expect(404);
+
+    const snapshot = await user.get(`/analytics/snapshot?month=${month(0)}`).expect(200);
+    expect(snapshot.body).toMatchObject({ period: month(0), expenses: '9649.00', currency: 'INR' });
+  });
+});

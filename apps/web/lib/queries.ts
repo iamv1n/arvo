@@ -12,7 +12,10 @@ import type {
   ImportRowStatus,
   ImportSummary,
   Merchant,
+  MerchantSpend,
   MonthlyPoint,
+  PeriodComparison,
+  RecurringOverview,
   NetWorth,
   Page,
   PeriodSummary,
@@ -137,3 +140,20 @@ export function useImportMutation<TInput, TResult = unknown>(fn: (input: TInput)
     },
   });
 }
+
+export const useComparison = (params: { from: string; to: string; previousFrom: string; previousTo: string }) =>
+  useQuery({
+    queryKey: [...keys.analytics, 'compare', params],
+    queryFn: () => api<PeriodComparison>('/analytics/compare', { query: { ...params } }),
+    placeholderData: keepPreviousData,
+  });
+
+export const useMerchantSpend = (period: Period) =>
+  useQuery({
+    queryKey: [...keys.analytics, 'merchants', period],
+    queryFn: () => api<{ items: MerchantSpend[] }>('/analytics/merchants', { query: { ...period } }).then((r) => r.items),
+    placeholderData: keepPreviousData,
+  });
+
+export const useRecurring = () =>
+  useQuery({ queryKey: [...keys.analytics, 'recurring'], queryFn: () => api<RecurringOverview>('/analytics/recurring') });

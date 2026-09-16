@@ -45,6 +45,7 @@ describe('detectRecurring', () => {
       lastSeen: '2026-08-05',
       nextExpected: '2026-09-05',
       occurrences: 5,
+      priceIncreased: true,
       status: 'ACTIVE',
       categoryId: 'streaming',
     });
@@ -63,6 +64,20 @@ describe('detectRecurring', () => {
       ['Cult Fit Session Ref', 'WEEKLY', '1300.00', '2026-08-05'],
     ]);
     expect(groupKey(weekly[0])).toBe(groupKey(weekly[3]));
+  });
+
+  it('ignores variable spending with a regular rhythm, and flags price increases only on stable prices', () => {
+    const fuel = ['2026-04-11', '2026-05-11', '2026-06-11', '2026-07-11', '2026-08-11'].map((date, i) =>
+      tx({ date, description: 'INDIAN OIL FUEL', amount: ['-1500', '-2800', '-1900', '-2600', '-1650'][i] }),
+    );
+    const cabs = ['2026-07-04', '2026-07-12', '2026-07-19', '2026-07-27', '2026-08-03'].map((date, i) =>
+      tx({ date, description: 'UBER TRIP', amount: ['-160', '-720', '-310', '-540', '-205'][i] }),
+    );
+    const noisyRent = ['2026-05-02', '2026-06-02', '2026-07-02', '2026-08-02'].map((date, i) =>
+      tx({ date, description: 'RENT', amount: ['-30000', '-33000', '-29000', '-33500'][i] }),
+    );
+    const series = detectRecurring([...fuel, ...cabs, ...noisyRent], { asOf: '2026-08-15' });
+    expect(series.map((s) => [s.label, s.priceIncreased])).toEqual([['Rent', false]]);
   });
 
   it('marks series that stopped and ignores irregular, income and too-short histories', () => {

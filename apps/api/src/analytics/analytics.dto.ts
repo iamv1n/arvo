@@ -1,6 +1,6 @@
 import { AccountType } from '@arvo/types';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsUUID, Matches } from 'class-validator';
+import { IsBoolean, IsOptional, IsUUID, Matches } from 'class-validator';
 import { DATE_PATTERN } from '../common/validation';
 
 export class PeriodQueryDto {
@@ -76,4 +76,22 @@ export class NetWorthDto {
   @ApiProperty() netWorth!: string;
   @ApiProperty({ type: [NetWorthAccountDto] }) accounts!: NetWorthAccountDto[];
   @ApiProperty() excludedAccountCount!: number;
+}
+
+export class ComparePeriodsQueryDto {
+  @ApiProperty({ example: '2026-08-01' }) @Matches(DATE_PATTERN) from!: string;
+  @ApiProperty({ example: '2026-08-31' }) @Matches(DATE_PATTERN) to!: string;
+  @ApiProperty({ example: '2026-07-01' }) @Matches(DATE_PATTERN) previousFrom!: string;
+  @ApiProperty({ example: '2026-07-31' }) @Matches(DATE_PATTERN) previousTo!: string;
+  @ApiPropertyOptional({ example: 'INR' }) @IsOptional() @Matches(/^[A-Z]{3}$/) currency?: string;
+  @ApiPropertyOptional() @IsOptional() @IsUUID() accountId?: string;
+}
+
+export class MonthQueryDto {
+  @ApiProperty({ example: '2026-08' }) @Matches(/^\d{4}-(0[1-9]|1[0-2])$/) month!: string;
+  @ApiPropertyOptional({ example: 'INR' }) @IsOptional() @Matches(/^[A-Z]{3}$/) currency?: string;
+}
+
+export class DismissRecurringDto {
+  @ApiProperty() @IsBoolean() isDismissed!: boolean;
 }
