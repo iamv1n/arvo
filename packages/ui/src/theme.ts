@@ -80,7 +80,6 @@ export function createAntdTheme(mode: ColorMode): ThemeConfig {
         headerFontSize: typography.fontSize.lg,
         headerHeight: 60,
         boxShadowTertiary: s.md,
-        colorBorderSecondary: mode === 'light' ? 'transparent' : c.borderSubtle,
       },
       Menu: {
         itemSelectedBg: c.brandSubtle,
@@ -101,11 +100,11 @@ export function createAntdTheme(mode: ColorMode): ThemeConfig {
       },
       Statistic: { contentFontSize: typography.fontSize['2xl'] },
       Table: {
-        headerBg: c.bgSurface,
-        headerColor: c.textMuted,
-        headerSplitColor: 'transparent',
+        headerBg: c.bgMuted,
+        headerColor: c.textSecondary,
+        headerSplitColor: c.border,
         rowHoverBg: c.brandSubtle,
-        borderColor: c.borderSubtle,
+        borderColor: c.border,
         cellPaddingBlock: 14,
       },
       Tag: { defaultBg: c.bgMuted, defaultColor: c.textSecondary, borderRadiusSM: radii.pill },

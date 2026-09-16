@@ -3,13 +3,23 @@
  * antd's theme and the styled-components theme are both derived from these,
  * so components from either system stay visually consistent.
  *
- * Identity: a confident indigo-violet brand, emerald for money coming in, coral for money
+ * Identity: a confident teal-green brand, emerald for money coming in, coral for money
  * going out, on a cool, bright canvas with elevated white surfaces.
  */
 
 export type ColorMode = 'light' | 'dark';
 
 const palette = {
+  teal: {
+    50: '#e8f7f3',
+    100: '#cdeee5',
+    200: '#9fdccb',
+    400: '#2fc4a0',
+    500: '#12a887',
+    600: '#0b8f74',
+    700: '#08735e',
+    800: '#075c4c',
+  },
   indigo: {
     50: '#f1f0ff',
     100: '#e4e2ff',
@@ -81,12 +91,12 @@ export interface ColorTokens {
 
 export const colors: Record<ColorMode, ColorTokens> = {
   light: {
-    brand: palette.indigo[600],
-    brandHover: palette.indigo[500],
-    brandActive: palette.indigo[700],
-    brandSubtle: palette.indigo[50],
-    brandText: palette.indigo[700],
-    brandGradient: `linear-gradient(135deg, ${palette.indigo[600]} 0%, ${palette.violet[500]} 100%)`,
+    brand: palette.teal[600],
+    brandHover: palette.teal[500],
+    brandActive: palette.teal[700],
+    brandSubtle: palette.teal[50],
+    brandText: palette.teal[700],
+    brandGradient: `linear-gradient(135deg, ${palette.teal[700]} 0%, ${palette.teal[500]} 55%, #22b8c9 100%)`,
     onBrand: palette.slate[0],
     bgCanvas: palette.slate[50],
     bgSurface: palette.slate[0],
@@ -108,15 +118,15 @@ export const colors: Record<ColorMode, ColorTokens> = {
     warningSubtle: palette.amber[50],
     danger: palette.coral[600],
     info: palette.sky[600],
-    chart: [palette.indigo[600], palette.emerald[500], palette.amber[500], palette.coral[500], palette.sky[500], palette.violet[500], '#ee46bc', '#15b79e', palette.slate[400]],
+    chart: [palette.teal[600], palette.indigo[500], palette.amber[500], palette.coral[500], palette.sky[500], palette.violet[500], '#ee46bc', '#15b79e', palette.slate[400]],
   },
   dark: {
-    brand: palette.indigo[400],
-    brandHover: palette.indigo[200],
-    brandActive: palette.indigo[500],
-    brandSubtle: '#221d4d',
-    brandText: palette.indigo[200],
-    brandGradient: `linear-gradient(135deg, ${palette.indigo[600]} 0%, ${palette.violet[500]} 100%)`,
+    brand: palette.teal[400],
+    brandHover: palette.teal[200],
+    brandActive: palette.teal[500],
+    brandSubtle: '#0d2b25',
+    brandText: palette.teal[200],
+    brandGradient: `linear-gradient(135deg, ${palette.teal[700]} 0%, ${palette.teal[500]} 55%, #1fa3b3 100%)`,
     onBrand: palette.slate[0],
     bgCanvas: palette.night[950],
     bgSurface: palette.night[900],
@@ -138,7 +148,7 @@ export const colors: Record<ColorMode, ColorTokens> = {
     warningSubtle: '#33260c',
     danger: palette.coral[400],
     info: palette.sky[400],
-    chart: [palette.indigo[400], palette.emerald[400], palette.amber[400], palette.coral[400], palette.sky[400], palette.violet[400], '#f670c7', '#2ed3b7', palette.slate[400]],
+    chart: [palette.teal[400], palette.indigo[400], palette.amber[400], palette.coral[400], palette.sky[400], palette.violet[400], '#f670c7', '#2ed3b7', palette.slate[400]],
   },
 };
 
@@ -162,13 +172,13 @@ export const shadows: Record<ColorMode, { sm: string; md: string; lg: string; br
     sm: '0 1px 2px rgba(16, 24, 40, 0.05)',
     md: '0 1px 2px rgba(16, 24, 40, 0.04), 0 6px 20px rgba(16, 24, 40, 0.06)',
     lg: '0 12px 32px rgba(16, 24, 40, 0.10)',
-    brand: '0 6px 18px rgba(90, 69, 232, 0.28)',
+    brand: '0 6px 18px rgba(11, 143, 116, 0.28)',
   },
   dark: {
     sm: '0 1px 2px rgba(0, 0, 0, 0.4)',
     md: '0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.35)',
     lg: '0 16px 40px rgba(0, 0, 0, 0.5)',
-    brand: '0 6px 20px rgba(108, 92, 246, 0.35)',
+    brand: '0 6px 20px rgba(47, 196, 160, 0.25)',
   },
 };
 
