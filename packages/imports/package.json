@@ -1,0 +1,29 @@
+{
+  "name": "@arvo/imports",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Statement parsing: file detection, CSV/XLSX/PDF extraction, column mapping and normalization",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+  },
+  "dependencies": {
+    "@arvo/finance-core": "workspace:*",
+    "exceljs": "^4.4.0",
+    "unpdf": "^1.8.1"
+  },
+  "devDependencies": {
+    "@arvo/config": "workspace:*",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.19.0",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.5",
+    "typescript": "5.9.3"
+  }
+}
