@@ -6,11 +6,11 @@ import { useTheme } from 'styled-components';
 import { formatMoney, formatMonth } from '../lib/format';
 import type { CategorySpend, MonthlyPoint } from '../lib/types';
 
-export function IncomeExpenseChart({ data, currency }: { data: MonthlyPoint[]; currency: string }) {
+export function IncomeExpenseChart({ data, currency, height = 280 }: { data: MonthlyPoint[]; currency: string; height?: number }) {
   const theme = useTheme();
   const rows = data.map((p) => ({ month: formatMonth(p.month), Income: Number(p.income), Expenses: Number(p.expenses) }));
   return (
-    <ResponsiveContainer width="100%" height={280}>
+    <ResponsiveContainer width="100%" height={height}>
       <BarChart data={rows} barGap={4} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
         <CartesianGrid vertical={false} stroke={theme.colors.borderSubtle} />
         <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fill: theme.colors.textMuted, fontSize: 12 }} />
@@ -44,7 +44,7 @@ function categoryColors(theme: ReturnType<typeof useTheme>): string[] {
   return theme.colors.chart;
 }
 
-export function CategoryDonut({ data, currency }: { data: CategorySpend[]; currency: string }) {
+export function CategoryDonut({ data, currency, size = 240 }: { data: CategorySpend[]; currency: string; size?: number }) {
   const theme = useTheme();
   if (data.length === 0) return <Empty description="No spending in this period" image={Empty.PRESENTED_IMAGE_SIMPLE} />;
   const palette = categoryColors(theme);
@@ -52,9 +52,9 @@ export function CategoryDonut({ data, currency }: { data: CategorySpend[]; curre
   const rest = data.slice(7).reduce((sum, c) => sum + Number(c.amount), 0);
   const rows = [...top.map((c) => ({ name: c.name, value: Number(c.amount) })), ...(rest > 0 ? [{ name: 'Other', value: rest }] : [])];
   return (
-    <ResponsiveContainer width="100%" height={240}>
+    <ResponsiveContainer width="100%" height={size}>
       <PieChart>
-        <Pie data={rows} dataKey="value" nameKey="name" innerRadius={62} outerRadius={96} paddingAngle={2} stroke="none">
+        <Pie data={rows} dataKey="value" nameKey="name" innerRadius="62%" outerRadius="96%" paddingAngle={2} stroke="none">
           {rows.map((row, i) => (
             <Cell key={row.name} fill={palette[i % palette.length]} />
           ))}

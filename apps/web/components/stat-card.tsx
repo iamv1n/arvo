@@ -50,15 +50,45 @@ const Hero = styled.div`
   color: ${({ theme }) => theme.colors.onBrand};
   box-shadow: ${({ theme }) => theme.shadows.brand};
 
+  &::before,
   &::after {
     content: '';
     position: absolute;
-    right: -60px;
-    top: -60px;
-    width: 180px;
-    height: 180px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.12);
+    pointer-events: none;
+  }
+  &::before {
+    right: -60px;
+    top: -70px;
+    width: 190px;
+    height: 190px;
+  }
+  &::after {
+    right: 40px;
+    bottom: -90px;
+    width: 160px;
+    height: 160px;
+    background: rgba(255, 255, 255, 0.07);
+  }
+
+  .sheen {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.18) 45%, transparent 60%);
+    transform: translateX(-100%);
+    animation: arvo-sheen 3.2s ${({ theme }) => theme.motion.easing} 0.6s 1 both;
+    pointer-events: none;
+  }
+
+  @keyframes arvo-sheen {
+    to {
+      transform: translateX(100%);
+    }
+  }
+
+  > * {
+    position: relative;
   }
 
   .label {
@@ -106,6 +136,7 @@ export function StatCard({
   if (variant === 'hero') {
     return (
       <Hero>
+        <span className="sheen" aria-hidden />
         <div className="label">
           {icon}
           {label}

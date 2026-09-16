@@ -13,12 +13,13 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import { Avatar, Button, Drawer, Dropdown, Grid, Layout, Menu, Spin } from 'antd';
-import { MenuOutlined } from '@ant-design/icons';
+import { MenuFoldOutlined, MenuOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 import styled, { useTheme } from 'styled-components';
 import { useAuth } from '../lib/auth';
+import { usePreferences } from '../lib/preferences';
 import { ThemeToggle } from './theme-toggle';
 
 const NAV = [
@@ -101,6 +102,8 @@ const Center = styled.div`
 export function AppShell({ children }: { children: ReactNode }) {
   const { status, user, logout } = useAuth();
   const theme = useTheme();
+  const { preferences, update } = usePreferences();
+  const collapsed = preferences.sidebarCollapsed;
   const router = useRouter();
   const pathname = usePathname();
   const screens = Grid.useBreakpoint();
@@ -124,6 +127,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <Menu
       mode="inline"
       selectedKeys={[selected]}
+      inlineCollapsed={!isMobile && collapsed}
       style={{ borderInlineEnd: 'none' }}
       items={NAV.map((item) => ({ ...item, label: <Link href={item.key}>{item.label}</Link> }))}
       onClick={() => setDrawerOpen(false)}
@@ -135,12 +139,15 @@ export function AppShell({ children }: { children: ReactNode }) {
       {!isMobile && (
         <Layout.Sider
           width={248}
+          collapsedWidth={80}
+          collapsed={collapsed}
+          trigger={null}
           theme="light"
           style={{ position: 'sticky', top: 0, height: '100dvh', borderInlineEnd: `1px solid ${theme.colors.borderSubtle}` }}
         >
-          <Brand href="/dashboard">
+          <Brand href="/dashboard" style={collapsed ? { justifyContent: 'center', padding: 0 } : undefined}>
             <LogoMark aria-hidden />
-            Arvo
+            {!collapsed && 'Arvo'}
           </Brand>
           {menu}
         </Layout.Sider>
@@ -150,7 +157,16 @@ export function AppShell({ children }: { children: ReactNode }) {
       </Drawer>
       <Layout>
         <Bar>
-          {isMobile && <Button type="text" icon={<MenuOutlined />} onClick={() => setDrawerOpen(true)} aria-label="Menu" />}
+          {isMobile ? (
+            <Button type="text" icon={<MenuOutlined />} onClick={() => setDrawerOpen(true)} aria-label="Menu" />
+          ) : (
+            <Button
+              type="text"
+              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+              onClick={() => update({ sidebarCollapsed: !collapsed })}
+              aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            />
+          )}
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
             <ThemeToggle />
             <Dropdown
@@ -169,7 +185,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Dropdown>
           </div>
         </Bar>
-        <Content>{children}</Content>
+        <Content>
+          <div className="arvo-page" key={pathname}>
+            {children}
+          </div>
+        </Content>
       </Layout>
     </Layout>
   );

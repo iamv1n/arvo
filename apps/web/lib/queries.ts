@@ -36,8 +36,14 @@ export const keys = {
 export interface TransactionFilters {
   accountId?: string;
   categoryId?: string;
+  uncategorized?: boolean;
   merchantId?: string;
+  withoutMerchant?: boolean;
   type?: TransactionType[];
+  source?: string[];
+  direction?: 'IN' | 'OUT';
+  minAmount?: string;
+  maxAmount?: string;
   from?: string;
   to?: string;
   search?: string;
@@ -55,8 +61,20 @@ export const useCategories = () =>
     staleTime: 5 * 60_000,
   });
 
+/** Merchants for name lookups (first 500 by name). Use useMerchantSearch for pickers. */
 export const useMerchants = () =>
-  useQuery({ queryKey: keys.merchants, queryFn: () => api<{ items: Merchant[] }>('/merchants').then((r) => r.items) });
+  useQuery({
+    queryKey: keys.merchants,
+    queryFn: () => api<Page<Merchant>>('/merchants', { query: { limit: 500 } }).then((r) => r.items),
+    staleTime: 60_000,
+  });
+
+export const useMerchantSearch = (search: string) =>
+  useQuery({
+    queryKey: [...keys.merchants, 'search', search],
+    queryFn: () => api<Page<Merchant>>('/merchants', { query: { search, limit: 20 } }).then((r) => r.items),
+    placeholderData: keepPreviousData,
+  });
 
 export const useTransactions = (filters: TransactionFilters) =>
   useQuery({
@@ -65,8 +83,12 @@ export const useTransactions = (filters: TransactionFilters) =>
     placeholderData: keepPreviousData,
   });
 
-export const useTransfers = () =>
-  useQuery({ queryKey: keys.transfers, queryFn: () => api<{ items: Transfer[] }>('/transfers').then((r) => r.items) });
+export const useTransfers = (page: { limit: number; offset: number }) =>
+  useQuery({
+    queryKey: [...keys.transfers, page],
+    queryFn: () => api<Page<Transfer>>('/transfers', { query: { ...page } }),
+    placeholderData: keepPreviousData,
+  });
 
 export interface Period {
   from: string;
@@ -106,8 +128,12 @@ export function useLedgerMutation<TInput, TResult = unknown>(fn: (input: TInput)
   });
 }
 
-export const useImports = () =>
-  useQuery({ queryKey: keys.imports, queryFn: () => api<{ items: ImportBatch[] }>('/imports').then((r) => r.items) });
+export const useImports = (page: { limit: number; offset: number }) =>
+  useQuery({
+    queryKey: [...keys.imports, 'list', page],
+    queryFn: () => api<Page<ImportBatch>>('/imports', { query: { ...page } }),
+    placeholderData: keepPreviousData,
+  });
 
 export const useImportSummary = (id: string) =>
   useQuery({ queryKey: [...keys.imports, id], queryFn: () => api<ImportSummary>(`/imports/${id}`) });

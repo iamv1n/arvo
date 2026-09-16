@@ -5,6 +5,8 @@ import { App, Button, Card, Col, Popconfirm, Result, Row, Skeleton, Space } from
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
+import { usePagedTable } from '../../../../components/data-table';
+import { usePreferences } from '../../../../lib/preferences';
 import { AccountFormModal } from '../../../../components/account-form-modal';
 import { PageHeader } from '../../../../components/page-header';
 import { StatCard } from '../../../../components/stat-card';
@@ -16,8 +18,6 @@ import { periodRange } from '../../../../lib/periods';
 import { useAccounts, useLedgerMutation, useSummary, useTransactions } from '../../../../lib/queries';
 import type { Transaction } from '../../../../lib/types';
 
-const PAGE_SIZE = 25;
-
 export default function AccountDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -25,7 +25,9 @@ export default function AccountDetailPage() {
   const accounts = useAccounts();
   const account = accounts.data?.find((a) => a.id === id);
   const [page, setPage] = useState(1);
-  const transactions = useTransactions({ accountId: id, limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE });
+  const { preferences } = usePreferences();
+  const transactions = useTransactions({ accountId: id, limit: preferences.pageSize, offset: (page - 1) * preferences.pageSize });
+  const pagination = usePagedTable(transactions.data?.total, page, setPage);
   const month = useMemo(() => ({ ...periodRange('this-month'), accountId: id }), [id]);
   const summary = useSummary(month);
   const [editAccount, setEditAccount] = useState(false);
@@ -87,11 +89,13 @@ export default function AccountDetailPage() {
       </Row>
       <Card styles={{ body: { padding: 0 } }}>
         <TransactionsTable
+          tableId="account-transactions"
+          toolbar={transactions.data ? `${transactions.data.total.toLocaleString('en-IN')} transactions` : ' '}
           hideAccount
           data={transactions.data?.items ?? []}
           loading={transactions.isFetching}
           onEdit={(transaction) => setTxModal({ open: true, transaction })}
-          pagination={{ current: page, pageSize: PAGE_SIZE, total: transactions.data?.total, onChange: setPage, showSizeChanger: false }}
+          pagination={pagination}
         />
       </Card>
       <AccountFormModal open={editAccount} account={account} onClose={() => setEditAccount(false)} />

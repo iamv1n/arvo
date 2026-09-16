@@ -2,11 +2,15 @@
 
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { CategoryType } from '@arvo/types';
-import { App, Button, Card, Col, Form, Input, Popconfirm, Row, Select, Space, Tag, Tree, Typography } from 'antd';
+import { App, Button, Card, Col, Divider, Flex, Form, Input, Popconfirm, Row, Segmented, Select, Space, Switch, Tag, Tree, Typography } from 'antd';
+import { DesktopOutlined, MoonFilled, SunFilled, UndoOutlined } from '@ant-design/icons';
+import { PAGE_SIZE_OPTIONS } from '../../../components/data-table';
+import { PERIOD_OPTIONS } from '../../../lib/periods';
+import { usePreferences } from '../../../lib/preferences';
+import { useThemeMode, type ThemePreference } from '../../../lib/theme-mode';
 import { useMemo } from 'react';
 import { CategorySelect } from '../../../components/category-select';
 import { PageHeader } from '../../../components/page-header';
-import { ThemeToggle } from '../../../components/theme-toggle';
 import { api, errorMessage } from '../../../lib/api';
 import { useAuth } from '../../../lib/auth';
 import { titleCase } from '../../../lib/format';
@@ -15,6 +19,8 @@ import type { Category } from '../../../lib/types';
 
 export default function SettingsPage() {
   const { user, reloadUser } = useAuth();
+  const { preferences, update, reset } = usePreferences();
+  const { preference: themePreference, setPreference: setThemePreference } = useThemeMode();
   const { message } = App.useApp();
   const categories = useCategories();
   const [profileForm] = Form.useForm();
@@ -104,11 +110,91 @@ export default function SettingsPage() {
               </Button>
             </Form>
           </Card>
-          <Card title="Appearance">
-            <Space>
-              <Typography.Text>Theme</Typography.Text>
-              <ThemeToggle />
-            </Space>
+          <Card
+            title="Preferences"
+            extra={
+              <Popconfirm title="Reset all preferences on this browser?" onConfirm={() => { reset(); setThemePreference('system'); message.success('Preferences reset'); }}>
+                <Button type="text" icon={<UndoOutlined />}>
+                  Reset
+                </Button>
+              </Popconfirm>
+            }
+          >
+            <Typography.Paragraph type="secondary" style={{ marginTop: -8 }}>
+              Saved in this browser only.
+            </Typography.Paragraph>
+            <Flex vertical gap={14}>
+              <PreferenceRow label="Theme">
+                <Segmented<ThemePreference>
+                  value={themePreference}
+                  onChange={setThemePreference}
+                  options={[
+                    { value: 'light', label: 'Light', icon: <SunFilled /> },
+                    { value: 'dark', label: 'Dark', icon: <MoonFilled /> },
+                    { value: 'system', label: 'System', icon: <DesktopOutlined /> },
+                  ]}
+                />
+              </PreferenceRow>
+              <PreferenceRow label="Collapse sidebar">
+                <Switch checked={preferences.sidebarCollapsed} onChange={(sidebarCollapsed) => update({ sidebarCollapsed })} />
+              </PreferenceRow>
+              <PreferenceRow label="Reduce motion" hint="Turns off animations and count-ups">
+                <Switch checked={preferences.reduceMotion} onChange={(reduceMotion) => update({ reduceMotion })} />
+              </PreferenceRow>
+
+              <Divider style={{ margin: '4px 0' }} titlePlacement="start" plain>
+                Tables
+              </Divider>
+              <PreferenceRow label="Density">
+                <Segmented<'small' | 'middle' | 'large'>
+                  value={preferences.tableDensity}
+                  onChange={(tableDensity) => update({ tableDensity })}
+                  options={[
+                    { value: 'small', label: 'Compact' },
+                    { value: 'middle', label: 'Comfortable' },
+                    { value: 'large', label: 'Spacious' },
+                  ]}
+                />
+              </PreferenceRow>
+              <PreferenceRow label="Rows per page">
+                <Select
+                  value={preferences.pageSize}
+                  onChange={(pageSize) => update({ pageSize })}
+                  style={{ width: 100 }}
+                  options={PAGE_SIZE_OPTIONS.map((n) => ({ value: n, label: n }))}
+                />
+              </PreferenceRow>
+              <PreferenceRow label="Striped rows">
+                <Switch checked={preferences.stripedRows} onChange={(stripedRows) => update({ stripedRows })} />
+              </PreferenceRow>
+              <PreferenceRow label="Limit table height" hint="Long tables scroll under a fixed header">
+                <Switch checked={preferences.compactTables} onChange={(compactTables) => update({ compactTables })} />
+              </PreferenceRow>
+              <PreferenceRow label="Hidden columns">
+                <Button
+                  size="small"
+                  disabled={Object.values(preferences.hiddenColumns).every((keys) => keys.length === 0)}
+                  onClick={() => update({ hiddenColumns: {} })}
+                >
+                  Show all
+                </Button>
+              </PreferenceRow>
+
+              <Divider style={{ margin: '4px 0' }} titlePlacement="start" plain>
+                Numbers & dates
+              </Divider>
+              <PreferenceRow label="Show paise" hint="₹1,234.50 instead of ₹1,235">
+                <Switch checked={preferences.showDecimals} onChange={(showDecimals) => update({ showDecimals })} />
+              </PreferenceRow>
+              <PreferenceRow label="Dashboard period">
+                <Select
+                  value={preferences.defaultPeriod}
+                  onChange={(defaultPeriod) => update({ defaultPeriod })}
+                  style={{ width: 150 }}
+                  options={PERIOD_OPTIONS}
+                />
+              </PreferenceRow>
+            </Flex>
           </Card>
         </Col>
         <Col xs={24} lg={14}>
@@ -146,5 +232,21 @@ export default function SettingsPage() {
         </Col>
       </Row>
     </>
+  );
+}
+
+function PreferenceRow({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+  return (
+    <Flex justify="space-between" align="center" gap={16} wrap>
+      <div>
+        <Typography.Text>{label}</Typography.Text>
+        {hint && (
+          <Typography.Text type="secondary" style={{ display: 'block', fontSize: 12 }}>
+            {hint}
+          </Typography.Text>
+        )}
+      </div>
+      {children}
+    </Flex>
   );
 }

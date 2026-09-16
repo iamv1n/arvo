@@ -17,7 +17,6 @@ import {
   Row,
   Segmented,
   Select,
-  Table,
   Tooltip,
   Typography,
 } from 'antd';
@@ -31,8 +30,8 @@ import type { ImportRow, ImportRowStatus, ImportSummary } from '../../lib/types'
 import { Amount } from '../amount';
 import { CategorySelect } from '../category-select';
 import { RowStatusTag } from './status-tags';
-
-const PAGE_SIZE = 50;
+import { DataTable, usePagedTable, useTableColumns, type DataColumn } from '../data-table';
+import { usePreferences } from '../../lib/preferences';
 
 type Filter = 'ALL' | ImportRowStatus | 'PENDING';
 
@@ -82,12 +81,14 @@ export function ReviewStep({ summary, onRemap }: { summary: ImportSummary; onRem
   const [page, setPage] = useState(1);
   const [editing, setEditing] = useState<ImportRow | null>(null);
 
+  const { preferences } = usePreferences();
   const rows = useImportRows(batchId, {
     status: filter === 'ALL' || filter === 'PENDING' ? undefined : [filter],
     decision: filter === 'PENDING' ? ['PENDING'] : undefined,
-    limit: PAGE_SIZE,
-    offset: (page - 1) * PAGE_SIZE,
+    limit: preferences.pageSize,
+    offset: (page - 1) * preferences.pageSize,
   });
+  const pagination = usePagedTable(rows.data?.total, page, setPage);
 
   const update = useImportMutation(({ id, ...patch }: { id: string } & Record<string, unknown>) =>
     api<ImportRow>(`/imports/${batchId}/rows/${id}`, { method: 'PATCH', body: patch }),
@@ -107,6 +108,122 @@ export function ReviewStep({ summary, onRemap }: { summary: ImportSummary; onRem
       message.error(errorMessage(e));
     }
   };
+
+  const { columns, settings } = useTableColumns<ImportRow>('import-review', [
+            { key: 'rowNumber', label: 'Line #', title: '#', dataIndex: 'rowNumber', width: 56 },
+            { key: 'status', title: 'Status', width: 150, render: (_, r) => <RowStatusTag status={r.status} /> },
+            {
+              key: 'date',
+              title: 'Date',
+              width: 124,
+              render: (_, r) => (r.date ? <span style={{ whiteSpace: 'nowrap' }}>{formatDate(r.date)}</span> : <Typography.Text type="danger">{r.raw.find(Boolean) ?? '—'}</Typography.Text>),
+            },
+            {
+              key: 'description',
+              alwaysVisible: true,
+              title: 'Description',
+              render: (_, r) => (
+                <div style={{ minWidth: 200 }}>
+                  <Typography.Text ellipsis style={{ display: 'block', maxWidth: 320 }}>
+                    {r.description ?? '—'}
+                  </Typography.Text>
+                  {r.issues.length > 0 && (
+                    <Typography.Text type="danger" style={{ fontSize: 12 }}>
+                      {r.issues.map((i) => i.message).join(' · ')}
+                    </Typography.Text>
+                  )}
+                  {r.status === 'POSSIBLE_DUPLICATE' && (
+                    <Typography.Text type="warning" style={{ fontSize: 12 }}>
+                      {r.duplicateOfTransactionId ? 'Matches a transaction already in your ledger' : 'Same as an earlier line in this file'}
+                    </Typography.Text>
+                  )}
+                </div>
+              ),
+            },
+            {
+              key: 'amount',
+              alwaysVisible: true,
+              title: 'Amount',
+              align: 'right',
+              width: 140,
+              render: (_, r) => (r.amount ? <Amount value={r.amount} currency={r.currency ?? 'INR'} type={r.type ?? undefined} /> : '—'),
+            },
+            {
+              key: 'type',
+              title: 'Type',
+              width: 140,
+              render: (_, r) => (
+                <Select
+                  size="small"
+                  variant="borderless"
+                  value={r.type ?? undefined}
+                  placeholder="Type"
+                  style={{ width: 130 }}
+                  disabled={!r.amount}
+                  onChange={(type) => void run(update.mutateAsync({ id: r.id, type }))}
+                  options={Object.values(TransactionType).map((t) => ({ value: t, label: titleCase(t) }))}
+                />
+              ),
+            },
+            {
+              key: 'category',
+              title: 'Category',
+              width: 220,
+              render: (_, r) => (
+                <Flex vertical>
+                  <CategorySelect
+                    value={r.categoryId}
+                    style={{ width: 200, minWidth: 0 }}
+                    onChange={(categoryId) => void run(update.mutateAsync({ id: r.id, categoryId }))}
+                  />
+                  {r.categorizationSource && (
+                    <Typography.Text type="secondary" style={{ fontSize: 11, paddingLeft: 4 }}>
+                      by {SOURCE_LABEL[r.categorizationSource]}
+                      {r.merchantName ? ` · ${r.merchantName}` : ''}
+                    </Typography.Text>
+                  )}
+                </Flex>
+              ),
+            },
+            {
+              key: 'decision',
+              alwaysVisible: true,
+              title: 'Decision',
+              width: 190,
+              render: (_, r) => (
+                <Flex gap={4} align="center">
+                  <Tooltip title={r.status === 'INVALID' ? 'Fix the row first' : 'Import this row'}>
+                    <Button
+                      size="small"
+                      type={r.decision === 'ACCEPT' ? 'primary' : 'default'}
+                      icon={<CheckOutlined />}
+                      disabled={r.status === 'INVALID'}
+                      onClick={() => void run(update.mutateAsync({ id: r.id, decision: 'ACCEPT' }))}
+                      aria-label="Import row"
+                    />
+                  </Tooltip>
+                  <Tooltip title="Skip this row">
+                    <Button
+                      size="small"
+                      danger={r.decision === 'REJECT'}
+                      type={r.decision === 'REJECT' ? 'primary' : 'default'}
+                      icon={<CloseOutlined />}
+                      onClick={() => void run(update.mutateAsync({ id: r.id, decision: 'REJECT' }))}
+                      aria-label="Skip row"
+                    />
+                  </Tooltip>
+                  <Tooltip title="Edit">
+                    <Button size="small" type="text" icon={<EditOutlined />} onClick={() => setEditing(r)} aria-label="Edit row" />
+                  </Tooltip>
+                  {r.decision === 'PENDING' && (
+                    <Typography.Text type="warning" style={{ fontSize: 12 }}>
+                      Decide
+                    </Typography.Text>
+                  )}
+                </Flex>
+              ),
+            },
+  ] as DataColumn<ImportRow>[]);
 
   const { counts } = summary;
   const toImport = counts.byDecision.ACCEPT;
@@ -194,6 +311,7 @@ export function ReviewStep({ summary, onRemap }: { summary: ImportSummary; onRem
           />
         }
         extra={
+          <Flex gap={4} align="center">
           <Dropdown
             menu={{
               items: [
@@ -215,129 +333,20 @@ export function ReviewStep({ summary, onRemap }: { summary: ImportSummary; onRem
           >
             <Button>Bulk decisions</Button>
           </Dropdown>
+          {settings}
+          </Flex>
         }
       >
         <SkippedRows>
-        <Table<ImportRow>
+        <DataTable<ImportRow>
           rowKey="id"
           size="middle"
           loading={rows.isFetching}
           dataSource={rows.data?.items}
           scroll={{ x: 1100 }}
-          pagination={{
-            current: page,
-            pageSize: PAGE_SIZE,
-            total: rows.data?.total,
-            showSizeChanger: false,
-            onChange: setPage,
-          }}
+          pagination={pagination}
           rowClassName={(r) => (r.decision === 'REJECT' ? 'arvo-row-skipped' : '')}
-          columns={[
-            { title: '#', dataIndex: 'rowNumber', width: 56 },
-            { title: 'Status', width: 150, render: (_, r) => <RowStatusTag status={r.status} /> },
-            {
-              title: 'Date',
-              width: 124,
-              render: (_, r) => (r.date ? <span style={{ whiteSpace: 'nowrap' }}>{formatDate(r.date)}</span> : <Typography.Text type="danger">{r.raw.find(Boolean) ?? '—'}</Typography.Text>),
-            },
-            {
-              title: 'Description',
-              render: (_, r) => (
-                <div style={{ minWidth: 200 }}>
-                  <Typography.Text ellipsis style={{ display: 'block', maxWidth: 320 }}>
-                    {r.description ?? '—'}
-                  </Typography.Text>
-                  {r.issues.length > 0 && (
-                    <Typography.Text type="danger" style={{ fontSize: 12 }}>
-                      {r.issues.map((i) => i.message).join(' · ')}
-                    </Typography.Text>
-                  )}
-                  {r.status === 'POSSIBLE_DUPLICATE' && (
-                    <Typography.Text type="warning" style={{ fontSize: 12 }}>
-                      {r.duplicateOfTransactionId ? 'Matches a transaction already in your ledger' : 'Same as an earlier line in this file'}
-                    </Typography.Text>
-                  )}
-                </div>
-              ),
-            },
-            {
-              title: 'Amount',
-              align: 'right',
-              width: 140,
-              render: (_, r) => (r.amount ? <Amount value={r.amount} currency={r.currency ?? 'INR'} type={r.type ?? undefined} /> : '—'),
-            },
-            {
-              title: 'Type',
-              width: 140,
-              render: (_, r) => (
-                <Select
-                  size="small"
-                  variant="borderless"
-                  value={r.type ?? undefined}
-                  placeholder="Type"
-                  style={{ width: 130 }}
-                  disabled={!r.amount}
-                  onChange={(type) => void run(update.mutateAsync({ id: r.id, type }))}
-                  options={Object.values(TransactionType).map((t) => ({ value: t, label: titleCase(t) }))}
-                />
-              ),
-            },
-            {
-              title: 'Category',
-              width: 220,
-              render: (_, r) => (
-                <Flex vertical>
-                  <CategorySelect
-                    value={r.categoryId}
-                    style={{ width: 200, minWidth: 0 }}
-                    onChange={(categoryId) => void run(update.mutateAsync({ id: r.id, categoryId }))}
-                  />
-                  {r.categorizationSource && (
-                    <Typography.Text type="secondary" style={{ fontSize: 11, paddingLeft: 4 }}>
-                      by {SOURCE_LABEL[r.categorizationSource]}
-                      {r.merchantName ? ` · ${r.merchantName}` : ''}
-                    </Typography.Text>
-                  )}
-                </Flex>
-              ),
-            },
-            {
-              title: 'Decision',
-              width: 190,
-              render: (_, r) => (
-                <Flex gap={4} align="center">
-                  <Tooltip title={r.status === 'INVALID' ? 'Fix the row first' : 'Import this row'}>
-                    <Button
-                      size="small"
-                      type={r.decision === 'ACCEPT' ? 'primary' : 'default'}
-                      icon={<CheckOutlined />}
-                      disabled={r.status === 'INVALID'}
-                      onClick={() => void run(update.mutateAsync({ id: r.id, decision: 'ACCEPT' }))}
-                      aria-label="Import row"
-                    />
-                  </Tooltip>
-                  <Tooltip title="Skip this row">
-                    <Button
-                      size="small"
-                      danger={r.decision === 'REJECT'}
-                      type={r.decision === 'REJECT' ? 'primary' : 'default'}
-                      icon={<CloseOutlined />}
-                      onClick={() => void run(update.mutateAsync({ id: r.id, decision: 'REJECT' }))}
-                      aria-label="Skip row"
-                    />
-                  </Tooltip>
-                  <Tooltip title="Edit">
-                    <Button size="small" type="text" icon={<EditOutlined />} onClick={() => setEditing(r)} aria-label="Edit row" />
-                  </Tooltip>
-                  {r.decision === 'PENDING' && (
-                    <Typography.Text type="warning" style={{ fontSize: 12 }}>
-                      Decide
-                    </Typography.Text>
-                  )}
-                </Flex>
-              ),
-            },
-          ]}
+          columns={columns}
         />
         </SkippedRows>
       </Card>

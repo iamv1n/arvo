@@ -2,8 +2,10 @@
 
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { TransactionType } from '@arvo/types';
-import { App, Button, Popconfirm, Space, Table, Tag, Typography } from 'antd';
+import { App, Button, Popconfirm, Space, Tag, Typography } from 'antd';
 import type { TableProps } from 'antd';
+import type { ReactNode } from 'react';
+import { DataTable, TableToolbar, useTableColumns, type DataColumn } from './data-table';
 import { useMemo } from 'react';
 import { api, errorMessage } from '../lib/api';
 import { formatDate, titleCase } from '../lib/format';
@@ -25,12 +27,17 @@ export function TransactionsTable({
   loading,
   onEdit,
   hideAccount,
+  tableId = 'transactions',
+  toolbar,
   ...tableProps
 }: {
   data: Transaction[];
   loading?: boolean;
   onEdit: (t: Transaction) => void;
   hideAccount?: boolean;
+  tableId?: string;
+  /** Left side of the toolbar (e.g. a count); the column settings sit on the right. */
+  toolbar?: ReactNode;
 } & Pick<TableProps<Transaction>, 'pagination' | 'rowSelection' | 'onChange'>) {
   const { message } = App.useApp();
   const accounts = useAccounts();
@@ -46,9 +53,10 @@ export function TransactionsTable({
   );
   const remove = useLedgerMutation((id: string) => api(`/transactions/${id}`, { method: 'DELETE' }));
 
-  const columns: TableProps<Transaction>['columns'] = [
-    { title: 'Date', dataIndex: 'date', width: 120, render: formatDate },
+  const allColumns: DataColumn<Transaction>[] = [
+    { key: 'date', title: 'Date', dataIndex: 'date', width: 120, render: formatDate },
     {
+      key: 'merchant',
       title: 'Merchant',
       dataIndex: 'merchantId',
       width: 160,
@@ -56,6 +64,8 @@ export function TransactionsTable({
       render: (id: string | null) => (id ? names.merchant.get(id) : <Typography.Text type="secondary">—</Typography.Text>),
     },
     {
+      key: 'description',
+      alwaysVisible: true,
       title: 'Description',
       dataIndex: 'description',
       ellipsis: true,
@@ -71,6 +81,7 @@ export function TransactionsTable({
       ),
     },
     {
+      key: 'category',
       title: 'Category',
       dataIndex: 'categoryId',
       width: 170,
@@ -87,6 +98,8 @@ export function TransactionsTable({
       },
     },
     {
+      key: 'amount',
+      alwaysVisible: true,
       title: 'Amount',
       dataIndex: 'amount',
       align: 'right',
@@ -97,6 +110,7 @@ export function TransactionsTable({
       ? []
       : [
           {
+            key: 'account',
             title: 'Account',
             dataIndex: 'accountId',
             width: 170,
@@ -106,6 +120,8 @@ export function TransactionsTable({
         ]),
     {
       key: 'actions',
+      alwaysVisible: true,
+      label: 'Actions',
       width: 88,
       align: 'right',
       render: (_: unknown, t: Transaction) => (
@@ -128,15 +144,21 @@ export function TransactionsTable({
     },
   ];
 
+  const { columns, settings } = useTableColumns(tableId, allColumns);
   return (
-    <Table<Transaction>
-      rowKey="id"
-      size="middle"
-      columns={columns}
-      dataSource={data}
-      loading={loading}
-      scroll={{ x: 960 }}
-      {...tableProps}
-    />
+    <>
+      <TableToolbar>
+        <span>{toolbar}</span>
+        {settings}
+      </TableToolbar>
+      <DataTable<Transaction>
+        rowKey="id"
+        columns={columns}
+        dataSource={data}
+        loading={loading}
+        scroll={{ x: 960 }}
+        {...tableProps}
+      />
+    </>
   );
 }

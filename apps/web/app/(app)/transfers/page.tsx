@@ -1,7 +1,9 @@
 'use client';
 
 import { ArrowRightOutlined, DisconnectOutlined, PlusOutlined } from '@ant-design/icons';
-import { App, Button, Card, Col, DatePicker, Form, Input, Modal, Popconfirm, Row, Select, Table, Typography } from 'antd';
+import { App, Button, Card, Col, DatePicker, Form, Input, Modal, Popconfirm, Row, Select, Typography } from 'antd';
+import { DataTable, TableToolbar, usePagedTable, useTableColumns, type DataColumn } from '../../../components/data-table';
+import { usePreferences } from '../../../lib/preferences';
 import dayjs, { type Dayjs } from 'dayjs';
 import { useMemo, useState } from 'react';
 import { Amount } from '../../../components/amount';
@@ -21,7 +23,10 @@ interface Values {
 
 export default function TransfersPage() {
   const { message } = App.useApp();
-  const transfers = useTransfers();
+  const { preferences } = usePreferences();
+  const [page, setPage] = useState(1);
+  const transfers = useTransfers({ limit: preferences.pageSize, offset: (page - 1) * preferences.pageSize });
+  const pagination = usePagedTable(transfers.data?.total, page, setPage);
   const accounts = useAccounts();
   const accountName = useMemo(() => new Map((accounts.data ?? []).map((a) => [a.id, a.name])), [accounts.data]);
   const [open, setOpen] = useState(false);
@@ -44,28 +49,11 @@ export default function TransfersPage() {
     }
   };
 
-  const accountOptions = accounts.data?.filter((a) => a.isActive).map((a) => ({ value: a.id, label: a.name }));
-
-  return (
-    <>
-      <PageHeader
-        title="Transfers"
-        subtitle="Money moving between your own accounts. Never counted as income or spending."
-        extra={
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setOpen(true)}>
-            New transfer
-          </Button>
-        }
-      />
-      <Card styles={{ body: { padding: 0 } }}>
-        <Table<Transfer>
-          rowKey="id"
-          loading={transfers.isPending}
-          dataSource={transfers.data}
-          scroll={{ x: 720 }}
-          columns={[
-            { title: 'Date', render: (_, t) => formatDate(t.from.date), width: 130 },
+  const { columns, settings } = useTableColumns<Transfer>('transfers', [
+            { key: 'date', title: 'Date', render: (_, t) => formatDate(t.from.date), width: 130 },
             {
+              key: 'route',
+              alwaysVisible: true,
               title: 'Route',
               render: (_, t) => (
                 <span>
@@ -74,8 +62,10 @@ export default function TransfersPage() {
                 </span>
               ),
             },
-            { title: 'Description', render: (_, t) => <Typography.Text ellipsis>{t.from.description}</Typography.Text> },
+            { key: 'description', title: 'Description', render: (_, t) => <Typography.Text ellipsis>{t.from.description}</Typography.Text> },
             {
+              key: 'amount',
+              alwaysVisible: true,
               title: 'Amount',
               align: 'right',
               width: 150,
@@ -83,6 +73,8 @@ export default function TransfersPage() {
             },
             {
               key: 'actions',
+              alwaysVisible: true,
+              label: 'Actions',
               width: 60,
               render: (_, t) => (
                 <Popconfirm
@@ -99,7 +91,33 @@ export default function TransfersPage() {
                 </Popconfirm>
               ),
             },
-          ]}
+  ] as DataColumn<Transfer>[]);
+
+  const accountOptions = accounts.data?.filter((a) => a.isActive).map((a) => ({ value: a.id, label: a.name }));
+
+  return (
+    <>
+      <PageHeader
+        title="Transfers"
+        subtitle="Money moving between your own accounts. Never counted as income or spending."
+        extra={
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setOpen(true)}>
+            New transfer
+          </Button>
+        }
+      />
+      <Card styles={{ body: { padding: 0 } }}>
+        <TableToolbar>
+          <span>{transfers.data ? `${transfers.data.total} transfers` : ' '}</span>
+          {settings}
+        </TableToolbar>
+        <DataTable<Transfer>
+          rowKey="id"
+          loading={transfers.isFetching}
+          dataSource={transfers.data?.items}
+          scroll={{ x: 720 }}
+          columns={columns}
+          pagination={pagination}
         />
       </Card>
       <Modal open={open} title="New transfer" okText="Record" onOk={submit} onCancel={() => setOpen(false)} confirmLoading={create.isPending} destroyOnHidden>

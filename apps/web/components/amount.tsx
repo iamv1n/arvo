@@ -2,7 +2,7 @@
 
 import { TransactionType } from '@arvo/types';
 import styled from 'styled-components';
-import { formatMoney } from '../lib/format';
+import { useMoney } from '../lib/use-money';
 
 type Tone = 'income' | 'expense' | 'transfer' | 'neutral';
 
@@ -34,6 +34,7 @@ export function Amount({
   size?: 'sm' | 'md' | 'lg';
   signed?: boolean;
 }) {
+  const formatMoney = useMoney();
   const n = Number(value);
   const tone: Tone =
     type === TransactionType.TRANSFER ? 'transfer' : n > 0 && signed ? 'income' : n < 0 ? 'expense' : 'neutral';

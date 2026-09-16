@@ -1,7 +1,9 @@
 'use client';
 
 import { ArrowDownOutlined, ArrowUpOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
-import { Button, Card, Col, Empty, Flex, Row, Skeleton, Table, Tag, Typography } from 'antd';
+import { Button, Card, Col, Empty, Flex, Row, Skeleton, Tag, Typography } from 'antd';
+import { DataTable } from '../../../components/data-table';
+import type { Transaction } from '../../../lib/types';
 import dayjs from 'dayjs';
 import { useMemo, useState } from 'react';
 import { useTheme } from 'styled-components';
@@ -100,20 +102,20 @@ export default function AnalyticsPage() {
 
         <Col xs={24} xl={14}>
           <Card title="What changed" extra={<Typography.Text type="secondary">vs {month.subtract(1, 'month').format('MMMM')}</Typography.Text>} styles={{ body: { padding: 0 } }}>
-            <Table
+            <DataTable
               rowKey={(r) => r.categoryId ?? 'none'}
               loading={comparison.isFetching}
               dataSource={c?.categoryChanges}
               pagination={false}
-              size="middle"
               locale={{ emptyText: <Empty description="No spending in these months" image={Empty.PRESENTED_IMAGE_SIMPLE} /> }}
               columns={[
-                { title: 'Category', dataIndex: 'name' },
-                { title: 'This month', align: 'right', render: (_, r) => formatMoney(r.current, currency) },
+                { title: 'Category', dataIndex: 'name', sorter: (a, b) => a.name.localeCompare(b.name) },
+                { title: 'This month', align: 'right', sorter: (a, b) => Number(a.current) - Number(b.current), render: (_, r) => formatMoney(r.current, currency) },
                 { title: 'Last month', align: 'right', render: (_, r) => <Typography.Text type="secondary">{formatMoney(r.previous, currency)}</Typography.Text> },
                 {
                   title: 'Change',
                   align: 'right',
+                  sorter: (a, b) => Number(a.change) - Number(b.change),
                   render: (_, r) => {
                     const n = Number(r.change);
                     if (n === 0) return <Typography.Text type="secondary">—</Typography.Text>;
@@ -133,35 +135,48 @@ export default function AnalyticsPage() {
 
         <Col xs={24} xl={10}>
           <Card title="Top merchants" style={{ height: '100%' }} styles={{ body: { padding: 0 } }}>
-            <Table
+            <DataTable
               rowKey={(r) => r.merchantId ?? 'none'}
               loading={merchants.isFetching}
               dataSource={merchants.data?.slice(0, 10)}
               pagination={false}
-              size="middle"
               columns={[
                 { title: 'Merchant', dataIndex: 'name', ellipsis: true },
-                { title: 'Txns', dataIndex: 'transactionCount', align: 'right', width: 70 },
-                { title: 'Spent', align: 'right', render: (_, r) => formatMoney(r.amount, currency) },
+                { title: 'Txns', dataIndex: 'transactionCount', align: 'right', width: 80, sorter: (a, b) => a.transactionCount - b.transactionCount },
+                { title: 'Spent', align: 'right', defaultSortOrder: 'descend', sorter: (a, b) => Number(a.amount) - Number(b.amount), render: (_, r) => formatMoney(r.amount, currency) },
               ]}
             />
           </Card>
         </Col>
 
         <Col span={24}>
-          <Card title="Largest expenses this month" styles={{ body: { padding: 0 } }}>
-            <Table
+          <Card
+            title="Largest expenses this month"
+            extra={<Typography.Text type="secondary">Top {c?.largestExpenses.length ?? 5} by amount</Typography.Text>}
+            styles={{ body: { padding: 0 } }}
+          >
+            <DataTable<Transaction & { rank: number }>
               rowKey="id"
               loading={comparison.isFetching}
-              dataSource={c?.largestExpenses}
+              dataSource={c?.largestExpenses.map((t, i) => ({ ...t, rank: i + 1 }))}
               pagination={false}
-              size="middle"
-              scroll={{ x: 640 }}
+              scroll={{ x: 680 }}
               columns={[
-                { title: 'Date', dataIndex: 'date', width: 130, render: formatDate },
+                { title: '#', dataIndex: 'rank', width: 56, sorter: (a, b) => a.rank - b.rank },
+                { title: 'Date', dataIndex: 'date', width: 130, render: formatDate, sorter: (a, b) => a.date.localeCompare(b.date) },
                 { title: 'Description', dataIndex: 'description', ellipsis: true },
                 { title: 'Account', dataIndex: 'accountId', width: 200, render: (id: string) => accountName.get(id) },
-                { title: 'Amount', dataIndex: 'amount', align: 'right', width: 150, render: (v: string, t) => <Amount value={v} currency={t.currency} type={t.type} /> },
+                {
+                  title: 'Amount',
+                  dataIndex: 'amount',
+                  align: 'right',
+                  width: 150,
+                  defaultSortOrder: 'ascend',
+                  sortDirections: ['ascend', 'descend', 'ascend'],
+                  showSorterTooltip: { title: 'Largest first' },
+                  sorter: (a, b) => Number(a.amount) - Number(b.amount),
+                  render: (v: string, t) => <Amount value={v} currency={t.currency} type={t.type} />,
+                },
               ]}
             />
           </Card>

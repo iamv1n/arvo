@@ -1,7 +1,8 @@
 'use client';
 
 import { EyeInvisibleOutlined, EyeOutlined, RiseOutlined } from '@ant-design/icons';
-import { App, Button, Card, Col, Empty, Flex, Progress, Row, Segmented, Table, Tag, Tooltip, Typography } from 'antd';
+import { App, Button, Card, Col, Empty, Flex, Progress, Row, Segmented, Tag, Tooltip, Typography } from 'antd';
+import { DataTable, useTableColumns, type DataColumn } from '../../../components/data-table';
 import { useState } from 'react';
 import { PageHeader } from '../../../components/page-header';
 import { StatCard } from '../../../components/stat-card';
@@ -31,6 +32,83 @@ export default function RecurringPage() {
     view === 'dismissed' ? s.isDismissed : !s.isDismissed && (view === 'active' ? s.status === 'ACTIVE' : s.status === 'STOPPED'),
   );
   const increases = series.filter((s) => !s.isDismissed && s.status === 'ACTIVE' && s.priceIncreased);
+
+  const { columns, settings } = useTableColumns<RecurringSeries>('recurring', [
+            {
+              key: 'name',
+              alwaysVisible: true,
+              title: 'Name',
+              render: (_, s) => (
+                <div>
+                  <Typography.Text strong>{s.label}</Typography.Text>
+                  <Typography.Text type="secondary" style={{ display: 'block', fontSize: 12 }}>
+                    {[s.categoryId && categoryName.get(s.categoryId), accountName.get(s.accountId)].filter(Boolean).join(' · ')}
+                  </Typography.Text>
+                </div>
+              ),
+            },
+            { key: 'frequency', title: 'Frequency', width: 120, render: (_, s) => <Tag variant="filled">{titleCase(s.frequency)}</Tag> },
+            {
+              key: 'amount',
+              title: 'Amount',
+              align: 'right',
+              width: 170,
+              render: (_, s) => {
+                const increased = s.priceIncreased;
+                return (
+                  <div>
+                    <Typography.Text strong style={{ fontVariantNumeric: 'tabular-nums' }}>
+                      {formatMoney(s.lastAmount, currency)}
+                    </Typography.Text>
+                    {increased && (
+                      <Tooltip title={`Was ${formatMoney(s.previousAmount!, currency)}`}>
+                        <Tag color="red" variant="filled" style={{ marginInlineStart: 6, marginInlineEnd: 0 }}>
+                          <RiseOutlined /> up
+                        </Tag>
+                      </Tooltip>
+                    )}
+                  </div>
+                );
+              },
+            },
+            { key: 'monthlyCost', title: 'Monthly cost', align: 'right', width: 140, render: (_, s) => formatMoney(s.monthlyCost, currency) },
+            { key: 'lastSeen', title: 'Last charged', width: 130, render: (_, s) => formatDate(s.lastSeen) },
+            {
+              key: 'nextExpected',
+              title: 'Next expected',
+              width: 140,
+              render: (_, s) =>
+                s.status === 'STOPPED' ? <Typography.Text type="secondary">Stopped</Typography.Text> : formatDate(s.nextExpected),
+            },
+            {
+              key: 'confidence',
+              title: 'Confidence',
+              width: 130,
+              render: (_, s) => (
+                <Tooltip title={`${s.occurrences} payments detected`}>
+                  <Progress percent={Math.round(s.confidence * 100)} size="small" showInfo={false} />
+                </Tooltip>
+              ),
+            },
+            {
+              key: 'actions',
+              alwaysVisible: true,
+              label: 'Actions',
+              width: 60,
+              render: (_, s) => (
+                <Tooltip title={s.isDismissed ? 'Restore' : 'Not recurring? Dismiss'}>
+                  <Button
+                    type="text"
+                    icon={s.isDismissed ? <EyeOutlined /> : <EyeInvisibleOutlined />}
+                    aria-label={s.isDismissed ? 'Restore' : 'Dismiss'}
+                    onClick={() =>
+                      toggle.mutateAsync({ id: s.id, isDismissed: !s.isDismissed }).catch((e) => message.error(errorMessage(e)))
+                    }
+                  />
+                </Tooltip>
+              ),
+            },
+  ] as DataColumn<RecurringSeries>[]);
 
   return (
     <>
@@ -66,84 +144,17 @@ export default function RecurringPage() {
             ]}
           />
         }
+        extra={settings}
         styles={{ body: { padding: 0 } }}
       >
-        <Table<RecurringSeries>
+        <DataTable<RecurringSeries>
           rowKey="id"
           loading={recurring.isFetching}
           dataSource={visible}
           pagination={false}
           scroll={{ x: 960 }}
           locale={{ emptyText: <Empty description="Nothing here. Recurring charges appear after 3 regular payments." image={Empty.PRESENTED_IMAGE_SIMPLE} /> }}
-          columns={[
-            {
-              title: 'Name',
-              render: (_, s) => (
-                <div>
-                  <Typography.Text strong>{s.label}</Typography.Text>
-                  <Typography.Text type="secondary" style={{ display: 'block', fontSize: 12 }}>
-                    {[s.categoryId && categoryName.get(s.categoryId), accountName.get(s.accountId)].filter(Boolean).join(' · ')}
-                  </Typography.Text>
-                </div>
-              ),
-            },
-            { title: 'Frequency', width: 120, render: (_, s) => <Tag variant="filled">{titleCase(s.frequency)}</Tag> },
-            {
-              title: 'Amount',
-              align: 'right',
-              width: 170,
-              render: (_, s) => {
-                const increased = s.priceIncreased;
-                return (
-                  <div>
-                    <Typography.Text strong style={{ fontVariantNumeric: 'tabular-nums' }}>
-                      {formatMoney(s.lastAmount, currency)}
-                    </Typography.Text>
-                    {increased && (
-                      <Tooltip title={`Was ${formatMoney(s.previousAmount!, currency)}`}>
-                        <Tag color="red" variant="filled" style={{ marginInlineStart: 6, marginInlineEnd: 0 }}>
-                          <RiseOutlined /> up
-                        </Tag>
-                      </Tooltip>
-                    )}
-                  </div>
-                );
-              },
-            },
-            { title: 'Monthly cost', align: 'right', width: 140, render: (_, s) => formatMoney(s.monthlyCost, currency) },
-            { title: 'Last charged', width: 130, render: (_, s) => formatDate(s.lastSeen) },
-            {
-              title: 'Next expected',
-              width: 140,
-              render: (_, s) =>
-                s.status === 'STOPPED' ? <Typography.Text type="secondary">Stopped</Typography.Text> : formatDate(s.nextExpected),
-            },
-            {
-              title: 'Confidence',
-              width: 130,
-              render: (_, s) => (
-                <Tooltip title={`${s.occurrences} payments detected`}>
-                  <Progress percent={Math.round(s.confidence * 100)} size="small" showInfo={false} />
-                </Tooltip>
-              ),
-            },
-            {
-              key: 'actions',
-              width: 60,
-              render: (_, s) => (
-                <Tooltip title={s.isDismissed ? 'Restore' : 'Not recurring? Dismiss'}>
-                  <Button
-                    type="text"
-                    icon={s.isDismissed ? <EyeOutlined /> : <EyeInvisibleOutlined />}
-                    aria-label={s.isDismissed ? 'Restore' : 'Dismiss'}
-                    onClick={() =>
-                      toggle.mutateAsync({ id: s.id, isDismissed: !s.isDismissed }).catch((e) => message.error(errorMessage(e)))
-                    }
-                  />
-                </Tooltip>
-              ),
-            },
-          ]}
+          columns={columns}
         />
       </Card>
       <Flex justify="flex-end" style={{ marginTop: 8 }}>
