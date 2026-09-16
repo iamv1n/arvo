@@ -56,7 +56,7 @@ export const Lead = styled.p`
   color: ${({ theme }) => theme.colors.textSecondary};
   font-size: ${({ theme }) => theme.typography.fontSize.lg}px;
   line-height: 1.65;
-  max-width: 640px;
+  max-width: 60ch;
 `;
 
 export const Body = styled.p`
@@ -101,8 +101,11 @@ export function Reveal({ children, delay = 0, className }: { children: ReactNode
   );
 }
 
-const HeadWrap = styled.div<{ $center?: boolean }>`
-  margin-bottom: ${({ theme }) => theme.space[12]}px;
+const HeadWrap = styled.div<{ $center?: boolean; $compact?: boolean }>`
+  margin-bottom: ${({ theme, $compact }) => ($compact ? theme.space[6] : theme.space[12])}px;
+  & > :last-child {
+    margin-bottom: 0;
+  }
   text-align: ${({ $center }) => ($center ? 'center' : 'left')};
   ${({ $center }) => ($center ? '& > p:last-child { margin-left: auto; margin-right: auto; }' : '')}
 `;
@@ -113,16 +116,19 @@ export function SectionHeading({
   lead,
   id,
   center,
+  compact,
 }: {
   eyebrow: string;
   title: ReactNode;
   lead?: ReactNode;
   id: string;
   center?: boolean;
+  /** Smaller bottom gap, for headings that sit in a column above their own content. */
+  compact?: boolean;
 }) {
   return (
     <Reveal>
-      <HeadWrap $center={center}>
+      <HeadWrap $center={center} $compact={compact}>
         <Eyebrow>{eyebrow}</Eyebrow>
         <H2 id={id}>{title}</H2>
         {lead ? <Lead>{lead}</Lead> : null}

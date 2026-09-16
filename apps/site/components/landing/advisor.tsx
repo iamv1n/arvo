@@ -20,7 +20,7 @@ const Grid = styled.div`
 
 const Points = styled.ul`
   list-style: none;
-  margin: ${({ theme }) => theme.space[6]}px 0 0;
+  margin: ${({ theme }) => theme.space[5]}px 0 0;
   padding: 0;
   display: grid;
   gap: ${({ theme }) => theme.space[4]}px;
@@ -291,12 +291,13 @@ export function AdvisorSection() {
           <div>
             <SectionHeading
               id="advisor-title"
+              compact
               eyebrow="On the roadmap"
               title="Your personal finance manager"
               lead="A planned advisor that finds savings, tracks subscriptions and budgets, and helps you plan goals. Arvo calculates the numbers; the AI only explains them."
             />
             <Reveal>
-              <div style={{ marginBottom: 8 }}>
+              <div>
                 <Pill $tone="warning">Coming soon · not available yet</Pill>
               </div>
               <Points>

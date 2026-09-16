@@ -28,7 +28,7 @@ const McpGrid = styled.div`
 
 const ToolList = styled.ul`
   list-style: none;
-  margin: ${({ theme }) => theme.space[6]}px 0 0;
+  margin: 0;
   padding: 0;
   display: grid;
   gap: ${({ theme }) => theme.space[3]}px;
@@ -65,6 +65,10 @@ const Terminal = styled.div`
   background: ${({ theme }) => theme.colors.bgSurfaceRaised};
   box-shadow: ${({ theme }) => theme.shadows.md};
   min-width: 0;
+  @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
+    position: sticky;
+    top: 88px;
+  }
 `;
 
 const TermBar = styled.div`
@@ -219,6 +223,7 @@ export function McpSection() {
           <div>
             <SectionHeading
               id="mcp-title"
+              compact
               eyebrow="MCP server"
               title="Connect the AI assistant you already use"
               lead="Arvo speaks the Model Context Protocol. Connected assistants call finance tools that return computed, structured results for your account only, never raw database access."
