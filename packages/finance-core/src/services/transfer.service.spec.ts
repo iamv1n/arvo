@@ -26,8 +26,9 @@ describe('TransferService', () => {
     expect(transfer.to).toMatchObject({ accountId: icici.id, amount: '8000.00', type: TransactionType.TRANSFER });
     expect((await core.accounts.get(USER_A, hdfc.id)).balance).toBe('42000.00');
     expect((await core.accounts.get(USER_A, icici.id)).balance).toBe('0.00');
-    expect(await core.transfers.list(USER_A)).toHaveLength(1);
-    expect(await core.transfers.list(USER_B)).toEqual([]);
+    expect((await core.transfers.list(USER_A)).total).toBe(1);
+    expect(await core.transfers.list(USER_B)).toEqual({ items: [], total: 0 });
+    expect((await core.transfers.list(USER_A, { limit: 1, offset: 1 })).items).toEqual([]);
   });
 
   it('validates transfer input', async () => {

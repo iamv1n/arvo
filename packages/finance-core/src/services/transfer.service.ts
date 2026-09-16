@@ -3,7 +3,7 @@ import { DomainError } from '../errors';
 import { transactionFingerprint } from '../fingerprint';
 import { absMoney, formatMoney } from '../money';
 import type { FinanceStore, Repositories } from '../ports';
-import type { TransactionRecord, TransferRecord } from '../records';
+import { normalizePage, type Page, type PageRequest, type TransactionRecord, type TransferRecord } from '../records';
 import { requireActiveAccount, requireTransaction } from './transaction.service';
 import { optionalText, requireDate, requireMoney, requireText } from './validation';
 
@@ -40,8 +40,12 @@ const TYPE_BEFORE_TRANSFER = 'typeBeforeTransfer';
 export class TransferService {
   constructor(private readonly store: FinanceStore) {}
 
-  async list(userId: string): Promise<TransferDetail[]> {
-    const transfers = await this.store.transfers.findAll(userId);
+  async list(userId: string, request: Partial<PageRequest> = {}): Promise<Page<TransferDetail>> {
+    const page = await this.store.transfers.findPage(userId, normalizePage(request));
+    return { items: await this.withLegs(userId, page.items), total: page.total };
+  }
+
+  private async withLegs(userId: string, transfers: TransferRecord[]): Promise<TransferDetail[]> {
     const ids = transfers.flatMap((t) => [t.fromTransactionId, t.toTransactionId]);
     const transactions = new Map(
       (ids.length ? await this.store.transactions.findByIds(userId, ids) : []).map((t) => [t.id, t]),

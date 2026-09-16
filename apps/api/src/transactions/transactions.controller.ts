@@ -18,6 +18,7 @@ import { UserId } from '../common/auth.decorators';
 import {
   BulkCategorizeDto,
   BulkCategorizeResultDto,
+  BulkUpdateTransactionsDto,
   CreateTransactionDto,
   ListTransactionsQueryDto,
   TransactionDto,
@@ -34,8 +35,8 @@ export class TransactionsController {
   @Get()
   @ApiOkResponse({ type: TransactionPageDto })
   async list(@UserId() userId: string, @Query() query: ListTransactionsQueryDto): Promise<TransactionPageDto> {
-    const { type, ...filter } = query;
-    const page = await this.core.transactions.list(userId, { ...filter, types: type });
+    const { type, status, source, ...filter } = query;
+    const page = await this.core.transactions.list(userId, { ...filter, types: type, statuses: status, sources: source });
     return {
       items: page.items.map(TransactionDto.from),
       total: page.total,
@@ -49,6 +50,14 @@ export class TransactionsController {
   @ApiOkResponse({ type: BulkCategorizeResultDto })
   async bulkCategorize(@UserId() userId: string, @Body() dto: BulkCategorizeDto): Promise<BulkCategorizeResultDto> {
     return { updated: await this.core.transactions.bulkCategorize(userId, dto.transactionIds, dto.categoryId) };
+  }
+
+  @Post('bulk-update')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: BulkCategorizeResultDto, description: 'Apply a category and/or merchant to many transactions' })
+  async bulkUpdate(@UserId() userId: string, @Body() dto: BulkUpdateTransactionsDto): Promise<BulkCategorizeResultDto> {
+    const { transactionIds, ...changes } = dto;
+    return { updated: await this.core.transactions.bulkUpdate(userId, transactionIds, changes) };
   }
 
   @Get(':id')

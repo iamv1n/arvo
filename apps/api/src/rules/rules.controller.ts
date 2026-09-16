@@ -1,6 +1,7 @@
 import { FinanceCore, type RuleRecord } from '@arvo/finance-core';
 import { TransactionType } from '@arvo/types';
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Inject, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Inject, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
+import { PageQueryDto, pageResponse } from '../common/pagination';
 import { ApiBearerAuth, ApiProperty, ApiPropertyOptional, ApiTags } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
@@ -88,8 +89,9 @@ export class RulesController {
   constructor(@Inject(FinanceCore) private readonly core: FinanceCore) {}
 
   @Get()
-  async list(@UserId() userId: string) {
-    return { items: (await this.core.rules.list(userId)).map(present) };
+  async list(@UserId() userId: string, @Query() query: PageQueryDto) {
+    const page = await this.core.rules.page(userId, query);
+    return pageResponse({ items: page.items.map(present), total: page.total }, query);
   }
 
   @Post()

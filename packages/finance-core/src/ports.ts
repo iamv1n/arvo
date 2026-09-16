@@ -15,6 +15,7 @@ import type {
   AggregateFilter,
   TransactionAggregate,
   Page,
+  PageRequest,
   TransactionFilter,
   TransactionPatch,
   TransactionRecord,
@@ -50,6 +51,8 @@ export interface CategoryRepository {
 
 export interface MerchantRepository {
   findAll(userId: string): Promise<MerchantRecord[]>;
+  /** Ordered by name; search matches name case-insensitively. */
+  findPage(userId: string, request: PageRequest & { search?: string }): Promise<Page<MerchantRecord>>;
   findById(userId: string, id: string): Promise<MerchantRecord | null>;
   findByNormalizedName(userId: string, normalizedName: string): Promise<MerchantRecord | null>;
   create(input: NewMerchant): Promise<MerchantRecord>;
@@ -94,6 +97,8 @@ export interface TransactionRepository {
 
 export interface TransferRepository {
   findAll(userId: string): Promise<TransferRecord[]>;
+  /** Newest first. */
+  findPage(userId: string, request: PageRequest): Promise<Page<TransferRecord>>;
   findById(userId: string, id: string): Promise<TransferRecord | null>;
   findByTransactionId(userId: string, transactionId: string): Promise<TransferRecord | null>;
   create(input: NewTransfer): Promise<TransferRecord>;

@@ -17,6 +17,9 @@ export class TransferDto {
 
 export class TransferListDto {
   @ApiProperty({ type: [TransferDto] }) items!: TransferDto[];
+  @ApiProperty() total!: number;
+  @ApiProperty() limit!: number;
+  @ApiProperty() offset!: number;
 }
 
 export class CreateTransferDto {

@@ -6,7 +6,9 @@ import {
   ArrayMaxSize,
   ArrayMinSize,
   IsArray,
+  IsBoolean,
   IsEnum,
+  IsIn,
   IsInt,
   IsObject,
   IsOptional,
@@ -71,10 +73,51 @@ export class TransactionPageDto {
 const toArray = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.split(',').filter(Boolean) : value;
 
+const toBoolean = ({ value }: { value: unknown }) => (value === 'true' || value === true ? true : value === 'false' || value === false ? false : value);
+
 export class ListTransactionsQueryDto {
   @ApiPropertyOptional() @IsOptional() @IsUUID() accountId?: string;
   @ApiPropertyOptional() @IsOptional() @IsUUID() categoryId?: string;
+  @ApiPropertyOptional({ description: 'Only transactions without a category' })
+  @IsOptional()
+  @Transform(toBoolean)
+  @IsBoolean()
+  uncategorized?: boolean;
   @ApiPropertyOptional() @IsOptional() @IsUUID() merchantId?: string;
+  @ApiPropertyOptional({ description: 'Only transactions without a merchant' })
+  @IsOptional()
+  @Transform(toBoolean)
+  @IsBoolean()
+  withoutMerchant?: boolean;
+
+  @ApiPropertyOptional({ enum: TransactionStatus, isArray: true })
+  @IsOptional()
+  @Transform(toArray)
+  @IsArray()
+  @IsEnum(TransactionStatus, { each: true })
+  status?: TransactionStatus[];
+
+  @ApiPropertyOptional({ enum: TransactionSource, isArray: true })
+  @IsOptional()
+  @Transform(toArray)
+  @IsArray()
+  @IsEnum(TransactionSource, { each: true })
+  source?: TransactionSource[];
+
+  @ApiPropertyOptional({ enum: ['IN', 'OUT'], description: 'IN = money received, OUT = money spent' })
+  @IsOptional()
+  @IsIn(['IN', 'OUT'])
+  direction?: 'IN' | 'OUT';
+
+  @ApiPropertyOptional({ example: '100', description: 'Minimum absolute amount' })
+  @IsOptional()
+  @Matches(/^\d{1,15}(\.\d{1,4})?$/)
+  minAmount?: string;
+
+  @ApiPropertyOptional({ example: '5000', description: 'Maximum absolute amount' })
+  @IsOptional()
+  @Matches(/^\d{1,15}(\.\d{1,4})?$/)
+  maxAmount?: string;
 
   @ApiPropertyOptional({ enum: TransactionType, isArray: true, description: 'Comma-separated or repeated' })
   @IsOptional()
@@ -190,6 +233,33 @@ export class BulkCategorizeDto {
   @nullable
   @IsUUID()
   categoryId!: string | null;
+}
+
+export class BulkUpdateTransactionsDto {
+  @ApiProperty({ type: [String] })
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(500)
+  @IsUUID('all', { each: true })
+  transactionIds!: string[];
+
+  @ApiPropertyOptional({ type: String, nullable: true, description: 'Set, or null to clear' })
+  @IsOptional()
+  @nullable
+  @IsUUID()
+  categoryId?: string | null;
+
+  @ApiPropertyOptional({ type: String, nullable: true, description: 'null clears the merchant' })
+  @IsOptional()
+  @nullable
+  @IsUUID()
+  merchantId?: string | null;
+
+  @ApiPropertyOptional({ description: 'Existing merchant by name, or created' })
+  @IsOptional()
+  @IsString()
+  @Length(1, 120)
+  merchantName?: string;
 }
 
 export class BulkCategorizeResultDto {

@@ -14,6 +14,9 @@ export class MerchantDto {
 
 export class MerchantListDto {
   @ApiProperty({ type: [MerchantDto] }) items!: MerchantDto[];
+  @ApiProperty() total!: number;
+  @ApiProperty() limit!: number;
+  @ApiProperty() offset!: number;
 }
 
 export class MerchantNameDto {

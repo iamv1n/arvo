@@ -1,6 +1,6 @@
 import { AccountType, TransactionType } from '@arvo/types';
 import { DomainError } from '../errors';
-import { formatMoney, parseMoney, type MoneyUnits } from '../money';
+import { formatMoney, parseMoney, scaleToCents, type MoneyUnits } from '../money';
 import type { FinanceStore } from '../ports';
 import type { RecurringSeriesRecord, TransactionRecord } from '../records';
 import { AccountService } from '../services/account.service';
@@ -67,6 +67,20 @@ export interface FinancialSnapshot {
   recurringExpenses: string;
   topCategories: { name: string; amount: string }[];
   transactionCount: number;
+}
+
+export interface CashflowAnalysis {
+  currency: string;
+  from: string;
+  to: string;
+  months: { month: string; income: string; expenses: string; netCashflow: string }[];
+  totals: { income: string; expenses: string; netCashflow: string };
+  averages: { income: string; expenses: string; netCashflow: string };
+  /** Month with the highest net cashflow (earliest on ties). */
+  bestMonth: string | null;
+  /** Month with the lowest net cashflow (earliest on ties). */
+  worstMonth: string | null;
+  negativeMonths: number;
 }
 
 export class InsightsService {
@@ -145,6 +159,46 @@ export class InsightsService {
     const current = monthRange(month);
     const previousMonth = shiftMonth(month, -1);
     return this.comparePeriods(userId, { current, previous: monthRange(previousMonth), currency });
+  }
+
+  /** The last `months` complete-or-current calendar months ending at asOf's month. */
+  async cashflowAnalysis(userId: string, input: { months: number; currency: string; asOf: string }): Promise<CashflowAnalysis> {
+    if (!Number.isInteger(input.months) || input.months < 1 || input.months > 60) {
+      throw DomainError.validation('INVALID_INPUT', 'months must be between 1 and 60', { field: 'months' });
+    }
+    const asOf = requireDate('asOf', input.asOf);
+    const currency = requireCurrency(input.currency);
+    const endMonth = asOf.slice(0, 7);
+    const from = `${shiftMonth(endMonth, -(input.months - 1))}-01`;
+    const to = monthRange(endMonth).to;
+    const series = await this.analytics.monthly(userId, { from, to, currency });
+
+    let income = 0n;
+    let expenses = 0n;
+    let best: { month: string; net: MoneyUnits } | null = null;
+    let worst: { month: string; net: MoneyUnits } | null = null;
+    let negativeMonths = 0;
+    for (const point of series) {
+      const net = parseMoney(point.netCashflow);
+      income += parseMoney(point.income);
+      expenses += parseMoney(point.expenses);
+      if (net < 0n) negativeMonths++;
+      if (!best || net > best.net) best = { month: point.month, net };
+      if (!worst || net < worst.net) worst = { month: point.month, net };
+    }
+    const n = BigInt(series.length || 1);
+    const average = (units: MoneyUnits) => formatMoney(scaleToCents(units, 1n, n));
+    return {
+      currency,
+      from,
+      to,
+      months: series,
+      totals: { income: formatMoney(income), expenses: formatMoney(expenses), netCashflow: formatMoney(income - expenses) },
+      averages: { income: average(income), expenses: average(expenses), netCashflow: average(income - expenses) },
+      bestMonth: series.length ? best!.month : null,
+      worstMonth: series.length ? worst!.month : null,
+      negativeMonths,
+    };
   }
 
   async spendingByMerchant(userId: string, input: PeriodInput): Promise<MerchantSpend[]> {

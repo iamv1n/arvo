@@ -1,7 +1,7 @@
 import { DomainError } from '../errors';
 import { normalizeMerchantName } from '../normalize';
 import type { MerchantRepository } from '../ports';
-import type { MerchantRecord } from '../records';
+import { normalizePage, type MerchantRecord, type Page, type PageRequest } from '../records';
 import { requireText } from './validation';
 
 export class MerchantService {
@@ -10,6 +10,10 @@ export class MerchantService {
   async list(userId: string): Promise<MerchantRecord[]> {
     const merchants = await this.store.merchants.findAll(userId);
     return [...merchants].sort((a, b) => a.name.localeCompare(b.name, 'en'));
+  }
+
+  async page(userId: string, request: Partial<PageRequest> & { search?: string } = {}): Promise<Page<MerchantRecord>> {
+    return this.store.merchants.findPage(userId, { ...normalizePage(request), search: request.search?.trim() || undefined });
   }
 
   async require(userId: string, id: string): Promise<MerchantRecord> {

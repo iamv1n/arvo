@@ -48,3 +48,20 @@ export function sumMoney(values: Iterable<string>): MoneyUnits {
 export function absMoney(units: MoneyUnits): MoneyUnits {
   return units < 0n ? -units : units;
 }
+
+/** Rounds units to whole minor currency units (0.01), half away from zero. */
+export function roundToCents(units: MoneyUnits): MoneyUnits {
+  const negative = units < 0n;
+  const abs = negative ? -units : units;
+  const rounded = ((abs + 50n) / 100n) * 100n;
+  return negative ? -rounded : rounded;
+}
+
+/** units × numerator ÷ denominator, rounded to 0.01 half away from zero. */
+export function scaleToCents(units: MoneyUnits, numerator: bigint, denominator: bigint): MoneyUnits {
+  const negative = (units < 0n) !== (denominator < 0n);
+  const abs = (units < 0n ? -units : units) * numerator;
+  const den = (denominator < 0n ? -denominator : denominator) * 100n;
+  const cents = (abs * 2n + den) / (2n * den);
+  return (negative ? -cents : cents) * 100n;
+}

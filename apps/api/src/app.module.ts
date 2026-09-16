@@ -12,6 +12,7 @@ import { RulesController } from './rules/rules.controller';
 import { MerchantsController } from './merchants/merchants.controller';
 import { TransactionsController } from './transactions/transactions.controller';
 import { TransfersController } from './transfers/transfers.controller';
+import { TokensController } from './tokens/tokens.controller';
 import { UsersController } from './users/users.controller';
 
 @Global()
@@ -26,6 +27,7 @@ class ConfigModule {}
   controllers: [
     HealthController,
     UsersController,
+    TokensController,
     AccountsController,
     AnalyticsController,
     CategoriesController,

@@ -93,7 +93,7 @@ describe('Statement imports (e2e)', () => {
     await b.get(`/imports/${batch.id}/file`).expect(404);
     await b.post(`/imports/${batch.id}/process`, { mapping: batch.detection.suggestedMapping }).expect(404);
     await b.delete(`/imports/${batch.id}`).expect(404);
-    expect((await b.get('/imports')).body.items).toEqual([]);
+    expect((await b.get('/imports')).body).toMatchObject({ items: [], total: 0 });
   });
 
   it('applies user rules during import', async () => {

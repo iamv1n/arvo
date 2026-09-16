@@ -72,6 +72,12 @@ export class InMemoryStore implements FinanceStore {
 
   merchants: Repositories['merchants'] = {
     findAll: async (userId) => [...this.state.merchants.values()].filter((m) => m.userId === userId),
+    findPage: async (userId, { limit, offset, search }) => {
+      const rows = [...this.state.merchants.values()]
+        .filter((m) => m.userId === userId && (!search || m.name.toLowerCase().includes(search.toLowerCase())))
+        .sort((a, b) => a.name.localeCompare(b.name, 'en') || (a.id < b.id ? -1 : 1));
+      return { items: rows.slice(offset, offset + limit), total: rows.length };
+    },
     findById: async (userId, id) => owned(this.state.merchants.get(id), userId),
     findByNormalizedName: async (userId, normalizedName) =>
       [...this.state.merchants.values()].find((m) => m.userId === userId && m.normalizedName === normalizedName) ?? null,
@@ -88,9 +94,16 @@ export class InMemoryStore implements FinanceStore {
       const rows = [...this.state.transactions.values()]
         .filter((t) => t.userId === userId)
         .filter((t) => !filter.accountId || t.accountId === filter.accountId)
-        .filter((t) => !filter.categoryId || t.categoryId === filter.categoryId)
-        .filter((t) => !filter.merchantId || t.merchantId === filter.merchantId)
+        .filter((t) => (filter.categoryId ? t.categoryId === filter.categoryId : !filter.uncategorized || t.categoryId === null))
+        .filter((t) => (filter.merchantId ? t.merchantId === filter.merchantId : !filter.withoutMerchant || t.merchantId === null))
         .filter((t) => !filter.types?.length || filter.types.includes(t.type))
+        .filter((t) => !filter.statuses?.length || filter.statuses.includes(t.status))
+        .filter((t) => !filter.sources?.length || filter.sources.includes(t.source))
+        .filter((t) => !filter.direction || (filter.direction === 'IN' ? parseMoney(t.amount) > 0n : parseMoney(t.amount) < 0n))
+        .filter((t) => {
+          const abs = parseMoney(t.amount) < 0n ? -parseMoney(t.amount) : parseMoney(t.amount);
+          return (!filter.minAmount || abs >= parseMoney(filter.minAmount)) && (!filter.maxAmount || abs <= parseMoney(filter.maxAmount));
+        })
         .filter((t) => !filter.from || t.date >= filter.from)
         .filter((t) => !filter.to || t.date <= filter.to)
         .filter((t) => !filter.search || t.description.toLowerCase().includes(filter.search.toLowerCase()))
@@ -187,6 +200,10 @@ export class InMemoryStore implements FinanceStore {
 
   transfers: Repositories['transfers'] = {
     findAll: async (userId) => [...this.state.transfers.values()].filter((t) => t.userId === userId),
+    findPage: async (userId, { limit, offset }) => {
+      const rows = [...this.state.transfers.values()].filter((t) => t.userId === userId).reverse();
+      return { items: rows.slice(offset, offset + limit), total: rows.length };
+    },
     findById: async (userId, id) => owned(this.state.transfers.get(id), userId),
     findByTransactionId: async (userId, transactionId) =>
       [...this.state.transfers.values()].find(
@@ -197,7 +214,10 @@ export class InMemoryStore implements FinanceStore {
   };
 
   imports: Repositories['imports'] = {
-    findBatches: async (userId) => [...this.state.batches.values()].filter((b) => b.userId === userId),
+    findBatches: async (userId, { limit, offset }) => {
+      const rows = [...this.state.batches.values()].filter((b) => b.userId === userId).reverse();
+      return { items: rows.slice(offset, offset + limit), total: rows.length };
+    },
     findBatch: async (userId, id) => owned(this.state.batches.get(id), userId),
     findCompletedBatchByHash: async (userId, accountId, fileHash) =>
       [...this.state.batches.values()].find(

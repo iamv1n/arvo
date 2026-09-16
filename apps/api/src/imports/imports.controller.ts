@@ -22,6 +22,7 @@ import { ApiBearerAuth, ApiBody, ApiConsumes, ApiCreatedResponse, ApiNoContentRe
 import type { Response } from 'express';
 import { ApiError } from '../common/api-exception.filter';
 import { UserId } from '../common/auth.decorators';
+import { PageQueryDto, pageResponse } from '../common/pagination';
 import {
   ImportBatchDto,
   ImportDecisionDto,
@@ -49,8 +50,9 @@ export class ImportsController {
 
   @Get()
   @ApiOkResponse({ type: [ImportBatchDto] })
-  async list(@UserId() userId: string) {
-    return { items: (await this.core.imports.list(userId)).map(ImportBatchDto.from) };
+  async list(@UserId() userId: string, @Query() query: PageQueryDto) {
+    const page = await this.core.imports.list(userId, query);
+    return pageResponse({ items: page.items.map(ImportBatchDto.from), total: page.total }, query);
   }
 
   @Post()

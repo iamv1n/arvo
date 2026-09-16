@@ -204,7 +204,7 @@ describe('ImportService', () => {
     await core.imports.commit(USER_A, batch.id);
     await core.imports.delete(USER_A, batch.id);
     expect(files.size).toBe(0);
-    expect(await core.imports.list(USER_A)).toEqual([]);
+    expect(await core.imports.list(USER_A)).toEqual({ items: [], total: 0 });
     expect((await core.transactions.list(USER_A)).total).toBe(1);
   });
 });

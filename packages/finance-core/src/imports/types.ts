@@ -205,7 +205,8 @@ export interface ImportRowFilter {
 }
 
 export interface ImportRepository {
-  findBatches(userId: string): Promise<ImportBatchRecord[]>;
+  /** Newest first. */
+  findBatches(userId: string, request: { limit: number; offset: number }): Promise<{ items: ImportBatchRecord[]; total: number }>;
   findBatch(userId: string, id: string): Promise<ImportBatchRecord | null>;
   findCompletedBatchByHash(userId: string, accountId: string, fileHash: string): Promise<ImportBatchRecord | null>;
   createBatch(input: NewImportBatch): Promise<ImportBatchRecord>;

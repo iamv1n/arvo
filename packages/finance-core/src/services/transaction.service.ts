@@ -2,7 +2,7 @@ import { TransactionSource, TransactionStatus, TransactionType } from '@arvo/typ
 import { isIsoDate } from '../dates';
 import { DomainError } from '../errors';
 import { transactionFingerprint } from '../fingerprint';
-import { formatMoney } from '../money';
+import { formatMoney, isMoneyString, parseMoney } from '../money';
 import type { FinanceStore, Repositories } from '../ports';
 import type {
   AccountRecord,
@@ -73,9 +73,20 @@ export class TransactionService {
     if (input.from && input.to && input.from > input.to) {
       throw DomainError.validation('INVALID_DATE_RANGE', 'from must not be after to');
     }
+    for (const field of ['minAmount', 'maxAmount'] as const) {
+      const value = input[field];
+      if (value !== undefined && (!isMoneyString(value) || value.trim().startsWith('-'))) {
+        throw DomainError.validation('INVALID_AMOUNT', `${field} must be a positive decimal amount`, { field });
+      }
+    }
+    if (input.minAmount && input.maxAmount && parseMoney(input.minAmount) > parseMoney(input.maxAmount)) {
+      throw DomainError.validation('INVALID_AMOUNT_RANGE', 'minAmount must not be greater than maxAmount');
+    }
     const filter: TransactionFilter = {
       ...input,
       search: input.search?.trim() || undefined,
+      minAmount: input.minAmount ? formatMoney(parseMoney(input.minAmount)) : undefined,
+      maxAmount: input.maxAmount ? formatMoney(parseMoney(input.maxAmount)) : undefined,
       limit: clamp(input.limit ?? DEFAULT_PAGE_SIZE, 1, MAX_PAGE_SIZE),
       offset: Math.max(0, input.offset ?? 0),
     };
@@ -182,6 +193,19 @@ export class TransactionService {
 
   /** Sets (or clears, with null) the category of many transactions atomically. */
   async bulkCategorize(userId: string, ids: string[], categoryId: string | null): Promise<number> {
+    return this.bulkUpdate(userId, ids, { categoryId });
+  }
+
+  /**
+   * Applies the same category and/or merchant to many transactions in one database transaction.
+   * merchantName resolves to an existing merchant (by normalized name) or creates it;
+   * merchantId null clears the merchant.
+   */
+  async bulkUpdate(
+    userId: string,
+    ids: string[],
+    changes: { categoryId?: string | null; merchantId?: string | null; merchantName?: string },
+  ): Promise<number> {
     const uniqueIds = [...new Set(ids)];
     if (uniqueIds.length === 0 || uniqueIds.length > MAX_BULK_SIZE) {
       throw DomainError.validation(
@@ -190,8 +214,15 @@ export class TransactionService {
         { field: 'transactionIds' },
       );
     }
+    const touchesCategory = changes.categoryId !== undefined;
+    const touchesMerchant = changes.merchantId !== undefined || changes.merchantName !== undefined;
+    if (!touchesCategory && !touchesMerchant) {
+      throw DomainError.validation('INVALID_INPUT', 'Provide a category or merchant to apply');
+    }
     return this.store.transaction(async (repos) => {
-      const resolved = await resolveCategory(repos, userId, categoryId);
+      const patch: TransactionPatch = {};
+      if (touchesCategory) patch.categoryId = await resolveCategory(repos, userId, changes.categoryId);
+      if (touchesMerchant) patch.merchantId = await resolveMerchant(repos, userId, changes.merchantId, changes.merchantName);
       const found = await repos.transactions.findByIds(userId, uniqueIds);
       if (found.length !== uniqueIds.length) {
         const foundIds = new Set(found.map((t) => t.id));
@@ -200,7 +231,7 @@ export class TransactionService {
         });
       }
       for (const id of uniqueIds) {
-        await repos.transactions.update(userId, id, { categoryId: resolved });
+        await repos.transactions.update(userId, id, patch);
       }
       return uniqueIds.length;
     });

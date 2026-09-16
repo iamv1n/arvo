@@ -1,5 +1,5 @@
 import { TransactionType } from '@arvo/types';
-import { absMoney, formatMoney, parseMoney, type MoneyUnits } from '../money';
+import { absMoney, formatMoney, parseMoney, scaleToCents, type MoneyUnits } from '../money';
 import type { RecurringFrequency, RecurringSeriesUpsert, TransactionRecord } from '../records';
 import { descriptionPatternKey } from '../rules/categorizer';
 
@@ -144,7 +144,7 @@ export function detectRecurring(
       currency: last.currency,
       frequency: spec.frequency,
       expectedAmount: formatMoney(expected),
-      monthlyCost: formatMoney(roundToCents(divideRounded(expected * numerator, denominator))),
+      monthlyCost: formatMoney(scaleToCents(expected, numerator, denominator)),
       lastAmount: formatMoney(amounts[amounts.length - 1]),
       previousAmount: amounts.length > 1 ? formatMoney(amounts[amounts.length - 2]) : null,
       lastSeen: last.date,
@@ -173,17 +173,6 @@ function collapseSameDay(items: TransactionRecord[]): TransactionRecord[] {
 function within(value: MoneyUnits, reference: MoneyUnits, percent: bigint): boolean {
   const diff = value > reference ? value - reference : reference - value;
   return diff * 100n <= reference * percent;
-}
-
-function divideRounded(numerator: MoneyUnits, denominator: bigint): MoneyUnits {
-  return (numerator * 2n + denominator) / (2n * denominator);
-}
-
-/** Derived amounts are shown in minor currency units: round half away from zero to 0.01. */
-function roundToCents(units: MoneyUnits): MoneyUnits {
-  const sign = units < 0n ? -1n : 1n;
-  const abs = units * sign;
-  return sign * (((abs + 50n) / 100n) * 100n);
 }
 
 function titleFromPattern(pattern: string): string {

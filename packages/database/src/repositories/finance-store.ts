@@ -46,6 +46,11 @@ const DESCRIPTION_PATTERN_SQL = "btrim(regexp_replace(upper(t.description), '[^A
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyPatch = any;
 
+/** Escapes LIKE/ILIKE wildcards so user search text matches literally. */
+function escapeLike(value: string): string {
+  return value.replace(/[\\%_]/g, (c) => `\\${c}`);
+}
+
 /** Every query below is scoped by user_id. Rows of other users behave as absent. */
 export function createRepositories(manager: EntityManager): Repositories {
   async function updateOwned<T extends ObjectLiteral>(
@@ -93,6 +98,12 @@ export function createRepositories(manager: EntityManager): Repositories {
 
   const merchants: MerchantRepository = {
     findAll: async (userId) => (await manager.findBy(MerchantEntity, { userId })).map(toMerchant),
+    findPage: async (userId, { limit, offset, search }) => {
+      const qb = manager.createQueryBuilder(MerchantEntity, 'm').where('m.user_id = :userId', { userId });
+      if (search) qb.andWhere('m.name ILIKE :pattern', { pattern: `%${escapeLike(search)}%` });
+      const [rows, total] = await qb.orderBy('lower(m.name)', 'ASC').addOrderBy('m.id', 'ASC').take(limit).skip(offset).getManyAndCount();
+      return { items: rows.map(toMerchant), total };
+    },
     findById: async (userId, id) => {
       const row = await manager.findOneBy(MerchantEntity, { id, userId });
       return row ? toMerchant(row) : null;
@@ -114,12 +125,20 @@ export function createRepositories(manager: EntityManager): Repositories {
         .where('t.user_id = :userId', { userId });
       if (filter.accountId) qb.andWhere('t.account_id = :accountId', { accountId: filter.accountId });
       if (filter.categoryId) qb.andWhere('t.category_id = :categoryId', { categoryId: filter.categoryId });
+      else if (filter.uncategorized) qb.andWhere('t.category_id IS NULL');
       if (filter.merchantId) qb.andWhere('t.merchant_id = :merchantId', { merchantId: filter.merchantId });
+      else if (filter.withoutMerchant) qb.andWhere('t.merchant_id IS NULL');
       if (filter.types?.length) qb.andWhere('t.type IN (:...types)', { types: filter.types });
+      if (filter.statuses?.length) qb.andWhere('t.status IN (:...statuses)', { statuses: filter.statuses });
+      if (filter.sources?.length) qb.andWhere('t.source IN (:...sources)', { sources: filter.sources });
+      if (filter.direction === 'IN') qb.andWhere('t.amount > 0');
+      if (filter.direction === 'OUT') qb.andWhere('t.amount < 0');
+      if (filter.minAmount) qb.andWhere('abs(t.amount) >= :minAmount', { minAmount: filter.minAmount });
+      if (filter.maxAmount) qb.andWhere('abs(t.amount) <= :maxAmount', { maxAmount: filter.maxAmount });
       if (filter.from) qb.andWhere('t.date >= :from', { from: filter.from });
       if (filter.to) qb.andWhere('t.date <= :to', { to: filter.to });
       if (filter.search) {
-        const pattern = `%${filter.search.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+        const pattern = `%${escapeLike(filter.search)}%`;
         qb.andWhere('(t.description ILIKE :pattern OR m.name ILIKE :pattern)', { pattern });
       }
       const [rows, total] = await qb
@@ -250,6 +269,15 @@ export function createRepositories(manager: EntityManager): Repositories {
   const transfers: TransferRepository = {
     findAll: async (userId) =>
       (await manager.find(TransferEntity, { where: { userId }, order: { createdAt: 'DESC' } })).map(toTransfer),
+    findPage: async (userId, { limit, offset }) => {
+      const [rows, total] = await manager.findAndCount(TransferEntity, {
+        where: { userId },
+        order: { createdAt: 'DESC', id: 'DESC' },
+        take: limit,
+        skip: offset,
+      });
+      return { items: rows.map(toTransfer), total };
+    },
     findById: async (userId, id) => {
       const row = await manager.findOneBy(TransferEntity, { id, userId });
       return row ? toTransfer(row) : null;
@@ -268,8 +296,15 @@ export function createRepositories(manager: EntityManager): Repositories {
   };
 
   const imports: ImportRepository = {
-    findBatches: async (userId) =>
-      (await manager.find(ImportBatchEntity, { where: { userId }, order: { createdAt: 'DESC' } })).map(toImportBatch),
+    findBatches: async (userId, { limit, offset }) => {
+      const [rows, total] = await manager.findAndCount(ImportBatchEntity, {
+        where: { userId },
+        order: { createdAt: 'DESC', id: 'DESC' },
+        take: limit,
+        skip: offset,
+      });
+      return { items: rows.map(toImportBatch), total };
+    },
     findBatch: async (userId, id) => {
       const row = await manager.findOneBy(ImportBatchEntity, { id, userId });
       return row ? toImportBatch(row) : null;

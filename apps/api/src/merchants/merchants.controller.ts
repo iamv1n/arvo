@@ -1,8 +1,19 @@
 import { FinanceCore } from '@arvo/finance-core';
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Inject, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Inject, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { PageQueryDto, pageResponse } from '../common/pagination';
 import { ApiBearerAuth, ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { UserId } from '../common/auth.decorators';
 import { MerchantDto, MerchantListDto, MerchantNameDto } from './dto/merchant.dto';
+
+class MerchantQueryDto extends PageQueryDto {
+  @ApiPropertyOptional({ description: 'Case-insensitive name search' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  search?: string;
+}
 
 @ApiTags('merchants')
 @ApiBearerAuth()
@@ -12,8 +23,9 @@ export class MerchantsController {
 
   @Get()
   @ApiOkResponse({ type: MerchantListDto })
-  async list(@UserId() userId: string): Promise<MerchantListDto> {
-    return { items: (await this.core.merchants.list(userId)).map(MerchantDto.from) };
+  async list(@UserId() userId: string, @Query() query: MerchantQueryDto) {
+    const page = await this.core.merchants.page(userId, query);
+    return pageResponse({ items: page.items.map(MerchantDto.from), total: page.total }, query);
   }
 
   @Post()

@@ -2,6 +2,7 @@ import { TransactionType } from '@arvo/types';
 import { DomainError } from '../errors';
 import { isMoneyString } from '../money';
 import type { FinanceStore } from '../ports';
+import { normalizePage, type Page, type PageRequest } from '../records';
 import { requireText } from '../services/validation';
 import { sortRules } from './categorizer';
 import type { RuleActions, RuleCondition, RulePatch, RuleRecord } from './types';
@@ -22,6 +23,13 @@ export class RuleService {
 
   async list(userId: string): Promise<RuleRecord[]> {
     return sortRules(await this.store.rules.findAll(userId));
+  }
+
+  /** Rules in evaluation order. */
+  async page(userId: string, request: Partial<PageRequest> = {}): Promise<Page<RuleRecord>> {
+    const { limit, offset } = normalizePage(request);
+    const rules = await this.list(userId);
+    return { items: rules.slice(offset, offset + limit), total: rules.length };
   }
 
   async create(userId: string, input: RuleInput): Promise<RuleRecord> {

@@ -99,8 +99,19 @@ export type NewTransfer = Omit<TransferRecord, 'id' | 'createdAt'>;
 export interface TransactionFilter {
   accountId?: string;
   categoryId?: string;
+  /** Only transactions without a category. Ignored when categoryId is set. */
+  uncategorized?: boolean;
   merchantId?: string;
+  /** Only transactions without a merchant. Ignored when merchantId is set. */
+  withoutMerchant?: boolean;
   types?: TransactionType[];
+  statuses?: TransactionStatus[];
+  sources?: TransactionSource[];
+  /** IN = money received (amount > 0), OUT = money spent (amount < 0). */
+  direction?: 'IN' | 'OUT';
+  /** Inclusive bounds on the absolute amount, decimal strings. */
+  minAmount?: string;
+  maxAmount?: string;
   /** Inclusive lower bound, YYYY-MM-DD. */
   from?: string;
   /** Inclusive upper bound, YYYY-MM-DD. */
@@ -114,6 +125,21 @@ export interface TransactionFilter {
 export interface Page<T> {
   items: T[];
   total: number;
+}
+
+export interface PageRequest {
+  limit: number;
+  offset: number;
+}
+
+export const DEFAULT_LIST_LIMIT = 50;
+export const MAX_LIST_LIMIT = 500;
+
+/** Clamps a user-supplied page request into a safe, valid one. */
+export function normalizePage(input: Partial<PageRequest> = {}, defaultLimit = DEFAULT_LIST_LIMIT): PageRequest {
+  const limit = Number.isFinite(input.limit) ? Math.trunc(input.limit as number) : defaultLimit;
+  const offset = Number.isFinite(input.offset) ? Math.trunc(input.offset as number) : 0;
+  return { limit: Math.min(MAX_LIST_LIMIT, Math.max(1, limit)), offset: Math.max(0, offset) };
 }
 
 /** One SQL aggregate bucket: all transactions sharing month, type, category and direction. */

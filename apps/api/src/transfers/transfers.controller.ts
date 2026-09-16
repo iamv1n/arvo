@@ -1,5 +1,6 @@
 import { FinanceCore } from '@arvo/finance-core';
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Inject, Param, ParseUUIDPipe, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Inject, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
+import { PageQueryDto, pageResponse } from '../common/pagination';
 import { ApiBearerAuth, ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserId } from '../common/auth.decorators';
 import { CreateTransferDto, LinkTransferDto, TransferDto, TransferListDto } from './dto/transfer.dto';
@@ -12,8 +13,9 @@ export class TransfersController {
 
   @Get()
   @ApiOkResponse({ type: TransferListDto })
-  async list(@UserId() userId: string): Promise<TransferListDto> {
-    return { items: (await this.core.transfers.list(userId)).map(TransferDto.from) };
+  async list(@UserId() userId: string, @Query() query: PageQueryDto) {
+    const page = await this.core.transfers.list(userId, query);
+    return pageResponse({ items: page.items.map(TransferDto.from), total: page.total }, query);
   }
 
   @Get(':id')

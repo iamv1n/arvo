@@ -1,4 +1,5 @@
 import type { INestApplication } from '@nestjs/common';
+import request from 'supertest';
 import { createTestApp, registerUser } from './app';
 
 type User = Awaited<ReturnType<typeof registerUser>>;
@@ -248,5 +249,72 @@ describe('Insights over HTTP (e2e)', () => {
 
     const snapshot = await user.get(`/analytics/snapshot?month=${month(0)}`).expect(200);
     expect(snapshot.body).toMatchObject({ period: month(0), expenses: '9649.00', currency: 'INR' });
+  });
+});
+
+describe('Pagination, filters, bulk updates and access tokens (e2e)', () => {
+  let app: INestApplication;
+  beforeAll(async () => (app = await createTestApp()));
+  afterAll(() => app.close());
+
+  it('pages transfers and merchants, filters transactions by amount and bulk assigns merchants', async () => {
+    const user = await registerUser(app);
+    const bank = (await user.post('/accounts', { name: 'Bank', type: 'BANK', openingBalance: '100000' })).body;
+    const cash = (await user.post('/accounts', { name: 'Cash', type: 'CASH' })).body;
+    for (const [i, amount] of ['100', '200', '300'].entries()) {
+      await user.post('/transfers', { fromAccountId: bank.id, toAccountId: cash.id, amount, date: `2026-08-0${i + 1}`, description: `ATM ${i}` }).expect(201);
+    }
+    const page = await user.get('/transfers?limit=2&offset=1').expect(200);
+    expect(page.body).toMatchObject({ total: 3, limit: 2, offset: 1 });
+    expect(page.body.items).toHaveLength(2);
+
+    const ids: string[] = [];
+    for (const [description, amount, merchantName] of [
+      ['UPI Tea', '-99.50', 'Chaayos'],
+      ['UPI Groceries', '-1450', undefined],
+      ['UPI Snacks', '-310', undefined],
+    ] as const) {
+      const res = await user
+        .post('/transactions', { accountId: bank.id, date: '2026-08-10', description, amount, type: 'EXPENSE', ...(merchantName ? { merchantName } : {}) })
+        .expect(201);
+      ids.push(res.body.id);
+    }
+
+    const ranged = await user.get('/transactions?direction=OUT&type=EXPENSE&minAmount=100&maxAmount=1450').expect(200);
+    expect(ranged.body.items.map((t: { description: string }) => t.description).sort()).toEqual(['UPI Groceries', 'UPI Snacks']);
+    const noMerchant = await user.get('/transactions?withoutMerchant=true&type=EXPENSE').expect(200);
+    expect(noMerchant.body.total).toBe(2);
+    const badRange = await user.get('/transactions?minAmount=500&maxAmount=100').expect(422);
+    expect(badRange.body.error.code).toBe('INVALID_AMOUNT_RANGE');
+
+    const bulk = await user.post('/transactions/bulk-update', { transactionIds: ids.slice(1), merchantName: 'Blinkit' }).expect(200);
+    expect(bulk.body).toEqual({ updated: 2 });
+    expect((await user.get('/transactions?withoutMerchant=true&type=EXPENSE')).body.total).toBe(0);
+    await user.post('/transactions/bulk-update', { transactionIds: ids }).expect(422);
+
+    const merchants = await user.get('/merchants?search=bli&limit=10').expect(200);
+    expect(merchants.body).toMatchObject({ total: 1, limit: 10, offset: 0 });
+    expect(merchants.body.items[0].name).toBe('Blinkit');
+    expect((await user.get('/merchants?limit=1')).body).toMatchObject({ total: 2 });
+  });
+
+  it('creates, lists and revokes personal access tokens without exposing hashes', async () => {
+    const user = await registerUser(app);
+    const created = await user.post('/me/tokens', { name: 'Claude Desktop', expiresInDays: 30 }).expect(201);
+    expect(created.body.token).toMatch(/^arvo_pat_[A-Za-z0-9_-]{40,}$/);
+    expect(created.body.tokenPrefix).toBe(created.body.token.slice(0, 15));
+    expect(created.body).not.toHaveProperty('tokenHash');
+
+    const list = await user.get('/me/tokens').expect(200);
+    expect(list.body.items).toHaveLength(1);
+    expect(list.body.items[0]).not.toHaveProperty('token');
+
+    // A personal access token is not a web session token.
+    await request(app.getHttpServer()).get('/accounts').set('Authorization', `Bearer ${created.body.token}`).expect(401);
+
+    const other = await registerUser(app);
+    await other.delete(`/me/tokens/${created.body.id}`).expect(404);
+    await user.delete(`/me/tokens/${created.body.id}`).expect(204);
+    expect((await user.get('/me/tokens')).body.items).toEqual([]);
   });
 });

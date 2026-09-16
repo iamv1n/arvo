@@ -185,6 +185,26 @@ describe('InsightsService', () => {
     await expectDomainError(core.insights.snapshot(USER_A, { month: '2026-13', currency: 'INR', asOf: '2026-08-31' }), 'INVALID_INPUT');
   });
 
+  it('analyzes cashflow over recent months with exact averages', async () => {
+    const { core } = await fixture();
+    const analysis = await core.insights.cashflowAnalysis(USER_A, { months: 3, currency: 'INR', asOf: '2026-08-31' });
+    expect(analysis.months.map((m) => [m.month, m.netCashflow])).toEqual([
+      ['2026-06', '-649.00'],
+      ['2026-07', '92351.00'],
+      ['2026-08', '83351.00'],
+    ]);
+    expect(analysis).toMatchObject({
+      from: '2026-06-01',
+      to: '2026-08-31',
+      totals: { income: '200000.00', expenses: '24947.00', netCashflow: '175053.00' },
+      averages: { income: '66666.67', expenses: '8315.67', netCashflow: '58351.00' },
+      bestMonth: '2026-07',
+      worstMonth: '2026-06',
+      negativeMonths: 1,
+    });
+    await expectDomainError(core.insights.cashflowAnalysis(USER_A, { months: 0, currency: 'INR', asOf: '2026-08-31' }), 'INVALID_INPUT');
+  });
+
   it('shifts months across year boundaries', () => {
     expect(shiftMonth('2026-01', -1)).toBe('2025-12');
     expect(monthRange('2024-02')).toEqual({ from: '2024-02-01', to: '2024-02-29' });

@@ -1,4 +1,4 @@
-import { formatMoney, isMoneyString, parseMoney, sumMoney } from './money';
+import { formatMoney, isMoneyString, parseMoney, roundToCents, scaleToCents, sumMoney } from './money';
 
 describe('money', () => {
   it.each([
@@ -35,5 +35,23 @@ describe('money', () => {
 
   it('round-trips database numeric(19,4) strings', () => {
     expect(formatMoney(parseMoney('-649.0000'))).toBe('-649.00');
+  });
+});
+
+describe('cent rounding', () => {
+  it.each([
+    ['124.9167', '124.92'],
+    ['124.9150', '124.92'],
+    ['124.9149', '124.91'],
+    ['-0.0050', '-0.01'],
+  ])('rounds %s to %s', (input, expected) => {
+    expect(formatMoney(roundToCents(parseMoney(input)))).toBe(expected);
+  });
+
+  it('scales and divides exactly before rounding', () => {
+    expect(formatMoney(scaleToCents(parseMoney('1499'), 1n, 12n))).toBe('124.92');
+    expect(formatMoney(scaleToCents(parseMoney('300'), 52n, 12n))).toBe('1300.00');
+    expect(formatMoney(scaleToCents(parseMoney('24947'), 1n, 3n))).toBe('8315.67');
+    expect(formatMoney(scaleToCents(parseMoney('-100'), 1n, 3n))).toBe('-33.33');
   });
 });

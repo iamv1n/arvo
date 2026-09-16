@@ -112,6 +112,42 @@ describe('TransactionService', () => {
     await expectDomainError(core.transactions.list(USER_A, { from: '2026-09-01', to: '2026-08-01' }), 'INVALID_DATE_RANGE');
   });
 
+  it('filters by amount range, direction, merchant presence, category presence and source', async () => {
+    const { core, bank } = setup();
+    const account = await bank();
+    await core.transactions.create(USER_A, expense(account.id, { amount: '-99.50', description: 'Tea', merchantName: 'Chaayos' }));
+    await core.transactions.create(USER_A, expense(account.id, { amount: '-1200', description: 'Shoes' }));
+    await core.transactions.create(USER_A, expense(account.id, { amount: '5000', type: TransactionType.INCOME, description: 'Refund-ish income' }));
+    const list = (filter: Record<string, unknown>) => core.transactions.list(USER_A, filter).then((p) => p.items.map((t) => t.description).sort());
+
+    expect(await list({ minAmount: '100' })).toEqual(['Refund-ish income', 'Shoes']);
+    expect(await list({ minAmount: '99.5', maxAmount: '1200' })).toEqual(['Shoes', 'Tea']);
+    expect(await list({ direction: 'OUT' })).toEqual(['Shoes', 'Tea']);
+    expect(await list({ direction: 'IN' })).toEqual(['Refund-ish income']);
+    expect(await list({ withoutMerchant: true })).toEqual(['Refund-ish income', 'Shoes']);
+    expect(await list({ uncategorized: true })).toHaveLength(3);
+    expect(await list({ sources: ['CSV'] })).toEqual([]);
+    await expectDomainError(core.transactions.list(USER_A, { minAmount: '-5' }), 'INVALID_AMOUNT');
+    await expectDomainError(core.transactions.list(USER_A, { minAmount: '10', maxAmount: '5' }), 'INVALID_AMOUNT_RANGE');
+  });
+
+  it('bulk assigns merchants by name, clears them, and rejects empty changes', async () => {
+    const { core, bank } = setup();
+    const account = await bank();
+    const a = await core.transactions.create(USER_A, expense(account.id, { description: 'UPI 1' }));
+    const b = await core.transactions.create(USER_A, expense(account.id, { description: 'UPI 2' }));
+    expect(await core.transactions.bulkUpdate(USER_A, [a.id, b.id], { merchantName: 'Blinkit' })).toBe(2);
+    const merchantId = (await core.transactions.get(USER_A, a.id)).merchantId;
+    expect(merchantId).not.toBeNull();
+    expect((await core.transactions.get(USER_A, b.id)).merchantId).toBe(merchantId);
+    expect(await core.merchants.list(USER_A)).toHaveLength(1);
+
+    await core.transactions.bulkUpdate(USER_A, [a.id], { merchantId: null });
+    expect((await core.transactions.get(USER_A, a.id)).merchantId).toBeNull();
+    await expectDomainError(core.transactions.bulkUpdate(USER_A, [a.id], {}), 'INVALID_INPUT');
+    await expectDomainError(core.transactions.bulkUpdate(USER_B, [a.id], { merchantName: 'X' }), 'TRANSACTION_NOT_FOUND');
+  });
+
   it('bulk categorizes atomically', async () => {
     const { core, bank, store } = setup();
     const food = store.addSystemCategory('Food');

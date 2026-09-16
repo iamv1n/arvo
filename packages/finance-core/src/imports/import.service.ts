@@ -13,6 +13,7 @@ import { transactionFingerprint } from '../fingerprint';
 import { formatMoney, isMoneyString, parseMoney } from '../money';
 import { normalizeText } from '../normalize';
 import type { FinanceStore } from '../ports';
+import { normalizePage, type Page, type PageRequest } from '../records';
 import { categorize, descriptionPatternKey, mostFrequent, type CategorizationContext } from '../rules/categorizer';
 import { MerchantService } from '../services/merchant.service';
 import { requireActiveAccount } from '../services/transaction.service';
@@ -86,8 +87,8 @@ export class ImportService {
     private readonly deps: ImportDependencies,
   ) {}
 
-  list(userId: string): Promise<ImportBatchRecord[]> {
-    return this.store.imports.findBatches(userId);
+  list(userId: string, request: Partial<PageRequest> = {}): Promise<Page<ImportBatchRecord>> {
+    return this.store.imports.findBatches(userId, normalizePage(request));
   }
 
   async upload(
