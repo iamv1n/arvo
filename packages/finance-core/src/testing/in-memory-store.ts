@@ -31,7 +31,10 @@ interface State {
 
 const now = () => new Date('2026-01-01T00:00:00Z');
 
-/** Test double for FinanceStore. transaction() restores a snapshot if the work throws. */
+/**
+ * In-memory FinanceStore for tests (also used by other packages via @arvo/finance-core/testing).
+ * transaction() restores a snapshot if the work throws.
+ */
 export class InMemoryStore implements FinanceStore {
   private state: State = {
     accounts: new Map(),

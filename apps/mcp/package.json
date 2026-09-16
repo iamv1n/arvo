@@ -1,0 +1,35 @@
+{
+  "name": "@arvo/mcp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Arvo MCP server: business-level finance tools for AI clients",
+  "bin": {
+    "arvo-mcp": "dist/main.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json && (tsc -p tsconfig.build.json --watch --preserveWatchOutput > /dev/null & node --watch-path=dist --watch-path=../../packages/finance-tools/dist --watch-path=../../packages/finance-core/dist --watch-path=../../packages/database/dist dist/main.js)",
+    "start": "node dist/main.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test:e2e": "NODE_OPTIONS=--experimental-vm-modules jest --config test/jest-e2e.config.js --runInBand"
+  },
+  "dependencies": {
+    "@arvo/database": "workspace:*",
+    "@arvo/finance-core": "workspace:*",
+    "@arvo/finance-tools": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^1.1.1",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "@arvo/config": "workspace:*",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.19.0",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.5",
+    "typescript": "5.9.3",
+    "@arvo/types": "workspace:*"
+  }
+}

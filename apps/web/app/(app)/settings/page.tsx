@@ -4,6 +4,7 @@ import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { CategoryType } from '@arvo/types';
 import { App, Button, Card, Col, Divider, Flex, Form, Input, Popconfirm, Row, Segmented, Select, Space, Switch, Tag, Tree, Typography } from 'antd';
 import { DesktopOutlined, MoonFilled, SunFilled, UndoOutlined } from '@ant-design/icons';
+import { AiConnections } from '../../../components/ai-connections';
 import { PAGE_SIZE_OPTIONS } from '../../../components/data-table';
 import { PERIOD_OPTIONS } from '../../../lib/periods';
 import { usePreferences } from '../../../lib/preferences';
@@ -198,6 +199,9 @@ export default function SettingsPage() {
           </Card>
         </Col>
         <Col xs={24} lg={14}>
+          <div style={{ marginBottom: 16 }}>
+            <AiConnections />
+          </div>
           <Card title="Categories">
             <Form
               form={categoryForm}

@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1.7
 # Multi-target build for the Node apps in the monorepo.
 #   docker build -f docker/node.Dockerfile --target api .
+#   docker build -f docker/node.Dockerfile --target mcp .
 #   docker build -f docker/node.Dockerfile --target web --build-arg NEXT_PUBLIC_API_URL=http://localhost:3301 .
 #   docker build -f docker/node.Dockerfile --target site --build-arg NEXT_PUBLIC_APP_URL=http://localhost:3300 .
 
@@ -17,6 +18,8 @@ COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json tsconfig.base.js
 COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
 COPY apps/site/package.json apps/site/
+COPY apps/mcp/package.json apps/mcp/
+COPY packages/finance-tools/package.json packages/finance-tools/
 COPY packages/config/package.json packages/config/
 COPY packages/types/package.json packages/types/
 COPY packages/finance-core/package.json packages/finance-core/
@@ -43,10 +46,27 @@ HEALTHCHECK --interval=10s --timeout=3s --start-period=20s --retries=5 \
   CMD wget -qO- http://127.0.0.1:3301/health >/dev/null || exit 1
 ENTRYPOINT ["api-entrypoint.sh"]
 
+# ---- mcp ----
+FROM deps AS mcp-build
+COPY . .
+RUN pnpm turbo run build --filter=@arvo/mcp...
+
+FROM node:${NODE_VERSION} AS mcp
+ENV NODE_ENV=production MCP_PORT=3302
+WORKDIR /repo
+RUN addgroup -S arvo && adduser -S arvo -G arvo
+COPY --from=mcp-build --chown=arvo:arvo /repo /repo
+USER arvo
+EXPOSE 3302
+HEALTHCHECK --interval=10s --timeout=3s --start-period=15s --retries=5 \
+  CMD wget -qO- http://127.0.0.1:3302/health >/dev/null || exit 1
+CMD ["node", "apps/mcp/dist/main.js"]
+
 # ---- web (Next.js standalone) ----
 FROM deps AS web-build
 ARG NEXT_PUBLIC_API_URL=http://localhost:3301
-ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ARG NEXT_PUBLIC_MCP_URL=http://localhost:3302/mcp
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL} NEXT_PUBLIC_MCP_URL=${NEXT_PUBLIC_MCP_URL}
 COPY . .
 RUN pnpm turbo run build --filter=@arvo/web...
 

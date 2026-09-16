@@ -1,0 +1,29 @@
+{
+  "name": "@arvo/finance-tools",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Business-level finance tools (schemas + handlers over Finance Core) shared by the MCP server and the AI advisor",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@arvo/finance-core": "workspace:*",
+    "@arvo/types": "workspace:*",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "@arvo/config": "workspace:*",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.19.0",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.5",
+    "typescript": "5.9.3"
+  }
+}

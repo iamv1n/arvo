@@ -1,7 +1,7 @@
 import { AccountType } from '@arvo/types';
 import { DomainError } from '../errors';
 import { FinanceCore } from '../finance-core';
-import { InMemoryStore } from './in-memory-store';
+import { InMemoryStore } from '../testing/in-memory-store';
 
 export const USER_A = '00000000-0000-4000-8000-00000000000a';
 export const USER_B = '00000000-0000-4000-8000-00000000000b';

@@ -2,6 +2,7 @@ import type { ApiErrorBody } from '@arvo/types';
 import type { TokenResponse } from './types';
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3301';
+export const MCP_URL = process.env.NEXT_PUBLIC_MCP_URL ?? 'http://localhost:3302/mcp';
 
 export class ApiError extends Error {
   constructor(

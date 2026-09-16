@@ -20,8 +20,9 @@ A local-first, self-hostable personal finance OS. Import your bank and card stat
 | Analytics | Income, expenses, cash flow, savings rate, spending by category, monthly trend |
 | Web app | Dashboard, accounts, transactions, transfers, imports, settings; light and dark themes |
 | Landing site | Independent Next.js app in `apps/site` |
+| MCP server | Read-only finance tools for Claude, ChatGPT and other MCP clients, authenticated with personal access tokens |
 
-Coming next: recurring detection, MCP server, scenarios, AI advisor, and a personal finance manager for spend reduction and planning.
+Coming next: scenarios and planning, the AI advisor, and a personal finance manager for spend reduction.
 
 ## Quick start with Docker
 
@@ -39,6 +40,7 @@ docker compose up -d
 | --- | --- |
 | Web app | http://localhost:3300 |
 | API + Swagger docs | http://localhost:3301/docs |
+| MCP server | http://localhost:3302/mcp |
 | Landing site | http://localhost:3400 |
 
 The API applies database migrations on startup. Uploaded statements are stored in the `statement-files` volume.
@@ -77,10 +79,28 @@ pnpm dev            # api :3301, web :3300, site :3400
 | `pnpm db:generate <Name>` | Generate a migration from entity changes |
 | `pnpm db:seed` | Reset the demo user with 6 months of sample data |
 
+## Connecting AI assistants (MCP)
+
+1. In the web app, open **Settings → Connect AI assistants** and create a token (read-only; shown once).
+2. Add Arvo to your MCP client:
+
+```bash
+# Claude Code
+claude mcp add --transport http arvo http://localhost:3302/mcp --header "Authorization: Bearer arvo_pat_…"
+```
+
+```json
+{ "mcpServers": { "arvo": { "type": "http", "url": "http://localhost:3302/mcp", "headers": { "Authorization": "Bearer arvo_pat_…" } } } }
+```
+
+Or run it locally over stdio: `ARVO_TOKEN=arvo_pat_… DATABASE_URL=… node apps/mcp/dist/main.js --stdio`.
+
+Tools: `finance_get_accounts`, `finance_get_account_balance`, `finance_get_transactions`, `finance_search_transactions`, `finance_get_cashflow`, `finance_get_spending_summary`, `finance_get_income_summary`, `finance_get_net_worth`, `finance_get_recurring_expenses`, `finance_compare_periods`, `finance_get_financial_snapshot`, `finance_analyze_spending`, `finance_analyze_cashflow`. Every call is scoped to the token's user; tools are read-only and return computed results with provenance. Tool names use underscores because several LLM APIs reject dots.
+
 ## Architecture
 
 ```text
-apps/web ─┐                          ┌─ apps/mcp (planned)
+apps/web ─┐                          ┌─ apps/mcp (MCP server)
           ▼                          ▼
       apps/api ──────────► packages/finance-core ◄── packages/imports (parsers)
                                      │
@@ -94,9 +114,11 @@ apps/web ─┐                          ┌─ apps/mcp (planned)
 | `packages/finance-core` | Domain rules and services: ledger, transfers, analytics, imports, rules. No framework dependencies; exact decimal money |
 | `packages/database` | TypeORM entities, migrations, repositories implementing Finance Core ports |
 | `packages/imports` | File detection, CSV/XLSX/PDF extraction, column mapping, normalization |
+| `packages/finance-tools` | Business-level tool definitions (zod schemas + handlers over Finance Core) shared by MCP and the AI advisor |
 | `packages/types` | Shared enums and wire types |
 | `packages/ui` | Design tokens and theme bindings for antd and styled-components |
 | `apps/api` | NestJS REST API: auth, validation, OpenAPI, thin controllers |
+| `apps/mcp` | MCP server (Streamable HTTP and stdio) exposing the finance tools |
 | `apps/web` | Next.js app |
 | `apps/site` | Public landing page, deployable on its own |
 
