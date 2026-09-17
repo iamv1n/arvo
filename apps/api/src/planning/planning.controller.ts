@@ -7,9 +7,9 @@ import { DataSource } from 'typeorm';
 import { UserId } from '../common/auth.decorators';
 import { DATE_PATTERN, MONEY_PATTERN } from '../common/validation';
 
-const today = () => new Date().toISOString().slice(0, 10);
+export const today = () => new Date().toISOString().slice(0, 10);
 
-async function baseCurrency(dataSource: DataSource, userId: string): Promise<string> {
+export async function baseCurrency(dataSource: DataSource, userId: string): Promise<string> {
   return (await dataSource.getRepository(UserEntity).findOneBy({ id: userId }))?.currency ?? 'INR';
 }
 

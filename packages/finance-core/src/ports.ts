@@ -6,6 +6,9 @@ import type {
   GoalRecord,
   NewBudget,
   NewGoal,
+  NewScenario,
+  ScenarioPatch,
+  ScenarioRecord,
   AccountRecord,
   CategoryPatch,
   CategoryRecord,
@@ -138,6 +141,15 @@ export interface GoalRepository {
   delete(userId: string, id: string): Promise<void>;
 }
 
+export interface ScenarioRepository {
+  /** Oldest first. */
+  findAll(userId: string): Promise<ScenarioRecord[]>;
+  findById(userId: string, id: string): Promise<ScenarioRecord | null>;
+  create(input: NewScenario): Promise<ScenarioRecord>;
+  update(userId: string, id: string, patch: ScenarioPatch): Promise<ScenarioRecord>;
+  delete(userId: string, id: string): Promise<void>;
+}
+
 export interface Repositories {
   accounts: AccountRepository;
   categories: CategoryRepository;
@@ -149,6 +161,7 @@ export interface Repositories {
   recurring: RecurringRepository;
   budgets: BudgetRepository;
   goals: GoalRepository;
+  scenarios: ScenarioRepository;
 }
 
 /** Storage entry point: plain repositories plus an atomic unit of work. */

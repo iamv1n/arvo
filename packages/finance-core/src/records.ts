@@ -1,3 +1,4 @@
+import type { ScenarioAdjustment } from './planning/projection';
 import type {
   AccountType,
   CategoryType,
@@ -238,3 +239,17 @@ export interface GoalRecord {
 
 export type NewGoal = Omit<GoalRecord, Generated>;
 export type GoalPatch = Partial<Pick<GoalRecord, 'name' | 'targetAmount' | 'targetDate' | 'accountId' | 'savedAmount'>>;
+
+export interface ScenarioRecord {
+  id: string;
+  userId: string;
+  name: string;
+  description: string | null;
+  /** Validated what-if adjustments (see planning/projection.ts). */
+  adjustments: ScenarioAdjustment[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type NewScenario = Omit<ScenarioRecord, Generated>;
+export type ScenarioPatch = Partial<Pick<ScenarioRecord, 'name' | 'description' | 'adjustments'>>;

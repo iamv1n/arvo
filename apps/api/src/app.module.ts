@@ -9,6 +9,7 @@ import { DatabaseModule } from './database/database.module';
 import { HealthController } from './health/health.controller';
 import { ImportsController } from './imports/imports.controller';
 import { BudgetsController, GoalsController } from './planning/planning.controller';
+import { PlanningController, ScenariosController } from './planning/scenarios.controller';
 import { RulesController } from './rules/rules.controller';
 import { MerchantsController } from './merchants/merchants.controller';
 import { TransactionsController } from './transactions/transactions.controller';
@@ -43,6 +44,8 @@ class ConfigModule {}
     RulesController,
     BudgetsController,
     GoalsController,
+    PlanningController,
+    ScenariosController,
   ],
 })
 export class AppModule implements NestModule {

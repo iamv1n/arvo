@@ -447,6 +447,72 @@ export const getGoals = defineTool({
   },
 });
 
+export const getSavingsOpportunities = defineTool({
+  name: 'finance_get_savings_opportunities',
+  title: 'Get savings opportunities',
+  description:
+    'Ranked, deterministic ways to spend less: category and merchant spending above their 3-month average (last full month), subscription price increases, fees and interest, and informational one-off spikes. Each item has an exact estimated monthly saving, confidence, the figures behind it and evidence (transaction filter and ids). totalMonthly excludes informational and overlapping items. Use for "how can I spend less?". Read-only.',
+  inputSchema: z.object({}),
+  async run(ctx) {
+    const result = await ctx.core.savings.opportunities(ctx.userId, { currency: ctx.currency, asOf: ctx.today });
+    return { ...result, provenance: { as_of: result.asOf, compared_month: result.month, basis: 'last full month vs 3-month average', opportunities: result.opportunities.length } };
+  },
+});
+
+export const checkAffordability = defineTool({
+  name: 'finance_check_affordability',
+  title: 'Check affordability (simulate purchase)',
+  description:
+    'Simulates a purchase: can the user pay this amount (today or on a date within 12 months) and keep a cash buffer of N months of expenses? Uses bank and cash balances, average income and expenses of the last 3 full months and active goal contributions. Returns status affordable | tight | not_yet, cash after purchase, buffer months left, months to recover, first affordable month and a 12-month balance projection with and without the purchase. Read-only; nothing is saved.',
+  inputSchema: z.object({
+    amount: amount.describe('Purchase amount, e.g. 70000'),
+    date: date.optional().describe('Purchase date, YYYY-MM-DD (default today)'),
+    buffer_months: z.number().min(0).max(24).optional().describe('Months of expenses to keep as a safety buffer (default 3)'),
+  }),
+  async run(ctx, input) {
+    const result = await ctx.core.scenarios.affordability(ctx.userId, {
+      currency: ctx.currency,
+      asOf: ctx.today,
+      amount: input.amount,
+      date: input.date,
+      bufferMonths: input.buffer_months,
+    });
+    return { ...result, provenance: { as_of: result.asOf, averages_over: result.baseline.months } };
+  },
+});
+
+const signedValue = z.string().regex(/^[+-]?\d{1,15}(\.\d{1,4})?$/, 'Use a signed decimal like -5000 or 10.5');
+const month = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'Use YYYY-MM');
+
+export const runWhatIf = defineTool({
+  name: 'finance_run_what_if',
+  title: 'Run what-if scenario',
+  description:
+    'Projects liquid cash 12 months ahead under adjustments versus the baseline (last 3 full months). Adjustments: category (monthly spend change by amount, positive = spend more, or by percent, e.g. -50 halves it), income (monthly change by amount or percent) — both optionally from a month — and one_off (an expense in a month). Returns monthly change, yearly impact, end balances, the lowest point and the series. Category ids are listed in baseline.categories of finance_check_affordability or in this tool result. Read-only; nothing is saved.',
+  inputSchema: z.object({
+    adjustments: z
+      .array(
+        z.discriminatedUnion('type', [
+          z.object({ type: z.literal('category'), category_id: uuid, mode: z.enum(['amount', 'percent']), value: signedValue, from_month: month.optional() }),
+          z.object({ type: z.literal('income'), mode: z.enum(['amount', 'percent']), value: signedValue, from_month: month.optional() }),
+          z.object({ type: z.literal('one_off'), month, amount, label: z.string().max(80).optional() }),
+        ]),
+      )
+      .max(20),
+  }),
+  async run(ctx, input) {
+    const adjustments = input.adjustments.map((a) =>
+      a.type === 'category'
+        ? { type: a.type, categoryId: a.category_id, mode: a.mode, value: a.value, fromMonth: a.from_month }
+        : a.type === 'income'
+          ? { type: a.type, mode: a.mode, value: a.value, fromMonth: a.from_month }
+          : a,
+    );
+    const result = await ctx.core.scenarios.whatIf(ctx.userId, { currency: ctx.currency, asOf: ctx.today, adjustments });
+    return { ...result, provenance: { as_of: result.asOf, averages_over: result.baseline.months } };
+  },
+});
+
 export const FINANCE_TOOLS: FinanceTool[] = [
   getAccounts,
   getAccountBalance,
@@ -464,6 +530,9 @@ export const FINANCE_TOOLS: FinanceTool[] = [
   getHighlights,
   getBudgetStatus,
   getGoals,
+  getSavingsOpportunities,
+  checkAffordability,
+  runWhatIf,
 ] as unknown as FinanceTool[];
 
 export class ToolInputError extends Error {

@@ -23,3 +23,6 @@ export * from './analytics/highlights.service';
 export * from './analytics/patterns.service';
 export * from './planning/budget.service';
 export * from './planning/goal.service';
+export * from './planning/savings.service';
+export * from './planning/scenario.service';
+export * from './planning/projection';

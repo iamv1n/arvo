@@ -1,3 +1,4 @@
+import type { ScenarioAdjustment } from '@arvo/finance-core';
 import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
 import { AccountEntity } from './account.entity';
 import { CategoryEntity } from './category.entity';
@@ -74,6 +75,36 @@ export class GoalEntity {
 
   @Column({ ...MONEY_COLUMN, name: 'saved_amount', default: 0 })
   savedAmount!: string;
+
+  @CreatedAt()
+  createdAt!: Date;
+
+  @UpdatedAt()
+  updatedAt!: Date;
+}
+
+@Entity('scenarios')
+export class ScenarioEntity {
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
+
+  @Index()
+  @Column({ name: 'user_id', type: 'uuid' })
+  userId!: string;
+
+  @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
+  user?: UserEntity;
+
+  @Column({ type: 'varchar', length: 120 })
+  name!: string;
+
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  description!: string | null;
+
+  /** What-if adjustments, validated by Finance Core. */
+  @Column({ type: 'jsonb', default: () => "'[]'" })
+  adjustments!: ScenarioAdjustment[];
 
   @CreatedAt()
   createdAt!: Date;

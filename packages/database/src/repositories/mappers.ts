@@ -1,6 +1,7 @@
 import type {
   BudgetRecord,
   GoalRecord,
+  ScenarioRecord,
   RecurringSeriesRecord,
   ImportBatchRecord,
   ImportErrorRecord,
@@ -16,6 +17,7 @@ import { formatMoney, parseMoney } from '@arvo/finance-core';
 import type {
   BudgetEntity,
   GoalEntity,
+  ScenarioEntity,
   RecurringSeriesEntity,
   ImportBatchEntity,
   ImportErrorEntity,
@@ -207,6 +209,16 @@ export const toGoal = (e: GoalEntity): GoalRecord => ({
   targetDate: e.targetDate,
   accountId: e.accountId,
   savedAmount: canonicalMoney(e.savedAmount),
+  createdAt: e.createdAt,
+  updatedAt: e.updatedAt,
+});
+
+export const toScenario = (e: ScenarioEntity): ScenarioRecord => ({
+  id: e.id,
+  userId: e.userId,
+  name: e.name,
+  description: e.description,
+  adjustments: e.adjustments,
   createdAt: e.createdAt,
   updatedAt: e.updatedAt,
 });

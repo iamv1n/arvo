@@ -4,7 +4,7 @@ import type { ColumnMapping, ImportBatchRecord, ImportErrorRecord, ImportRowReco
 import { parseMoney, formatMoney } from '../money';
 import { descriptionPatternKey } from '../rules/categorizer';
 import type { RuleRecord } from '../rules/types';
-import type { BudgetRecord, GoalRecord, RecurringSeriesRecord } from '../records';
+import type { BudgetRecord, GoalRecord, RecurringSeriesRecord, ScenarioRecord } from '../records';
 import type { FinanceStore, Repositories } from '../ports';
 import type {
   AccountRecord,
@@ -29,6 +29,7 @@ interface State {
   recurring: Map<string, RecurringSeriesRecord>;
   budgets: Map<string, BudgetRecord>;
   goals: Map<string, GoalRecord>;
+  scenarios: Map<string, ScenarioRecord>;
 }
 
 const now = () => new Date('2026-01-01T00:00:00Z');
@@ -52,6 +53,7 @@ export class InMemoryStore implements FinanceStore {
     recurring: new Map(),
     budgets: new Map(),
     goals: new Map(),
+    scenarios: new Map(),
   };
 
   accounts: Repositories['accounts'] = {
@@ -320,6 +322,14 @@ export class InMemoryStore implements FinanceStore {
     create: async (input) => insert(this.state.goals, { ...input, id: randomUUID(), createdAt: now(), updatedAt: now() }),
     update: async (userId, id, patch) => patchOwned(this.state.goals, userId, id, patch),
     delete: async (userId, id) => void deleteOwned(this.state.goals, userId, id),
+  };
+
+  scenarios: Repositories['scenarios'] = {
+    findAll: async (userId) => [...this.state.scenarios.values()].filter((s) => s.userId === userId),
+    findById: async (userId, id) => owned(this.state.scenarios.get(id), userId),
+    create: async (input) => insert(this.state.scenarios, { ...input, id: randomUUID(), createdAt: now(), updatedAt: now() }),
+    update: async (userId, id, patch) => patchOwned(this.state.scenarios, userId, id, patch),
+    delete: async (userId, id) => void deleteOwned(this.state.scenarios, userId, id),
   };
 
   private inPeriod(userId: string, filter: { from: string; to: string; currency: string; accountId?: string }): TransactionRecord[] {

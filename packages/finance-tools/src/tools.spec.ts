@@ -47,7 +47,31 @@ describe('finance tools', () => {
     const goals = await call('finance_get_goals', {});
     expect(goals.goals[0]).toMatchObject({ name: 'Trip', remaining: '10000.00', monthsLeft: 5, requiredMonthly: '2000.00' });
     expect((await call('finance_get_goals', {}, USER_B)).goals).toEqual([]);
-    expect(FINANCE_TOOLS).toHaveLength(16);
+  });
+
+  it('compute savings opportunities, affordability and what-if without saving anything', async () => {
+    const { call, food } = await fixture();
+    const savings = await call('finance_get_savings_opportunities', {});
+    expect(savings).toMatchObject({ month: '2026-07', provenance: { as_of: '2026-08-20', compared_month: '2026-07' } });
+    expect(Array.isArray(savings.opportunities)).toBe(true);
+
+    // Liquid 10,000 + 2 × 1,00,000 − 2,000 − 3,500 − 4 × 649 = 2,01,904.
+    const afford = await call('finance_check_affordability', { amount: '250000', buffer_months: 2 });
+    expect(afford).toMatchObject({ status: 'not_yet', cashAfter: '-48096.00', bufferMonths: 2, provenance: { averages_over: ['2026-05', '2026-06', '2026-07'] } });
+    expect(afford.series).toHaveLength(13);
+    expect((await call('finance_check_affordability', { amount: '1000' })).status).toBe('affordable');
+
+    const whatIf = await call('finance_run_what_if', {
+      adjustments: [
+        { type: 'one_off', month: '2026-10', amount: '10000' },
+        { type: 'category', category_id: food.id, mode: 'amount', value: '-500', from_month: '2027-08' },
+      ],
+    });
+    expect(whatIf).toMatchObject({ yearlyImpact: '-9500.00', monthlyChange: '500.00' });
+    const bad = await runTool(findTool('finance_run_what_if')!, { core: (await fixture()).core, userId: USER_A, currency: 'INR', today: '2026-08-20' }, { adjustments: [{ type: 'income', mode: 'x', value: '1' }] });
+    expect(bad.ok).toBe(false);
+    expect(await call('finance_run_what_if', { adjustments: [] }, USER_B)).toMatchObject({ yearlyImpact: '0.00', baseline: { liquid: '0.00' } });
+    expect(FINANCE_TOOLS).toHaveLength(19);
   });
 
   it('have unique, provider-safe names and JSON-schema-convertible inputs', () => {

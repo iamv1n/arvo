@@ -1,6 +1,7 @@
 import type {
   BudgetRepository,
   GoalRepository,
+  ScenarioRepository,
   RecurringRepository,
   ImportRepository,
   ImportRowStatus,
@@ -18,6 +19,7 @@ import { Between, In, IsNull, Not, type DataSource, type EntityManager, type Ent
 import {
   BudgetEntity,
   GoalEntity,
+  ScenarioEntity,
   RecurringSeriesEntity,
   ImportBatchEntity,
   ImportColumnMappingEntity,
@@ -34,6 +36,7 @@ import {
   toAccount,
   toBudget,
   toGoal,
+  toScenario,
   toCategory,
   toImportBatch,
   toImportError,
@@ -450,7 +453,18 @@ export function createRepositories(manager: EntityManager): Repositories {
     delete: async (userId, id) => void (await manager.delete(GoalEntity, { id, userId })),
   };
 
-  return { accounts, categories, merchants, transactions, transfers, imports, rules, recurring, budgets, goals };
+  const scenarios: ScenarioRepository = {
+    findAll: async (userId) => (await manager.find(ScenarioEntity, { where: { userId }, order: { createdAt: 'ASC', id: 'ASC' } })).map(toScenario),
+    findById: async (userId, id) => {
+      const row = await manager.findOneBy(ScenarioEntity, { id, userId });
+      return row ? toScenario(row) : null;
+    },
+    create: async (input) => toScenario(await manager.save(manager.create(ScenarioEntity, input))),
+    update: async (userId, id, patch) => toScenario(await updateOwned(ScenarioEntity, userId, id, patch)),
+    delete: async (userId, id) => void (await manager.delete(ScenarioEntity, { id, userId })),
+  };
+
+  return { accounts, categories, merchants, transactions, transfers, imports, rules, recurring, budgets, goals, scenarios };
 }
 
 export function createFinanceStore(dataSource: DataSource): FinanceStore {
