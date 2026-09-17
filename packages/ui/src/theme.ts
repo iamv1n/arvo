@@ -1,5 +1,6 @@
 import { theme as antdTheme, type ThemeConfig } from 'antd';
-import { breakpoints, colors, motion, radii, shadows, space, typography, type ColorMode } from './tokens';
+import { DEFAULT_PALETTE, palettes, type PaletteId } from './palettes';
+import { breakpoints, colors, motion, radii, shadows, space, typography, type ColorMode, type ColorTokens } from './tokens';
 
 /** Theme object available to styled-components as `props.theme`. */
 export interface ArvoTheme {
@@ -13,13 +14,20 @@ export interface ArvoTheme {
   motion: typeof motion;
 }
 
-export function createStyledTheme(mode: ColorMode): ArvoTheme {
-  return { mode, colors: colors[mode], space, radii, typography, shadows: shadows[mode], breakpoints, motion };
+/** Resolved colors for a mode; palettes only recolor the light theme. */
+export function resolveColors(mode: ColorMode, palette: PaletteId = DEFAULT_PALETTE): ColorTokens {
+  if (mode === 'dark') return colors.dark;
+  const overrides = palettes.find((p) => p.id === palette)?.light ?? {};
+  return { ...colors.light, ...overrides };
+}
+
+export function createStyledTheme(mode: ColorMode, palette: PaletteId = DEFAULT_PALETTE): ArvoTheme {
+  return { mode, colors: resolveColors(mode, palette), space, radii, typography, shadows: shadows[mode], breakpoints, motion };
 }
 
 /** antd ThemeConfig derived from the same tokens. */
-export function createAntdTheme(mode: ColorMode): ThemeConfig {
-  const c = colors[mode];
+export function createAntdTheme(mode: ColorMode, palette: PaletteId = DEFAULT_PALETTE): ThemeConfig {
+  const c = resolveColors(mode, palette);
   const s = shadows[mode];
   return {
     algorithm: mode === 'dark' ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,

@@ -11,6 +11,7 @@ import styled, { useTheme } from 'styled-components';
 import { useAuth } from '../lib/auth';
 import { usePreferences } from '../lib/preferences';
 import { PixelLogo } from './logo';
+import { PalettePicker } from './palette-picker';
 import { ThemeToggle } from './theme-toggle';
 
 const navIcon = (Icon: typeof SquaresFour) => <Icon size={19} weight="duotone" aria-hidden />;
@@ -166,6 +167,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             />
           )}
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <PalettePicker />
             <ThemeToggle />
             <Dropdown
               menu={{

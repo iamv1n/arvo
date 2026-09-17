@@ -20,9 +20,9 @@ const GlobalStyle = createGlobalStyle`
 `;
 
 function ThemedApp({ children }: { children: ReactNode }) {
-  const { mode } = useThemeMode();
-  const antdTheme = useMemo(() => createAntdTheme(mode), [mode]);
-  const styledTheme = useMemo(() => createStyledTheme(mode), [mode]);
+  const { mode, palette } = useThemeMode();
+  const antdTheme = useMemo(() => createAntdTheme(mode, palette), [mode, palette]);
+  const styledTheme = useMemo(() => createStyledTheme(mode, palette), [mode, palette]);
   return (
     <ConfigProvider theme={antdTheme}>
       <ThemeProvider theme={styledTheme}>

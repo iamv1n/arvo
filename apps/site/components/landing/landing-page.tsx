@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import styled, { createGlobalStyle, keyframes } from 'styled-components';
 import { OpenAppLink } from '../beta-access';
 import { CONTACT_EMAIL } from '../../lib/legal';
+import { PalettePicker } from '../palette-picker';
 import { ThemeToggle } from '../theme-toggle';
 import { AdvisorSection } from './advisor';
 import { Features } from './features';
@@ -430,6 +431,7 @@ export function Nav({ base = '' }: { base?: string }) {
           ))}
         </NavLinks>
         <NavRight>
+          <PalettePicker />
           <ThemeToggle />
           <AppLink>
             <OpenAppLink>Open Arvo →</OpenAppLink>
@@ -475,7 +477,10 @@ export function Nav({ base = '' }: { base?: string }) {
             }}
           >
             <OpenAppLink>Open Arvo →</OpenAppLink>
-            <ThemeToggle />
+            <span style={{ display: 'flex', gap: 8 }}>
+              <PalettePicker />
+              <ThemeToggle />
+            </span>
           </div>
         </Sheet>
       ) : null}

@@ -6,11 +6,12 @@ import { PAGE_SIZE_OPTIONS } from '../data-table';
 import { PERIOD_OPTIONS } from '../../lib/periods';
 import { usePreferences } from '../../lib/preferences';
 import { useThemeMode, type ThemePreference } from '../../lib/theme-mode';
+import { PalettePicker } from '../palette-picker';
 import { SectionIntro, SettingRow } from './setting-row';
 
 export function AppearanceSettings() {
   const { preferences, update, reset } = usePreferences();
-  const { preference, setPreference } = useThemeMode();
+  const { preference, setPreference, setPalette } = useThemeMode();
   const { message } = App.useApp();
   return (
     <Card
@@ -20,6 +21,7 @@ export function AppearanceSettings() {
           onConfirm={() => {
             reset();
             setPreference('system');
+            setPalette('ledger');
             message.success('Preferences reset');
           }}
         >
@@ -40,6 +42,9 @@ export function AppearanceSettings() {
             { value: 'system', label: 'System', icon: <DesktopOutlined /> },
           ]}
         />
+      </SettingRow>
+      <SettingRow label="Light palette" hint="Canvas, ink and accent colors for the light theme">
+        <PalettePicker />
       </SettingRow>
       <SettingRow label="Collapse sidebar" hint="Show icons only in the navigation">
         <Switch checked={preferences.sidebarCollapsed} onChange={(sidebarCollapsed) => update({ sidebarCollapsed })} />
