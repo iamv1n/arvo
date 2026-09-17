@@ -1,190 +1,322 @@
 'use client';
 
-import {
-  ApiOutlined,
-  CloudOutlined,
-  DatabaseOutlined,
-  DesktopOutlined,
-  LaptopOutlined,
-  LockOutlined,
-  RobotOutlined,
-} from '@ant-design/icons';
-import styled from 'styled-components';
-import { dashFlow, fadeIn, fadeUp, growX, play, popIn, useInView } from './motion';
-import { Body, Container, H3, Pill, SectionHeading, SectionShell } from './primitives';
+import { useState } from 'react';
+import styled, { css, keyframes } from 'styled-components';
+import { drawStroke, fadeIn, fadeUp, play, popIn, useInView } from './motion';
+import { Container, fonts, SectionHeading, SectionShell } from './primitives';
 
-/* ================= Privacy ================= */
+/*
+ * Privacy as an architect's floor plan. Your machine is a walled house drawn in ink; your data
+ * lives in its rooms. The only opening in the outer wall is a labelled door to a cloud AI, and it
+ * stays shut until you open it yourself.
+ */
 
-const Machine = styled.div<{ $on: boolean }>`
+const Plan = styled.div`
+  display: grid;
+  gap: ${({ theme }) => theme.space[6]}px;
+  @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
+    grid-template-columns: minmax(0, 1fr) 260px;
+    align-items: center;
+    gap: 0;
+  }
+`;
+
+const House = styled.div<{ $on: boolean }>`
   position: relative;
-  padding: ${({ theme }) => theme.space[8]}px ${({ theme }) => theme.space[5]}px ${({ theme }) => theme.space[6]}px;
-  border: 2px dashed ${({ theme }) => theme.colors.brand};
-  border-radius: ${({ theme }) => theme.radii.xl}px;
-  background: ${({ theme }) => theme.colors.bgSurface};
+  border: 4px solid ${({ theme }) => theme.colors.textPrimary};
+  border-radius: 2px;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 23px, ${({ theme }) => theme.colors.borderSubtle} 23px 24px),
+    repeating-linear-gradient(90deg, transparent 0 23px, ${({ theme }) => theme.colors.borderSubtle} 23px 24px),
+    ${({ theme }) => theme.colors.bgSurface};
   animation-name: ${fadeIn};
   ${({ $on }) => play($on, 0, '600ms')}
 `;
 
-const MachineLabel = styled.span`
+const Title = styled.span`
   position: absolute;
-  top: -14px;
-  left: 20px;
-  display: inline-flex;
-  gap: 8px;
-  align-items: center;
-  padding: 3px 12px;
-  border-radius: ${({ theme }) => theme.radii.pill}px;
-  background: ${({ theme }) => theme.colors.brand};
-  color: ${({ theme }) => theme.colors.bgSurface};
-  font-size: 13px;
-  font-weight: 600;
+  top: -13px;
+  left: 18px;
+  padding: 2px 10px;
+  background: ${({ theme }) => theme.colors.bgCanvas};
+  font-family: ${fonts.mono};
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.colors.textPrimary};
 `;
 
-const Flow = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  @media (min-width: ${({ theme }) => theme.breakpoints.md}px) {
-    flex-direction: row;
-    align-items: center;
-  }
-`;
-
-const NodeBox = styled.div<{ $on: boolean; $d: number; $dashed?: boolean }>`
-  flex: 1;
+const Rooms = styled.ul`
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 2px 12px;
-  align-items: center;
-  padding: 14px 16px;
-  border-radius: ${({ theme }) => theme.radii.lg}px;
-  border: 1px ${({ $dashed }) => ($dashed ? 'dashed' : 'solid')} ${({ theme }) => theme.colors.border};
-  background: ${({ theme }) => theme.colors.bgSurfaceRaised};
-  box-shadow: ${({ theme, $dashed }) => ($dashed ? 'none' : theme.shadows.sm)};
-  min-width: 0;
-  animation-name: ${popIn};
-  ${({ $on, $d }) => play($on, $d, '500ms')}
-  & > .anticon {
-    grid-row: span 2;
-    font-size: 22px;
-    color: ${({ theme }) => theme.colors.brand};
+  grid-template-columns: 1fr 1fr;
+  & > li:nth-child(odd) {
+    border-right: 2px solid ${({ theme }) => theme.colors.textPrimary};
   }
-  & strong {
-    color: ${({ theme }) => theme.colors.textPrimary};
-    font-size: 15px;
-  }
-  & small {
-    color: ${({ theme }) => theme.colors.textSecondary};
-    font-size: 12px;
+  & > li:nth-child(-n + 2) {
+    border-bottom: 2px solid ${({ theme }) => theme.colors.textPrimary};
   }
 `;
 
-const Connector = styled.div<{ $on: boolean; $d: number; $optional?: boolean }>`
-  flex: none;
+const Room = styled.li<{ $on: boolean; $d: number; $lit?: boolean }>`
   position: relative;
-  align-self: center;
-  width: 2px;
-  height: 28px;
-  @media (min-width: ${({ theme }) => theme.breakpoints.md}px) {
-    width: 48px;
-    height: 2px;
-  }
-  & svg {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    overflow: visible;
-  }
-  & line {
-    stroke: ${({ theme, $optional }) => ($optional ? theme.colors.textMuted : theme.colors.brand)};
-    stroke-width: 2;
-    stroke-dasharray: 6 6;
-    animation: ${dashFlow} 1.2s linear infinite;
-  }
-  animation-name: ${fadeIn};
-  ${({ $on, $d }) => play($on, $d, '400ms')}
-`;
-
-function Wire({ on, d, optional }: { on: boolean; d: number; optional?: boolean }) {
-  return (
-    <Connector $on={on} $d={d} $optional={optional} aria-hidden>
-      <svg preserveAspectRatio="none">
-        <line className="h" x1="0" y1="50%" x2="100%" y2="50%" />
-        <line className="v" x1="50%" y1="0" x2="50%" y2="100%" />
-      </svg>
-    </Connector>
-  );
-}
-
-const LinkStyles = styled.div`
-  & .h {
-    display: none;
-  }
-  @media (min-width: ${({ theme }) => theme.breakpoints.md}px) {
-    & .h {
-      display: inline;
-    }
-    & .v {
-      display: none;
-    }
-  }
-`;
-
-const Local = styled.div`
-  margin-top: ${({ theme }) => theme.space[5]}px;
-  display: grid;
-  gap: ${({ theme }) => theme.space[3]}px;
-  @media (min-width: ${({ theme }) => theme.breakpoints.md}px) {
-    grid-template-columns: 1fr 1fr;
-  }
-`;
-
-const Outside = styled.div`
-  margin-top: ${({ theme }) => theme.space[6]}px;
+  min-height: 150px;
+  padding: 18px 16px;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  @media (min-width: ${({ theme }) => theme.breakpoints.md}px) {
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-end;
-    & > :last-child {
-      flex: 0 1 360px;
-    }
-  }
-`;
-
-const PrivacyPoint = styled.div<{ $on: boolean; $d: number }>`
+  justify-content: flex-end;
+  gap: 4px;
+  background: ${({ $lit, theme }) => ($lit ? theme.colors.brandSubtle : 'transparent')};
+  transition: background 400ms;
   animation-name: ${fadeUp};
   ${({ $on, $d }) => play($on, $d, '600ms')}
+  & .no {
+    position: absolute;
+    top: 12px;
+    left: 16px;
+    font-family: ${fonts.mono};
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: ${({ theme }) => theme.colors.textMuted};
+  }
+  & strong {
+    font-family: ${fonts.serif};
+    font-weight: 500;
+    font-size: clamp(20px, 2.6vw, 28px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: ${({ theme }) => theme.colors.textPrimary};
+  }
+  & span.hand {
+    font-family: ${fonts.hand};
+    font-size: 20px;
+    line-height: 1.1;
+    color: ${({ theme }) => theme.colors.brandText};
+  }
+  @media (min-width: ${({ theme }) => theme.breakpoints.md}px) {
+    min-height: 190px;
+    padding: 24px;
+  }
 `;
 
-const Points = styled.div`
-  margin-top: ${({ theme }) => theme.space[10]}px;
+/* The door cut into the right wall (bottom wall on narrow screens). */
+const Doorway = styled.div<{ $open: boolean }>`
+  position: absolute;
+  right: -4px;
+  bottom: 38px;
+  width: 4px;
+  height: 64px;
+  background: ${({ theme }) => theme.colors.bgSurface};
+  & svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 64px;
+    height: 64px;
+    overflow: visible;
+  }
+  & .leaf {
+    stroke: ${({ theme }) => theme.colors.textPrimary};
+    stroke-width: 4;
+    transform-origin: 2px 64px;
+    transform: rotate(${({ $open }) => ($open ? -70 : 0)}deg);
+    transition: transform 500ms cubic-bezier(0.34, 1.3, 0.64, 1);
+  }
+  & .swing {
+    fill: none;
+    stroke: ${({ theme }) => theme.colors.textMuted};
+    stroke-width: 1;
+    stroke-dasharray: 3 3;
+    opacity: ${({ $open }) => ($open ? 1 : 0)};
+    transition: opacity 300ms;
+  }
+  @media (max-width: ${({ theme }) => theme.breakpoints.lg - 1}px) {
+    display: none;
+  }
+`;
+
+const Outside = styled.div<{ $on: boolean }>`
   display: grid;
-  gap: ${({ theme }) => theme.space[6]}px;
+  gap: 14px;
+  justify-items: start;
+  animation-name: ${fadeIn};
+  ${({ $on }) => play($on, 900, '600ms')}
+  @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
+    padding-left: 28px;
+    align-self: end;
+    margin-bottom: 8px;
+  }
+`;
+
+const march = keyframes`
+  to { background-position: 24px 0; }
+`;
+
+const Path = styled.span<{ $open: boolean }>`
+  display: none;
+  @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background: repeating-linear-gradient(
+      90deg,
+      ${({ theme }) => theme.colors.warning} 0 8px,
+      transparent 8px 12px
+    );
+    transform-origin: left;
+    transform: scaleX(${({ $open }) => ($open ? 1 : 0)});
+    transition: transform 500ms;
+    ${({ $open }) =>
+      $open &&
+      css`
+        animation: ${march} 800ms linear infinite;
+      `}
+  }
+`;
+
+const Cloud = styled.div<{ $open: boolean }>`
+  width: 100%;
+  padding: 16px;
+  border: 2px dashed ${({ $open, theme }) => ($open ? theme.colors.warning : theme.colors.border)};
+  border-radius: 6px;
+  color: ${({ $open, theme }) => ($open ? theme.colors.textPrimary : theme.colors.textMuted)};
+  transition:
+    border-color 300ms,
+    color 300ms;
+  & b {
+    display: block;
+    font-family: ${fonts.serif};
+    font-weight: 500;
+    font-size: 22px;
+    letter-spacing: -0.01em;
+  }
+  & small {
+    display: block;
+    margin-top: 4px;
+    font-family: ${fonts.mono};
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+`;
+
+const Toggle = styled.button<{ $open: boolean }>`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  cursor: pointer;
+  font-family: ${fonts.mono};
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.colors.textPrimary};
+  & i {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    border: 2px solid ${({ theme }) => theme.colors.textPrimary};
+    border-radius: 4px;
+    background: ${({ $open, theme }) => ($open ? theme.colors.warning : 'transparent')};
+    transition: background 200ms;
+  }
+  & i::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: ${({ $open }) => ($open ? 20 : 2)}px;
+    width: 14px;
+    height: 14px;
+    border-radius: 2px;
+    background: ${({ theme }) => theme.colors.textPrimary};
+    transition: left 200ms cubic-bezier(0.34, 1.4, 0.64, 1);
+  }
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.brand};
+    outline-offset: 4px;
+  }
+`;
+
+const Scribble = styled.p<{ $open: boolean }>`
+  margin: 0;
+  font-family: ${fonts.hand};
+  font-size: 22px;
+  line-height: 1.15;
+  transform: rotate(-2deg);
+  color: ${({ $open, theme }) => ($open ? theme.colors.warning : theme.colors.brandText)};
+`;
+
+/* Legend: three short claims printed like the key on a drawing. */
+const Key = styled.ol`
+  list-style: none;
+  margin: ${({ theme }) => theme.space[10]}px 0 0;
+  padding: 0;
+  display: grid;
+  border-top: 2px solid ${({ theme }) => theme.colors.textPrimary};
   @media (min-width: ${({ theme }) => theme.breakpoints.md}px) {
     grid-template-columns: repeat(3, 1fr);
   }
-  & h3 {
-    font-size: ${({ theme }) => theme.typography.fontSize.lg}px;
+`;
+
+const KeyItem = styled.li<{ $on: boolean; $d: number }>`
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 14px;
+  padding: 18px 16px 18px 0;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  animation-name: ${fadeUp};
+  ${({ $on, $d }) => play($on, $d, '600ms')}
+  & svg {
+    grid-row: span 2;
+    width: 28px;
+    height: 28px;
+    color: ${({ theme }) => theme.colors.brand};
+  }
+  & svg path {
+    stroke-dasharray: 1;
+    animation-name: ${drawStroke};
+    ${({ $on, $d }) => play($on, $d + 200, '900ms')}
+  }
+  & b {
+    font-family: ${fonts.mono};
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: ${({ theme }) => theme.colors.textPrimary};
+  }
+  & span {
+    font-size: 15px;
+    line-height: 1.5;
+    color: ${({ theme }) => theme.colors.textSecondary};
   }
 `;
 
-const Underline = styled.div<{ $on: boolean }>`
-  height: 3px;
-  width: 40px;
-  margin-bottom: 12px;
-  border-radius: 2px;
-  background: ${({ theme }) => theme.colors.brand};
-  transform-origin: left;
-  animation-name: ${growX};
-  ${({ $on }) => play($on, 300, '600ms')}
+const Badge = styled.span<{ $on: boolean }>`
+  display: inline-block;
+  animation-name: ${popIn};
+  ${({ $on }) => play($on, 700, '400ms')}
 `;
+
+const rooms = [
+  { name: 'Browser', note: 'you, or your AI assistant' },
+  { name: 'Arvo', note: 'does every calculation' },
+  { name: 'Your database', note: 'your ledger, your disk' },
+  { name: 'Private AI', note: 'optional, on your hardware' },
+];
+
+const keys = [
+  { title: 'No bank logins', body: 'Import the statements you already download. Nothing to link.', d: 'M4 14h20M8 10l-4 4 4 4M20 10l4 4-4 4' },
+  { title: 'You own the database', body: 'Back it up, export it, or delete it.', d: 'M6 7c0-2 16-2 16 0v14c0 2-16 2-16 0zM6 7c0 2 16 2 16 0M6 14c0 2 16 2 16 0' },
+  { title: 'Cloud AI is opt-in', body: 'Off by default, and Arvo says when one is in use.', d: 'M8 13V9a6 6 0 0 1 12 0v4M6 13h16v10H6z' },
+];
 
 export function PrivacySection() {
   const [ref, on] = useInView<HTMLDivElement>(0.3);
+  const [open, setOpen] = useState(false);
   return (
     <SectionShell id="privacy" aria-labelledby="privacy-title">
       <Container>
@@ -193,71 +325,61 @@ export function PrivacySection() {
           eyebrow="Local-first"
           index="06"
           title="Your finances never leave your machine unless you say so"
-          lead="Arvo runs next to your data. No bank credentials, no third-party aggregators, no hosted database."
         />
-        <LinkStyles ref={ref}>
-          <figure style={{ margin: 0 }} aria-label="Diagram: your browser talks to Arvo, which keeps your data in your own database and can use a private AI model, all on your machine. A cloud AI outside your machine is optional.">
-            <Machine $on={on}>
-              <MachineLabel>
-                <LaptopOutlined aria-hidden /> Your machine
-              </MachineLabel>
-              <Flow>
-                <NodeBox $on={on} $d={200}>
-                  <DesktopOutlined aria-hidden />
-                  <strong>Browser</strong>
-                  <small>You, or your AI assistant</small>
-                </NodeBox>
-                <Wire on={on} d={450} />
-                <NodeBox $on={on} $d={500}>
-                  <ApiOutlined aria-hidden />
-                  <strong>Arvo</strong>
-                  <small>The app and its calculations</small>
-                </NodeBox>
-                <Wire on={on} d={750} />
-                <NodeBox $on={on} $d={800}>
-                  <DatabaseOutlined aria-hidden />
-                  <strong>Your database</strong>
-                  <small>Your ledger, your disk</small>
-                </NodeBox>
-              </Flow>
-              <Local>
-                <NodeBox $on={on} $d={1000}>
-                  <RobotOutlined aria-hidden />
-                  <strong>Private AI</strong>
-                  <small>Private AI, runs on your hardware</small>
-                </NodeBox>
-                <NodeBox $on={on} $d={1100}>
-                  <LockOutlined aria-hidden />
-                  <strong>Easy to run</strong>
-                  <small>Start everything in a few steps</small>
-                </NodeBox>
-              </Local>
-            </Machine>
-            <Outside>
-              <Wire on={on} d={1300} optional />
-              <NodeBox $on={on} $d={1350} $dashed>
-                <CloudOutlined aria-hidden />
-                <strong>
-                  Cloud AI <Pill $tone="muted">optional · opt-in</Pill>
-                </strong>
-                <small>Only if you enable it, with a clear disclosure</small>
-              </NodeBox>
+        <div ref={ref}>
+          <Plan>
+            <figure
+              style={{ margin: 0 }}
+              aria-label="Floor plan of your machine. Browser, Arvo, your database and an optional private AI all sit inside its walls. The only way out is an optional cloud AI door."
+            >
+              <House $on={on}>
+                <Title>Plan · your machine</Title>
+                <Rooms>
+                  {rooms.map((r, i) => (
+                    <Room key={r.name} $on={on} $d={200 + i * 150} $lit={on && !open}>
+                      <span className="no" aria-hidden>
+                        RM {String(i + 1).padStart(2, '0')}
+                      </span>
+                      <strong>{r.name}</strong>
+                      <span className="hand">{r.note}</span>
+                    </Room>
+                  ))}
+                </Rooms>
+                <Doorway $open={open} aria-hidden>
+                  <svg viewBox="0 0 64 64">
+                    <path className="swing" d="M2 0 A64 64 0 0 1 62 42" />
+                    <line className="leaf" x1="2" y1="64" x2="2" y2="0" />
+                  </svg>
+                </Doorway>
+              </House>
+            </figure>
+            <Outside $on={on}>
+              <Path $open={open} aria-hidden />
+              <Cloud $open={open}>
+                <b>Cloud AI</b>
+                <small>{open ? 'Door open · disclosed in the app' : 'Door shut · nothing leaves'}</small>
+              </Cloud>
+              <Toggle type="button" $open={open} aria-pressed={open} onClick={() => setOpen((v) => !v)}>
+                <i aria-hidden />
+                {open ? 'Close the door' : 'Open the door'}
+              </Toggle>
+              <Scribble $open={open} aria-live="polite">
+                {open ? 'your choice, and Arvo tells you' : <Badge $on={on}>stays shut unless you open it</Badge>}
+              </Scribble>
             </Outside>
-          </figure>
-        </LinkStyles>
-        <Points>
-          {[
-            ['No bank APIs', 'Import the statements your bank already gives you. Nothing to link, nothing to leak.'],
-            ['Your database', 'Every transaction lives in a database you own. Back it up, export it, or delete it.'],
-            ['AI on your terms', 'Use a private AI on your own computer, or choose a cloud AI knowing exactly what is sent.'],
-          ].map(([title, body], i) => (
-            <PrivacyPoint key={title} $on={on} $d={1400 + i * 120}>
-              <Underline $on={on} />
-              <H3 as="h3">{title}</H3>
-              <Body>{body}</Body>
-            </PrivacyPoint>
-          ))}
-        </Points>
+          </Plan>
+          <Key>
+            {keys.map((k, i) => (
+              <KeyItem key={k.title} $on={on} $d={1100 + i * 140}>
+                <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                  <path d={k.d} pathLength={1} />
+                </svg>
+                <b>{k.title}</b>
+                <span>{k.body}</span>
+              </KeyItem>
+            ))}
+          </Key>
+        </div>
       </Container>
     </SectionShell>
   );
