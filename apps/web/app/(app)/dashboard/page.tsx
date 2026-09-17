@@ -11,6 +11,7 @@ import { CategoryDonut, categoryColors, IncomeExpenseChart } from '../../../comp
 import { PageHeader } from '../../../components/page-header';
 import { Panel } from '../../../components/panel';
 import { RowList } from '../../../components/row-list';
+import { UploadReminderBanner } from '../../../components/upload-reminder-banner';
 import { useAuth } from '../../../lib/auth';
 import { formatDate } from '../../../lib/format';
 import { PERIOD_OPTIONS, periodRange, type PeriodKey } from '../../../lib/periods';
@@ -100,6 +101,8 @@ export default function DashboardPage() {
         subtitle={s ? `${formatDate(s.from)} – ${formatDate(s.to)}` : 'Your financial picture'}
         extra={<Segmented options={PERIOD_OPTIONS} value={period} onChange={setPeriod} />}
       />
+
+      <UploadReminderBanner />
 
       {accounts.data?.length === 0 && (
         <Alert

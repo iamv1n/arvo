@@ -9,6 +9,7 @@ import { PageHeader } from '../../../components/page-header';
 import { AppearanceSettings, TableSettings } from '../../../components/settings/appearance-settings';
 import { CategorySettings } from '../../../components/settings/category-settings';
 import { ProfileSettings } from '../../../components/settings/profile-settings';
+import { ReminderSettings } from '../../../components/settings/reminder-settings';
 import { RuleSettings } from '../../../components/settings/rule-settings';
 import { SecuritySettings } from '../../../components/settings/security-settings';
 
@@ -27,6 +28,7 @@ const TABS = [
     content: (
       <Flex vertical gap={16}>
         <AppearanceSettings />
+        <ReminderSettings />
         <TableSettings />
       </Flex>
     ),

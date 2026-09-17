@@ -480,3 +480,14 @@ export interface ScenarioComparison {
   baselineSeries: string[];
   scenarios: { id: string; name: string; monthlyChange: string; yearlyImpact: string; endBalance: string; series: string[] }[];
 }
+
+export type ReminderFrequency = 'off' | 'every_15_days' | 'monthly';
+
+export interface ReminderSettings {
+  frequency: ReminderFrequency;
+  day: number | null;
+  lastImportAt: string | null;
+  daysSinceLastImport: number | null;
+  nextReminderAt: string | null;
+  overdue: boolean;
+}
