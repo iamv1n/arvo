@@ -84,7 +84,7 @@ const Room = styled.li<{ $on: boolean; $d: number; $lit?: boolean }>`
   & strong {
     font-family: ${fonts.serif};
     font-weight: 500;
-    font-size: clamp(20px, 2.6vw, 28px);
+    font-size: clamp(18px, 2vw, 22px);
     line-height: 1.05;
     letter-spacing: -0.02em;
     color: ${({ theme }) => theme.colors.textPrimary};

@@ -506,7 +506,7 @@ const BandGrid = styled.div`
     margin: 0;
     font-family: ${fonts.serif};
     font-weight: 400;
-    font-size: clamp(88px, 17vw, 220px);
+    font-size: clamp(64px, 11vw, 140px);
     line-height: 0.85;
     letter-spacing: -0.05em;
     font-variation-settings: 'opsz' 144;
@@ -516,7 +516,7 @@ const BandGrid = styled.div`
     font-family: ${fonts.serif};
     font-weight: 400;
     font-style: italic;
-    font-size: clamp(24px, 3vw, 36px);
+    font-size: clamp(20px, 2.4vw, 28px);
     line-height: 1.15;
     letter-spacing: -0.015em;
   }
@@ -792,7 +792,7 @@ const Closing = styled.section<{ $on: boolean }>`
     max-width: 16ch;
     font-family: ${fonts.serif};
     font-weight: 450;
-    font-size: clamp(40px, 6.5vw, 84px);
+    font-size: clamp(32px, 4.5vw, 56px);
     line-height: 1;
     letter-spacing: -0.035em;
     font-variation-settings: 'opsz' 144;

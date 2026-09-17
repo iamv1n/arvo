@@ -131,7 +131,7 @@ const Counter = styled.div<{ $on: boolean; $d: number }>`
   strong {
     display: block;
     font-family: ${fonts.serif};
-    font-size: 30px;
+    font-size: 24px;
     font-weight: 500;
     color: ${({ theme }) => theme.colors.textPrimary};
   }

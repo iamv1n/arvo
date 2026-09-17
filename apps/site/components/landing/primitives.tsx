@@ -53,7 +53,7 @@ export const H2 = styled.h2`
   margin: 0;
   color: ${({ theme }) => theme.colors.textPrimary};
   font-family: ${fonts.serif};
-  font-size: clamp(30px, 4.4vw, 50px);
+  font-size: clamp(26px, 3.2vw, 38px);
   line-height: 1.06;
   letter-spacing: -0.025em;
   font-weight: 500;

@@ -137,7 +137,7 @@ const Answer = styled.div`
     margin-top: 6px;
     font-family: ${fonts.serif};
     font-weight: 400;
-    font-size: clamp(44px, 7vw, 84px);
+    font-size: clamp(32px, 4.5vw, 52px);
     line-height: 0.95;
     letter-spacing: -0.045em;
     font-variant-numeric: lining-nums tabular-nums;

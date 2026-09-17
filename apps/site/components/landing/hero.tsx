@@ -91,7 +91,7 @@ const H1 = styled.h1`
   max-width: 22ch;
   font-family: ${fonts.serif};
   font-weight: 450;
-  font-size: clamp(32px, 2.8vw + 20px, 56px);
+  font-size: clamp(28px, 2vw + 18px, 44px);
   line-height: 1.04;
   letter-spacing: -0.03em;
   font-variation-settings: 'opsz' 144, 'SOFT' 30;

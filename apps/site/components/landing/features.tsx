@@ -60,7 +60,7 @@ const Title = styled.h3`
   margin: 0;
   font-family: ${fonts.serif};
   font-weight: 500;
-  font-size: clamp(30px, 5vw, 46px);
+  font-size: clamp(24px, 3.2vw, 34px);
   line-height: 1.02;
   letter-spacing: -0.025em;
   color: ${({ theme }) => theme.colors.textPrimary};
@@ -215,7 +215,7 @@ const Tray = styled.div<{ $tone: 'brand' | 'warning' }>`
   & strong {
     font-family: ${fonts.serif};
     font-weight: 500;
-    font-size: clamp(44px, 8vw, 64px);
+    font-size: clamp(32px, 5vw, 44px);
     line-height: 1;
     letter-spacing: -0.03em;
     color: ${({ theme, $tone }) => ($tone === 'brand' ? theme.colors.brandText : theme.colors.warning)};
@@ -439,7 +439,7 @@ const Figures = styled.dl`
     margin: 0;
     font-family: ${fonts.serif};
     font-weight: 500;
-    font-size: clamp(28px, 5vw, 40px);
+    font-size: clamp(18px, 2.4vw, 24px);
     letter-spacing: -0.02em;
     font-variant-numeric: tabular-nums;
   }
@@ -581,7 +581,7 @@ const BigFig = styled.div`
   margin-top: 18px;
   font-family: ${fonts.serif};
   font-weight: 500;
-  font-size: clamp(56px, 10vw, 84px);
+  font-size: clamp(40px, 6vw, 56px);
   line-height: 0.95;
   letter-spacing: -0.04em;
   font-variant-numeric: tabular-nums;
@@ -678,7 +678,7 @@ const AskGrid = styled.div`
 
 const Answer = styled.div`
   font-family: ${fonts.serif};
-  font-size: clamp(22px, 3.4vw, 30px);
+  font-size: clamp(18px, 2.4vw, 24px);
   line-height: 1.3;
   letter-spacing: -0.01em;
   color: ${({ theme }) => theme.colors.textPrimary};

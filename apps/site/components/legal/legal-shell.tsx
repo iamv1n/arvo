@@ -118,7 +118,7 @@ const Doc = styled.article`
     font-family: ${fonts.serif};
     font-weight: 450;
     font-variation-settings: 'opsz' 144;
-    font-size: clamp(30px, 5vw, 44px);
+    font-size: clamp(26px, 3.6vw, 36px);
     line-height: 1.15;
     letter-spacing: -0.02em;
     color: ${({ theme }) => theme.colors.textPrimary};

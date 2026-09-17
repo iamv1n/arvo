@@ -136,7 +136,7 @@ const Masthead = styled.header`
     margin: 0;
     font-family: ${fonts.serif};
     font-weight: 500;
-    font-size: 30px;
+    font-size: 24px;
     letter-spacing: -0.02em;
   }
   p {
@@ -216,7 +216,7 @@ const Total = styled.div<{ $on: boolean }>`
   b {
     font-family: ${fonts.serif};
     font-weight: 500;
-    font-size: 34px;
+    font-size: 28px;
     letter-spacing: -0.03em;
     color: ${({ theme }) => theme.colors.brandText};
   }

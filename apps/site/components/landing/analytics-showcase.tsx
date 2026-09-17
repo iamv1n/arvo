@@ -25,7 +25,7 @@ const Head = styled.div`
     margin: 0;
     font-family: ${fonts.serif};
     font-weight: 400;
-    font-size: clamp(34px, 5vw, 56px);
+    font-size: clamp(28px, 3.4vw, 40px);
     line-height: 1;
     letter-spacing: -0.035em;
     font-variation-settings: 'opsz' 144;
@@ -88,7 +88,7 @@ const Figure = styled.div`
   margin: 10px 0 2px;
   font-family: ${fonts.serif};
   font-weight: 400;
-  font-size: clamp(40px, 5vw, 64px);
+  font-size: clamp(30px, 3.4vw, 44px);
   line-height: 1;
   letter-spacing: -0.04em;
   font-variant-numeric: lining-nums tabular-nums;
@@ -350,7 +350,7 @@ export function AnalyticsShowcase() {
             <span>Net worth</span>
             <span style={{ color: 'inherit' }}>+₹5.1L / yr</span>
           </Label>
-          <Figure style={{ fontSize: 'clamp(34px, 4vw, 48px)' }}>{inr(worth)}</Figure>
+          <Figure style={{ fontSize: 'clamp(26px, 3vw, 36px)' }}>{inr(worth)}</Figure>
           <NetWorthMilestones on={on} />
         </Cell>
       </Spread>
