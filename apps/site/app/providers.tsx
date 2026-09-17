@@ -5,6 +5,7 @@ import { AntdRegistry } from '@ant-design/nextjs-registry';
 import { App as AntdApp, ConfigProvider } from 'antd';
 import { useMemo, type ReactNode } from 'react';
 import { createGlobalStyle, ThemeProvider } from 'styled-components';
+import { BetaAccessProvider } from '../components/beta-access';
 import { StyledComponentsRegistry } from '../lib/styled-registry';
 import { ThemeModeProvider, useThemeMode } from '../lib/theme-mode';
 
@@ -26,7 +27,9 @@ function ThemedApp({ children }: { children: ReactNode }) {
     <ConfigProvider theme={antdTheme}>
       <ThemeProvider theme={styledTheme}>
         <GlobalStyle />
-        <AntdApp>{children}</AntdApp>
+        <AntdApp>
+          <BetaAccessProvider>{children}</BetaAccessProvider>
+        </AntdApp>
       </ThemeProvider>
     </ConfigProvider>
   );

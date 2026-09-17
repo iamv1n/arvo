@@ -4,7 +4,7 @@ import { ArrowRightOutlined } from '@ant-design/icons';
 import { Button, Collapse } from 'antd';
 import { useEffect, useState } from 'react';
 import styled, { createGlobalStyle } from 'styled-components';
-import { APP_URL } from '../../lib/config';
+import { OpenAppButton, OpenAppLink } from '../beta-access';
 import { CONTACT_EMAIL } from '../../lib/legal';
 import { ThemeToggle } from '../theme-toggle';
 import { AdvisorSection } from './advisor';
@@ -175,9 +175,7 @@ export function Nav({ base = '' }: { base?: string }) {
         <NavRight>
           <ThemeToggle />
           <HideSm>
-            <Button type="primary" href={`${APP_URL}/dashboard`}>
-              Open Arvo
-            </Button>
+            <OpenAppButton type="primary" />
           </HideSm>
         </NavRight>
       </NavInner>
@@ -352,9 +350,7 @@ export function LandingPage() {
                 <h2 id="cta-title">Take your finances home.</h2>
                 <Body>Run Arvo on your own machine and see where your money goes, with numbers you can trace.</Body>
                 <div className="actions">
-                  <Button type="primary" size="large" href={`${APP_URL}/dashboard`} icon={<ArrowRightOutlined />} iconPlacement="end">
-                    Open Arvo
-                  </Button>
+                  <OpenAppButton type="primary" size="large" icon={<ArrowRightOutlined />} iconPlacement="end" />
                   <Button size="large" href="#features">
                     Explore features
                   </Button>
@@ -401,7 +397,7 @@ export function SiteFooter({ base = '' }: { base?: string }) {
               <a href={`mailto:${CONTACT_EMAIL}`}>Contact</a>
             </li>
             <li>
-              <a href={`${APP_URL}/dashboard`}>Open Arvo</a>
+              <OpenAppLink />
             </li>
           </ul>
         </nav>

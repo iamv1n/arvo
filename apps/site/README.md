@@ -12,7 +12,7 @@ pnpm --filter @arvo/site dev   # http://localhost:3400
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `NEXT_PUBLIC_APP_URL` | `http://localhost:3300` | Base URL of the Arvo web app. The "Open Arvo" buttons link to `${NEXT_PUBLIC_APP_URL}/dashboard`. |
+| `NEXT_PUBLIC_APP_URL` | unset | Base URL of the Arvo web app. When set, "Open Arvo" buttons link to `${NEXT_PUBLIC_APP_URL}/dashboard`. When unset or empty, they open a closed-beta modal asking visitors to email for access. |
 | `NEXT_PUBLIC_SHOW_SELF_HOST` | unset | Set to `true` to publish the `/self-host` guide and list it in the sitemap. Otherwise the route returns 404. Nothing links to it yet. |
 | `NEXT_PUBLIC_SITE_URL` | `http://localhost:3400` | Public URL of this site. Used for `metadataBase`, canonical links, `/sitemap.xml` and `/robots.txt`. |
 

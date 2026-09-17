@@ -5,7 +5,7 @@ import { Button } from 'antd';
 import styled, { useTheme } from 'styled-components';
 import { CategoryDonut, IncomeExpenseBars, categories } from './charts';
 import { fadeUp, float, formatINR, play, pulse, useCountUp, useInView } from './motion';
-import { APP_URL } from '../../lib/config';
+import { OpenAppButton } from '../beta-access';
 import { Container } from './primitives';
 
 const HeroSection = styled.section`
@@ -377,9 +377,7 @@ export function Hero() {
             </Anim>
             <Anim $d={240}>
               <Ctas>
-                <Button type="primary" size="large" href={`${APP_URL}/dashboard`} icon={<ArrowRightOutlined />} iconPlacement="end">
-                  Open Arvo
-                </Button>
+                <OpenAppButton type="primary" size="large" icon={<ArrowRightOutlined />} iconPlacement="end" />
                 <Button size="large" href="#how-it-works">
                   See how it works
                 </Button>
