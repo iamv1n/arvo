@@ -11,7 +11,8 @@ import { AdvisorSection } from './advisor';
 import { Features } from './features';
 import { Hero } from './hero';
 import { HowItWorks } from './how-it-works';
-import { McpSection, PrivacySection } from './mcp-privacy';
+import { McpSection } from './mcp-switchboard';
+import { PrivacySection } from './mcp-privacy';
 import { Body, Container, fonts, Reveal, SectionHeading, SectionShell } from './primitives';
 import { PlanningToolsSection } from './planning-tools';
 
