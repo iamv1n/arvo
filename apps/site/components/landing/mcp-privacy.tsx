@@ -62,8 +62,8 @@ const Rooms = styled.ul`
 
 const Room = styled.li<{ $on: boolean; $d: number; $lit?: boolean }>`
   position: relative;
-  min-height: 150px;
-  padding: 18px 16px;
+  min-height: 110px;
+  padding: 14px 14px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -96,8 +96,8 @@ const Room = styled.li<{ $on: boolean; $d: number; $lit?: boolean }>`
     color: ${({ theme }) => theme.colors.brandText};
   }
   @media (min-width: ${({ theme }) => theme.breakpoints.md}px) {
-    min-height: 190px;
-    padding: 24px;
+    min-height: 130px;
+    padding: 18px;
   }
 `;
 
