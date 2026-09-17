@@ -3,14 +3,18 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { api, onSessionChange, refreshSession, setSession } from './api';
-import type { TokenResponse, User } from './types';
+import type { TokenResponse, TwoFactorChallenge, TwoFactorMethod, User } from './types';
 
 type Status = 'loading' | 'authenticated' | 'anonymous';
 
 interface AuthContextValue {
   status: Status;
   user: User | null;
-  login: (email: string, password: string) => Promise<void>;
+  /** Resolves to a challenge when the account has two-factor authentication. */
+  login: (email: string, password: string) => Promise<TwoFactorChallenge | null>;
+  verifyTwoFactor: (challengeToken: string, method: TwoFactorMethod, code: string) => Promise<void>;
+  /** Adopts tokens returned by other endpoints (e.g. password change). */
+  applyTokens: (tokens: TokenResponse) => void;
   register: (input: { email: string; password: string; name: string; currency?: string; timezone?: string }) => Promise<void>;
   logout: () => Promise<void>;
   reloadUser: () => Promise<void>;
@@ -49,11 +53,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(
     async (email: string, password: string) => {
-      setSession(await api<TokenResponse>('/auth/login', { method: 'POST', body: { email, password }, auth: false }));
+      const result = await api<TokenResponse | TwoFactorChallenge>('/auth/login', { method: 'POST', body: { email, password }, auth: false });
+      if ('twoFactorRequired' in result) return result;
+      setSession(result);
+      await reloadUser();
+      return null;
+    },
+    [reloadUser],
+  );
+
+  const verifyTwoFactor = useCallback<AuthContextValue['verifyTwoFactor']>(
+    async (challengeToken, method, code) => {
+      setSession(await api<TokenResponse>('/auth/2fa/verify', { method: 'POST', body: { challengeToken, method, code }, auth: false }));
       await reloadUser();
     },
     [reloadUser],
   );
+
+  const applyTokens = useCallback((tokens: TokenResponse) => setSession(tokens), []);
 
   const register = useCallback<AuthContextValue['register']>(
     async (input) => {
@@ -70,8 +87,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [queryClient]);
 
   const value = useMemo(
-    () => ({ status, user, login, register, logout, reloadUser }),
-    [status, user, login, register, logout, reloadUser],
+    () => ({ status, user, login, verifyTwoFactor, applyTokens, register, logout, reloadUser }),
+    [status, user, login, verifyTwoFactor, applyTokens, register, logout, reloadUser],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

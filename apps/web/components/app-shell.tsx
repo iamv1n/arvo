@@ -12,6 +12,7 @@ import { useAuth } from '../lib/auth';
 import { usePreferences } from '../lib/preferences';
 import { PixelLogo } from './logo';
 import { ThemeToggle } from './theme-toggle';
+import { VerifyEmailBanner } from './verify-email-banner';
 
 const navIcon = (Icon: typeof SquaresFour) => <Icon size={19} weight="duotone" aria-hidden />;
 
@@ -188,6 +189,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </Bar>
         <Content>
+          <VerifyEmailBanner />
           <div className="arvo-page" key={pathname}>
             {children}
           </div>

@@ -10,9 +10,16 @@ import { AppearanceSettings, TableSettings } from '../../../components/settings/
 import { CategorySettings } from '../../../components/settings/category-settings';
 import { ProfileSettings } from '../../../components/settings/profile-settings';
 import { RuleSettings } from '../../../components/settings/rule-settings';
+import { SecuritySettings } from '../../../components/settings/security-settings';
 
 const TABS = [
-  { key: 'account', label: 'Account', icon: <UserOutlined />, content: <ProfileSettings /> },
+  { key: 'account', label: 'Account', icon: <UserOutlined />, content: (
+      <Flex vertical gap={16}>
+        <ProfileSettings />
+        <SecuritySettings />
+      </Flex>
+    ),
+  },
   {
     key: 'preferences',
     label: 'Preferences',

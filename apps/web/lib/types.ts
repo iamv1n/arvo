@@ -8,6 +8,8 @@ export interface User {
   name: string;
   currency: string;
   timezone: string;
+  emailVerifiedAt: string | null;
+  twoFactorEnabled: boolean;
   createdAt: string;
 }
 
@@ -116,6 +118,21 @@ export interface TokenResponse {
   expiresIn: number;
   refreshToken: string;
   refreshTokenExpiresAt: string;
+}
+
+export type TwoFactorMethod = 'totp' | 'email' | 'recovery';
+
+export interface TwoFactorChallenge {
+  twoFactorRequired: true;
+  challengeToken: string;
+  methods: TwoFactorMethod[];
+  expiresIn: number;
+}
+
+export interface TwoFactorStatus {
+  enabled: boolean;
+  enabledAt: string | null;
+  recoveryCodesRemaining: number;
 }
 
 export type ImportStatus = 'PENDING' | 'PROCESSING' | 'REVIEW' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
