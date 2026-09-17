@@ -90,8 +90,8 @@ const UserBubble = styled.div`
   max-width: 80%;
   padding: 10px 14px;
   border-radius: ${({ theme }) => theme.radii.lg}px ${({ theme }) => theme.radii.lg}px 4px ${({ theme }) => theme.radii.lg}px;
-  background: ${({ theme }) => theme.colors.textPrimary};
-  color: ${({ theme }) => theme.colors.bgCanvas};
+  background: ${({ theme }) => theme.colors.inkSurface};
+  color: ${({ theme }) => theme.colors.onInk};
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 `;

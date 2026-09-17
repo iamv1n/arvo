@@ -57,8 +57,8 @@ export const LogoMark = styled.span`
   width: 34px;
   height: 34px;
   border-radius: ${({ theme }) => theme.radii.md}px;
-  background: ${({ theme }) => theme.colors.textPrimary};
-  color: ${({ theme }) => theme.colors.bgCanvas};
+  background: ${({ theme }) => theme.colors.inkSurface};
+  color: ${({ theme }) => theme.colors.onInk};
   font-family: ${({ theme }) => theme.typography.fontFamilySerif};
   font-size: 19px;
   font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
@@ -183,7 +183,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 ],
               }}
             >
-              <Avatar style={{ cursor: 'pointer', background: theme.colors.textPrimary, color: theme.colors.bgCanvas, fontWeight: 600 }}>
+              <Avatar style={{ cursor: 'pointer', background: theme.colors.inkSurface, color: theme.colors.onInk, fontWeight: 600 }}>
                 {user?.name.charAt(0).toUpperCase() || <UserOutlined />}
               </Avatar>
             </Dropdown>

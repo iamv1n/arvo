@@ -100,6 +100,8 @@ describe('MCP server over Streamable HTTP (e2e)', () => {
       expect.arrayContaining(['finance_get_cashflow', 'finance_get_spending_summary', 'finance_compare_periods', 'finance_get_net_worth']),
     );
     expect(tools.every((t) => t.annotations?.readOnlyHint === true)).toBe(true);
+    // Advisor-only draft tools never reach MCP clients.
+    expect(tools.some((t) => t.name.startsWith('draft_'))).toBe(false);
     expect(tools.find((t) => t.name === 'finance_get_transactions')?.inputSchema.properties).toHaveProperty('min_amount');
 
     const cashflow = await client.callTool({ name: 'finance_get_cashflow', arguments: {} });
