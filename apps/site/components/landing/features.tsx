@@ -497,7 +497,7 @@ function TransfersIllustration() {
       <text x={x + 65} y={48} textAnchor="middle" fontSize={13} fontWeight={600} fill={theme.colors.textPrimary}>
         {label}
       </text>
-      <text x={x + 65} y={67} textAnchor="middle" fontSize={11} fill={theme.colors.textSecondary}>
+      <text x={x + 65} y={67} textAnchor="middle" fontSize={13} fill={theme.colors.textSecondary}>
         {sub}
       </text>
     </g>
@@ -513,10 +513,10 @@ function TransfersIllustration() {
         </FadeG>
         <FadeG $on={on} $d={700}>
           <rect x={160} y={28} width={80} height={18} rx={9} fill={theme.colors.bgMuted} />
-          <text x={200} y={41} textAnchor="middle" fontSize={11} fontWeight={600} fill={theme.colors.transfer}>
+          <text x={200} y={41} textAnchor="middle" fontSize={13} fontWeight={600} fill={theme.colors.transfer}>
             ₹32,400
           </text>
-          <text x={200} y={74} textAnchor="middle" fontSize={11} fill={theme.colors.textSecondary}>
+          <text x={200} y={74} textAnchor="middle" fontSize={13} fill={theme.colors.textSecondary}>
             Transfer
           </text>
         </FadeG>
@@ -576,13 +576,13 @@ function ScenarioIllustration() {
       </PanelHead>
       <svg viewBox={`0 0 ${w} ${h}`} width="100%" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Projected cash balance over six months with and without a ₹70,000 purchase; with the purchase the balance dips but stays above the safety buffer and recovers">
         <Buffer $on={on} x1={0} x2={w} y1={y(30)} y2={y(30)} stroke={theme.colors.warning} strokeDasharray="5 5" />
-        <text x={w - 4} y={y(30) + 14} textAnchor="end" fontSize={10} fill={theme.colors.textSecondary}>
+        <text x={w - 4} y={y(30) + 14} textAnchor="end" fontSize={12} fill={theme.colors.textSecondary}>
           Safety buffer
         </text>
         <FlowPath $on={on} d={path(base)} pathLength={1} fill="none" stroke={theme.colors.textMuted} strokeWidth={2} strokeLinecap="round" />
         <FlowPath $on={on} d={path(withBuy)} pathLength={1} fill="none" stroke={theme.colors.brand} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
         {['Now', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb'].map((m, i) => (
-          <text key={m} x={x(i)} y={h - 4} fontSize={10} textAnchor={i === 0 ? 'start' : i === 5 ? 'end' : 'middle'} fill={theme.colors.textMuted}>
+          <text key={m} x={x(i)} y={h - 4} fontSize={12} textAnchor={i === 0 ? 'start' : i === 5 ? 'end' : 'middle'} fill={theme.colors.textMuted}>
             {m}
           </text>
         ))}

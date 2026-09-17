@@ -170,6 +170,9 @@ const MenuButton = styled.button`
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  min-height: 44px;
+  min-width: 44px;
+  justify-content: center;
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
@@ -189,6 +192,8 @@ const Sheet = styled.div`
   z-index: 100;
   display: flex;
   flex-direction: column;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  overscroll-behavior: contain;
   background: ${({ theme }) => theme.colors.bgCanvas};
   color: ${({ theme }) => theme.colors.textPrimary};
   & .top {
@@ -212,7 +217,8 @@ const Sheet = styled.div`
     display: flex;
     align-items: baseline;
     gap: 16px;
-    padding: 14px 0;
+    min-height: 56px;
+    padding: 12px 0;
     font-family: ${fonts.serif};
     font-size: 30px;
     letter-spacing: -0.02em;
@@ -257,6 +263,7 @@ export function Nav({ base = '' }: { base?: string }) {
   const [compact, setCompact] = useState(false);
   const [open, setOpen] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -277,7 +284,26 @@ export function Nav({ base = '' }: { base?: string }) {
     const previous = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') close();
+      if (event.key === 'Escape') {
+        close();
+        return;
+      }
+      // Keep Tab and Shift+Tab cycling inside the open sheet.
+      if (event.key !== 'Tab' || !sheetRef.current) return;
+      const focusable = Array.from(
+        sheetRef.current.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'),
+      ).filter((el) => el.offsetParent !== null);
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!first || !last) return;
+      const active = document.activeElement;
+      if (event.shiftKey && (active === first || !sheetRef.current.contains(active))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (active === last || !sheetRef.current.contains(active))) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => {
@@ -311,7 +337,7 @@ export function Nav({ base = '' }: { base?: string }) {
         </NavRight>
       </Bar>
       {open ? (
-        <Sheet id="site-menu" role="dialog" aria-modal="true" aria-label="Site menu">
+        <Sheet ref={sheetRef} id="site-menu" role="dialog" aria-modal="true" aria-label="Site menu">
           <div className="top">
             <Wordmark href={base ? '/' : '#top'} onClick={() => setOpen(false)}>
               <strong>Arvo</strong>
@@ -330,7 +356,9 @@ export function Nav({ base = '' }: { base?: string }) {
               </li>
             ))}
           </ol>
-          <div className="foot">
+          <div className="foot" onClickCapture={(event) => {
+              if ((event.target as HTMLElement).closest('a')) setOpen(false);
+            }}>
             <OpenAppLink>Open Arvo →</OpenAppLink>
             <ThemeToggle />
           </div>

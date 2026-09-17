@@ -61,7 +61,7 @@ export function IncomeExpenseBars({ on, compact = false }: { on: boolean; compac
           <g key={d.m}>
             <Bar $on={on} $d={i * 90} x={cx - bw - 1} y={base - ih} width={bw} height={ih} rx={3} fill={theme.colors.income} />
             <Bar $on={on} $d={i * 90 + 60} x={cx + 1} y={base - eh} width={bw} height={eh} rx={3} fill={theme.colors.expense} />
-            <text x={cx} y={h - 4} textAnchor="middle" fontSize={10} fill={theme.colors.textMuted}>
+            <text x={cx} y={h - 4} textAnchor="middle" fontSize={12} fill={theme.colors.textMuted}>
               {d.m}
             </text>
           </g>
@@ -160,7 +160,7 @@ export function NetWorthLine({ on }: { on: boolean }) {
         <circle cx={x(pts.length - 1)} cy={y(pts[pts.length - 1] ?? 0)} r={4.5} fill={theme.colors.bgSurface} stroke={theme.colors.brand} strokeWidth={2.5} />
       </Fade>
       {['Oct', 'Jan', 'Apr', 'Sep'].map((m, i) => (
-        <text key={m} x={x(Math.round((i * (pts.length - 1)) / 3))} y={h - 4} fontSize={10} textAnchor={i === 0 ? 'start' : i === 3 ? 'end' : 'middle'} fill={theme.colors.textMuted}>
+        <text key={m} x={x(Math.round((i * (pts.length - 1)) / 3))} y={h - 4} fontSize={12} textAnchor={i === 0 ? 'start' : i === 3 ? 'end' : 'middle'} fill={theme.colors.textMuted}>
           {m}
         </text>
       ))}

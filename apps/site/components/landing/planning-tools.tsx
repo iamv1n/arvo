@@ -53,6 +53,12 @@ const TabList = styled.div`
     scroll-snap-align: start;
     flex: 0 0 auto;
   }
+  /* On narrow screens the last visible tab fades out, hinting there is more to scroll. */
+  @media (max-width: ${({ theme }) => theme.breakpoints.lg}px) {
+    padding-right: 48px;
+    mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
+  }
 `;
 
 const TabButton = styled.button<{ $active: boolean }>`

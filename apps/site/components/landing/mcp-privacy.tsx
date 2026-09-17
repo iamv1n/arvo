@@ -43,6 +43,8 @@ const ToolChips = styled.ul`
     background: ${({ theme }) => theme.colors.bgSurfaceRaised};
     font-family: ${({ theme }) => theme.typography.fontFamilyMono};
     font-size: 12.5px;
+    max-width: 100%;
+    overflow-wrap: anywhere;
     color: ${({ theme }) => theme.colors.brandText};
   }
   & li.soon {

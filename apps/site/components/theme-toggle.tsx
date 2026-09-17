@@ -40,8 +40,8 @@ const Track = styled.button<{ $dark: boolean }>`
     width: calc(50% - 3px);
     height: calc(100% - 6px);
     border-radius: ${({ theme }) => theme.radii.sm}px;
-    background: ${({ theme }) => theme.colors.brandGradient};
-    box-shadow: ${({ theme }) => theme.shadows.brand};
+    background: ${({ theme }) => theme.colors.textPrimary};
+    box-shadow: none;
     transform: translateX(${({ $dark }) => ($dark ? '100%' : '0')});
     transition: transform 320ms cubic-bezier(0.34, 1.3, 0.64, 1);
   }
@@ -53,7 +53,7 @@ const Icon = styled.span<{ $active: boolean }>`
   display: grid;
   place-items: center;
   font-size: 14px;
-  color: ${({ theme, $active }) => ($active ? theme.colors.onBrand : theme.colors.textMuted)};
+  color: ${({ theme, $active }) => ($active ? theme.colors.bgCanvas : theme.colors.textMuted)};
   transform: ${({ $active }) => ($active ? 'scale(1) rotate(0deg)' : 'scale(0.85) rotate(-30deg)')};
   opacity: ${({ $active }) => ($active ? 1 : 0.7)};
   transition:

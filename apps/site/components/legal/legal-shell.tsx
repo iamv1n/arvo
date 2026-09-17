@@ -83,15 +83,21 @@ const MobileToc = styled.details`
   background: ${({ theme }) => theme.colors.bgSurface};
   padding: 10px 14px;
   & summary {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
     cursor: pointer;
     font-weight: 600;
     color: ${({ theme }) => theme.colors.textPrimary};
   }
   & ol {
-    margin: 10px 0 4px;
+    margin: 4px 0 8px;
     padding-left: 22px;
-    line-height: 1.9;
-    font-size: 14px;
+    font-size: 15px;
+  }
+  & ol a {
+    display: block;
+    padding: 8px 0;
   }
   & a {
     color: ${({ theme }) => theme.colors.textSecondary};

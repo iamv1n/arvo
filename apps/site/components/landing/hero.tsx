@@ -69,7 +69,8 @@ function useStatementStage() {
     if (reduced) return;
     const limit = wide ? STAGES.rows : LAST_STAGE;
     if (timeStage >= limit) return;
-    const delay = timeStage === 0 ? 400 : timeStage < STAGES.rows ? 280 : 650;
+    // Small screens: the full sequence takes about 4s (400 + 5×280 + 5×450 ms).
+    const delay = timeStage === 0 ? 400 : timeStage < STAGES.rows ? 280 : 450;
     const id = window.setTimeout(() => setTimeStage((s) => s + 1), delay);
     return () => window.clearTimeout(id);
   }, [timeStage, wide, reduced]);
@@ -142,7 +143,7 @@ const H1 = styled.h1`
   max-width: 22ch;
   font-family: ${fonts.serif};
   font-weight: 450;
-  font-size: clamp(36px, 4.6vw, 56px);
+  font-size: clamp(32px, 2.8vw + 20px, 56px);
   line-height: 1.04;
   letter-spacing: -0.03em;
   font-variation-settings: 'opsz' 144, 'SOFT' 30;
@@ -168,9 +169,31 @@ const Below = styled.div`
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 10px 32px;
+    gap: 4px 32px;
+  }
+  @media (max-width: 480px) {
+    width: 100%;
+    & p {
+      font-size: 16px;
+    }
+    & .actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    & .actions a {
+      justify-content: center;
+      font-size: 17px;
+    }
+    & .actions a.primary {
+      border: 1px solid currentColor;
+      border-radius: ${({ theme }) => theme.radii.sm}px;
+      text-decoration: none;
+    }
   }
   & .actions a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
     font-size: 16px;
     font-weight: 600;
     text-decoration: underline;
@@ -240,10 +263,19 @@ const Letterhead = styled.div`
     font-weight: 700;
     letter-spacing: 0.08em;
   }
-  & span {
+  & > span {
     font-family: ${fonts.mono};
-    font-size: 11px;
+    font-size: 12px;
     color: ${({ theme }) => theme.colors.textSecondary};
+  }
+  @media (max-width: 480px) {
+    & strong {
+      font-size: 17px;
+    }
+    & strong .long,
+    & > span {
+      display: none;
+    }
   }
 `;
 
@@ -298,7 +330,10 @@ const cols = css`
 const HeadRow = styled.div`
   ${cols}
   height: ${HEAD_H}px;
-  font-size: 10px;
+  font-size: 11px;
+  @media (max-width: 700px) {
+    font-size: 12px;
+  }
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: ${({ theme }) => theme.colors.textMuted};
@@ -376,9 +411,9 @@ const Stamp = styled.span<{ $shown: boolean }>`
   border: 2.5px solid ${({ theme }) => theme.colors.brand};
   border-radius: 4px;
   font-family: ${fonts.mono};
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.16em;
   color: ${({ theme }) => theme.colors.brand};
   opacity: 0;
   ${({ $shown }) =>
@@ -452,7 +487,7 @@ function Statement({ stage }: { stage: number }) {
     >
       <Letterhead aria-hidden>
         <strong>
-          <b>ARVO</b> — Statement of understanding
+          <b>ARVO</b> — Statement<span className="long"> of understanding</span>
         </strong>
         <span>SAVINGS ··· 4417 · AUGUST 2026</span>
       </Letterhead>
