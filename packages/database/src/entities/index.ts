@@ -1,5 +1,6 @@
 import { AccountEntity } from './account.entity';
 import { ApiTokenEntity } from './api-token.entity';
+import { AuthTokenEntity, RecoveryCodeEntity } from './auth-token.entity';
 import { OAuthAuthorizationEntity, OAuthClientEntity, OAuthTokenEntity } from './oauth.entities';
 import { ImportBatchEntity, ImportColumnMappingEntity, ImportErrorEntity, ImportRowEntity } from './import.entities';
 import { RecurringSeriesEntity } from './recurring.entity';
@@ -13,6 +14,8 @@ import { TransferEntity } from './transfer.entity';
 import { UserEntity } from './user.entity';
 
 export {
+  AuthTokenEntity,
+  RecoveryCodeEntity,
   BudgetEntity,
   GoalEntity,
   ScenarioEntity,
@@ -56,4 +59,6 @@ export const ENTITIES = [
   BudgetEntity,
   GoalEntity,
   ScenarioEntity,
+  AuthTokenEntity,
+  RecoveryCodeEntity,
 ];
