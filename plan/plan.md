@@ -2237,6 +2237,197 @@ Observability
 
 ---
 
+# 73A. Expansion Products (Phases 9–14)
+
+New products built on the same ledger, Finance Core and tool layer. Each one is a separate area of the web app with its own nav group. Each exposes read-only MCP tools, and each can be switched off per install.
+
+## Shared principles
+
+* **Numbers from engines, words from AI.** Every figure comes from a tested, deterministic service. The AI explains, compares and drafts; it never computes.
+* **Your data first.** Features work from imported statements, tradebooks and holdings. Live market data is optional, pluggable and cached.
+* **Suggest, you approve.** Nothing is saved, and no order is placed, without an explicit action by the user.
+* **Levels of advice.** Every feature declares its level, and levels 3 and 4 stay behind config flags:
+
+| Level | What it does | Default |
+|---|---|---|
+| 0 | Analysis of the user's own data (P&L, risk, charges, tax) | on |
+| 1 | Education: strategy explainers, payoff diagrams, glossary | on |
+| 2 | Simulation: backtests, paper trading, what-ifs | on |
+| 3 | Rule-based alerts the user writes ("notify me if…") | on |
+| 4 | Personalised buy/sell recommendations, targets, signals | **off** |
+
+* **SEBI compliance.** In India, level 4 needs SEBI Research Analyst (RA) or Investment Adviser (IA) registration. Until an install declares `ADVICE_LEVEL=4` together with registration details, the engine refuses to produce security-specific calls. The UI then shows "educational, not a recommendation" disclaimers. Past performance of backtests is always labelled as such.
+
+---
+
+# 74A. Phase 9 — AI Advisor (finishes Phase 7B)
+
+```text
+/advisor   Chat over your data + weekly briefing + pending suggestions inbox
+```
+
+* **Providers:** Anthropic, OpenAI, Gemini and Ollama, behind `AIProvider`, selected in Settings. A clear notice appears when a cloud provider is on.
+* **Tool access:** the advisor calls the existing tools: highlights, savings, budgets, goals, affordability, what-if, recurring and net worth.
+* **Weekly briefing:** a scheduled job that sends email and an in-app card covering what changed, what is pacing over, and one decision to make.
+* **Suggestions inbox:**
+  * The advisor drafts budgets, goals, categorization rules and scenarios.
+  * The user approves, edits or dismisses each one.
+  * The audit log keeps the provenance ("Data used: 127 transactions, Aug").
+* **Life-event playbooks:** job change, marriage, a baby, buying a home, moving city, and a bonus received. Each is a guided checklist with a plan draft.
+* **Money personality:** a quarterly report on spending style (impulse vs planned, weekend skew, subscription creep) with nudges.
+
+---
+
+# 74B. Phase 10 — Wealth & Portfolio
+
+```text
+/portfolio   Holdings, allocation, XIRR, goals mapping
+```
+
+* **Imports:**
+  * CAS statements (CAMS/KFintech PDF) for mutual funds
+  * broker holdings CSVs (Zerodha Console, Groww, Upstox, Angel)
+  * NPS, EPF passbook, PPF, FD/RD, SGB, gold and real estate (manual entry)
+* **Returns:** XIRR per holding, per asset class and overall, plus benchmark comparison (Nifty 50 / Nifty 500 TRI).
+* **Allocation:** equity/debt/gold/cash, large/mid/small, sector and AMC concentration, and overlap between funds.
+* **Mutual fund health:** expense ratio drag, regular vs direct plan cost ("you pay ₹X/yr more"), exit load windows.
+* **Rebalancing calculator:** the target allocation and the minimum trades to reach it. Education level; tax impact is shown.
+* **Tax view:**
+  * LTCG/STCG realised this year, and harvesting room under the LTCG exemption
+  * ELSS lock-ins
+  * indexation where it still applies
+* **Goal mapping:** assign holdings to goals, then project the probability of reaching each goal (Monte Carlo, seeded and reproducible).
+
+---
+
+# 74C. Phase 11 — Trading Journal
+
+```text
+/trading/journal   Every trade, grouped into positions, with P&L after all costs
+```
+
+* **Imports:** tradebook and P&L CSVs from Zerodha, Upstox, Groww, Angel One, Dhan and Fyers; contract notes (PDF).
+* **Instruments and styles:**
+  * instruments: equity delivery, intraday, futures, options (index and stock), commodities (MCX), currency
+  * styles: intraday, BTST, swing, positional
+* **Position reconstruction:** FIFO matching, partial exits, rollovers, and expiry/assignment for options.
+* **Real P&L:**
+  * charges: brokerage, STT, exchange txn, SEBI fee, stamp duty, GST, DP charges
+  * "gross vs net" breakdown
+  * charges as a % of gross profit
+* **Metrics:**
+  * win rate, average win/loss, expectancy, profit factor
+  * max drawdown, longest losing streak
+  * R-multiples (if a stop is recorded)
+  * holding time distribution
+  * time-of-day and day-of-week edge
+  * performance by setup tag
+* **Behaviour analytics:**
+  * over-trading days, revenge trades (a new trade within N minutes of a loss)
+  * size creep after wins, and averaging down on losers
+  * expiry-day gambling ratio
+* **Journal:** per-trade notes, screenshots (local storage), setup tags, emotions and a mistakes checklist, plus a weekly review template.
+* **F&O reality check:** yearly net F&O P&L vs what the same capital would have earned in an index fund or FD. Shown neutrally.
+* **Tax:**
+  * speculative (intraday) vs non-speculative business income (F&O) vs capital gains (delivery)
+  * turnover calculation for tax audit thresholds
+  * an ITR-3 helper export
+
+---
+
+# 74D. Phase 12 — Strategy Lab (Education + Simulation)
+
+```text
+/trading/lab   Payoffs, backtests and paper trading — never live orders
+```
+
+* **Options payoff builder:**
+  * multi-leg strategies (straddle, strangle, iron condor, butterflies, spreads, calendars)
+  * P&L at expiry and before expiry (Black-Scholes)
+  * breakevens, max profit/loss, margin estimate
+  * Greeks: delta, gamma, theta, vega
+  * IV scenarios
+* **Futures calculator:** lot sizes, margin, MTM, rollover cost, and basis.
+* **Position sizing and risk:** fixed-fractional and fixed-risk sizing, risk of ruin, and a Kelly (fractional) explainer.
+* **Backtester:**
+  * rules DSL or form (indicators: SMA/EMA, RSI, MACD, VWAP, ATR, Supertrend, breakouts)
+  * entry/exit/stop/target, intraday session handling
+  * slippage and full Indian charges model
+  * results: equity curve, drawdown, trade list, walk-forward split, and an overfitting warning
+* **Data:** historical OHLC imports (CSV) at first. Later, optional providers (broker APIs, NSE bhavcopy) behind a `MarketData` port, cached locally.
+* **Paper trading:** virtual capital, the same rules or manual trades, forward-tested against live or delayed prices. It feeds the Trading Journal as "paper".
+* **Strategy library:** explainers with worked examples, risks and "when it fails" sections, labelled as educational.
+
+---
+
+# 74E. Phase 13 — Markets & Alerts
+
+```text
+/markets   Watchlists, calendars and user-defined alerts
+```
+
+* **Watchlists:** delayed quotes via a pluggable provider, 52-week range, and your average cost when you hold the stock.
+* **Calendars:**
+  * corporate actions for holdings (dividends, splits, bonus, results dates)
+  * F&O expiry calendar
+  * IPO calendar
+* **User-written alerts (level 3):**
+  * a price crossing a level
+  * a portfolio drawdown above X%
+  * a SIP not debited
+  * an option position's delta beyond a limit
+  * daily loss limit hit (from journal imports)
+* **Delivery:** email, web push, and optional Telegram.
+* **Risk guardrails for traders:** a personal max loss per day or week and a max trades per day. When one is breached Arvo shows a "cool-off" banner and sends an email. It is informational only.
+* **News digest (optional AI):** a summary of news only for holdings and watchlist, with sources linked, and no opinions on direction.
+
+---
+
+# 74F. Phase 14 — More Everyday Money Products
+
+* **Credit cards:**
+  * statement imports per card, reward points value, lounge/fee waivers tracking
+  * utilisation %, due-date reminders
+  * a "best card for this spend" suggestion from your own cards' reward rules
+* **Loans & EMIs:**
+  * a loan book (home, car, personal, education, BNPL)
+  * an amortization schedule reconciled against actual EMIs
+  * prepayment vs invest comparison
+  * a balance-transfer calculator
+* **Taxes (India):**
+  * old vs new regime comparison from actual income and deductions
+  * 80C/80D/HRA tracking from categorized transactions
+  * advance tax reminders, Form 26AS/AIS reconciliation (imported)
+* **Insurance:** a policy vault (term, health, vehicle), premium calendar, cover-adequacy check (term cover vs income × years, health cover vs city).
+* **Bills & subscriptions:** cancel/pause guidance, renewal reminders, and a shared-subscription splitter.
+* **Shared money:**
+  * household mode with partners and family, per-member views
+  * split expenses and settle-up (Splitwise-style) from imported transactions
+* **Net worth over time:** snapshots, milestones, and an "FI number" (financial independence) tracker with years-to-FI.
+* **Document vault:** encrypted local storage for statements, contract notes, policies and tax proofs, linked to transactions.
+* **Receipts OCR:** snap a receipt, match it to a transaction and split it into line items (local OCR by default).
+* **Exports and accountants:** a year-end pack (P&L, capital gains, charges, 26AS match) as PDF, XLSX or CSV, plus read-only share links for a CA.
+
+---
+
+## Suggested order
+
+1. Phase 9, AI Advisor. It reuses everything already built.
+2. Phase 11, Trading Journal. It needs only imports and analysis, is high value and low risk.
+3. Phase 10, Wealth & Portfolio.
+4. Phase 12, Strategy Lab: payoff builder first, then the backtester.
+5. Phase 13, Markets & Alerts, which needs a market data provider decision.
+6. Phase 14, picked item by item based on usage.
+
+## Acceptance (applies to every expansion phase)
+
+* Engines are deterministic with fixture tests; money is exact and charges models are tested against real contract notes.
+* All data is user-scoped with isolation tests. MCP tools for each area are read-only.
+* Advice level is declared per feature and enforced server-side; level 4 cannot be enabled without configuration.
+* Each area can be disabled per install and degrades cleanly with no market data provider.
+
+---
+
 # 74. Claude Code Working Rules
 
 Claude Code must follow these rules while implementing the project.
