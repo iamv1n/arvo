@@ -1,7 +1,6 @@
 'use client';
 
-import { BankOutlined, CheckCircleFilled, FallOutlined, LaptopOutlined, RiseOutlined, WalletOutlined } from '@ant-design/icons';
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
 import styled, { useTheme } from 'styled-components';
 import {
   HOME_LOAN,
@@ -14,8 +13,14 @@ import {
   personalFinanceExample,
   purchaseExample,
 } from '../../lib/finance-examples';
-import { drawStroke, fadeIn, formatINR, growX, growY, play, useInView } from './motion';
-import { Card, Container, fonts, Pill, Reveal, SectionHeading, SectionShell } from './primitives';
+import { drawStroke, fadeIn, fadeUp, formatINR, growX, growY, play, useInView } from './motion';
+import { Container, fonts, Pill, Reveal, SectionHeading, SectionShell } from './primitives';
+
+/*
+ * "Plan loans, investments and spending": a planning notebook. Each tool is a numbered chapter;
+ * every page leads with one serif answer and an italic finding, then one chart drawn for that
+ * question, annotated by hand, and closes with a ledger of the supporting figures.
+ */
 
 /* ---------- formatting ---------- */
 
@@ -27,218 +32,188 @@ function short(v: number) {
   return `₹${Math.round(v)}`;
 }
 
-/** Rounds an axis maximum up to 1, 2, 2.5 or 5 × a power of ten. */
-function niceMax(v: number) {
-  const pow = Math.pow(10, Math.floor(Math.log10(v)));
-  const n = v / pow;
-  const step = n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10;
-  return step * pow;
-}
+/* ---------- chapter index (tabs) ---------- */
 
-/* ---------- layout ---------- */
-
-/* Horizontally scrolling strip of tools; snaps on touch devices. */
-const TabList = styled.div`
-  display: flex;
-  gap: 0;
-  margin: 0 0 ${({ theme }) => theme.space[8]}px;
+const Index = styled.div`
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(150px, 1fr);
   overflow-x: auto;
   scroll-snap-type: x proximity;
   scrollbar-width: none;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  border-bottom: 2px solid ${({ theme }) => theme.colors.textPrimary};
   &::-webkit-scrollbar {
     display: none;
   }
-  & > button {
-    scroll-snap-align: start;
-    flex: 0 0 auto;
-  }
-  /* On narrow screens the last visible tab fades out, hinting there is more to scroll. */
   @media (max-width: ${({ theme }) => theme.breakpoints.lg}px) {
-    padding-right: 48px;
-    mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
-    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
+    grid-auto-columns: minmax(148px, 42%);
   }
 `;
 
-const TabButton = styled.button<{ $active: boolean }>`
+const Chapter = styled.button<{ $active: boolean }>`
   all: unset;
   box-sizing: border-box;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 20px 12px 0;
-  margin-right: 20px;
-  border-bottom: 2px solid ${({ theme, $active }) => ($active ? theme.colors.textPrimary : 'transparent')};
-  margin-bottom: -1px;
-  color: ${({ theme, $active }) => ($active ? theme.colors.textPrimary : theme.colors.textSecondary)};
-  font-family: ${fonts.serif};
-  font-size: 19px;
-  font-weight: ${({ $active }) => ($active ? 500 : 400)};
-  letter-spacing: -0.01em;
-  white-space: nowrap;
+  scroll-snap-align: start;
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  padding: 14px 16px 16px;
   cursor: pointer;
+  border-left: 1px solid ${({ theme }) => theme.colors.borderSubtle};
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  background: ${({ theme, $active }) => ($active ? theme.colors.textPrimary : 'transparent')};
+  color: ${({ theme, $active }) => ($active ? theme.colors.bgSurface : theme.colors.textSecondary)};
   transition:
-    color ${({ theme }) => theme.motion.fast},
-    border-color ${({ theme }) => theme.motion.fast};
-  & .anticon {
-    font-size: 14px;
-    color: ${({ theme, $active }) => ($active ? theme.colors.brandText : theme.colors.textMuted)};
+    background ${({ theme }) => theme.motion.fast},
+    color ${({ theme }) => theme.motion.fast};
+  &:first-child {
+    border-left: 0;
   }
-  & .short {
-    display: none;
+  & .num {
+    font-family: ${fonts.mono};
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: ${({ $active }) => ($active ? 0.75 : 0.9)};
+  }
+  & .name {
+    font-family: ${fonts.serif};
+    font-size: 18px;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
   }
   &:hover {
-    color: ${({ theme }) => theme.colors.textPrimary};
+    color: ${({ theme, $active }) => ($active ? theme.colors.bgSurface : theme.colors.textPrimary)};
   }
   &:focus-visible {
     outline: 2px solid ${({ theme }) => theme.colors.brand};
-    outline-offset: 2px;
+    outline-offset: -2px;
   }
 `;
 
-const Pane = styled.div`
-  display: grid;
-  gap: ${({ theme }) => theme.space[8]}px;
-  min-width: 0;
-  @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
-    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
-    gap: ${({ theme }) => theme.space[12]}px;
-    align-items: stretch;
-    min-height: 420px;
-  }
+/* ---------- page ---------- */
+
+const Page = styled.article`
+  padding-top: ${({ theme }) => theme.space[6]}px;
+  animation-name: ${fadeUp};
+  ${play(true, 0, '500ms')}
 `;
 
-const Text = styled.div`
+const Kicker = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: ${({ theme }) => theme.space[5]}px;
-  min-width: 0;
-  & h3 {
-    margin: 0;
-    font-size: 26px;
-    line-height: 1.2;
-    letter-spacing: -0.01em;
-    color: ${({ theme }) => theme.colors.textPrimary};
-  }
-  & .desc {
-    margin: -8px 0 0;
-    font-size: 16px;
-    line-height: 1.6;
-    color: ${({ theme }) => theme.colors.textSecondary};
-  }
-`;
-
-const Figures = styled.dl`
-  margin: 0;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: ${({ theme }) => theme.space[4]}px;
-  & dd {
-    margin: 0;
-    font-size: clamp(18px, 1.7vw, 23px);
-    font-weight: 700;
-    letter-spacing: -0.01em;
-    font-variant-numeric: tabular-nums;
-    color: ${({ theme }) => theme.colors.textPrimary};
-    white-space: nowrap;
-  }
-  & dd.good {
-    color: ${({ theme }) => theme.colors.income};
-  }
-  & dd.bad {
-    color: ${({ theme }) => theme.colors.expense};
-  }
-  & dt {
-    margin-top: 2px;
-    font-size: 13px;
-    line-height: 1.35;
-    color: ${({ theme }) => theme.colors.textSecondary};
-  }
-  & > div {
-    display: flex;
-    flex-direction: column-reverse;
-    justify-content: flex-end;
-    padding-left: 12px;
-    border-left: 2px solid ${({ theme }) => theme.colors.border};
-    min-width: 0;
-  }
-  @media (max-width: 480px) {
-    grid-template-columns: 1fr;
-    gap: ${({ theme }) => theme.space[3]}px;
-  }
-`;
-
-const Bullets = styled.ul`
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 8px;
-  font-size: 15px;
-  line-height: 1.55;
-  color: ${({ theme }) => theme.colors.textSecondary};
-  & li {
-    display: grid;
-    grid-template-columns: 18px 1fr;
-    gap: 8px;
-  }
-  & .anticon {
-    color: ${({ theme }) => theme.colors.brand};
-    margin-top: 5px;
-  }
-`;
-
-const Footnote = styled.p`
-  margin: auto 0 0;
-  font-size: 12px;
-  line-height: 1.5;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  flex-wrap: wrap;
+  font-family: ${fonts.mono};
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: ${({ theme }) => theme.colors.textMuted};
 `;
 
-const ChartCard = styled(Card)`
-  display: flex;
-  flex-direction: column;
-  padding: ${({ theme }) => theme.space[6]}px;
-  min-width: 0;
-  @media (max-width: 480px) {
-    padding: ${({ theme }) => theme.space[4]}px;
+const Lede = styled.div`
+  display: grid;
+  gap: ${({ theme }) => theme.space[4]}px;
+  margin: ${({ theme }) => theme.space[5]}px 0 ${({ theme }) => theme.space[6]}px;
+  @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: end;
+    gap: ${({ theme }) => theme.space[10]}px;
   }
 `;
 
-const ChartHead = styled.div`
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 4px 12px;
-  flex-wrap: wrap;
-  margin-bottom: ${({ theme }) => theme.space[4]}px;
-  & h4 {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 600;
-    color: ${({ theme }) => theme.colors.textPrimary};
-  }
-  & span {
-    font-size: 12px;
+const Answer = styled.div`
+  min-width: 0;
+  & .label {
+    font-family: ${fonts.mono};
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     color: ${({ theme }) => theme.colors.textMuted};
   }
+  & .value {
+    margin-top: 6px;
+    font-family: ${fonts.serif};
+    font-weight: 400;
+    font-size: clamp(44px, 7vw, 84px);
+    line-height: 0.95;
+    letter-spacing: -0.045em;
+    font-variant-numeric: lining-nums tabular-nums;
+    font-variation-settings: 'opsz' 144;
+    color: ${({ theme }) => theme.colors.textPrimary};
+    white-space: nowrap;
+  }
+  & .value.bad {
+    color: ${({ theme }) => theme.colors.expense};
+  }
+  & .value.good {
+    color: ${({ theme }) => theme.colors.brandText};
+  }
 `;
 
-const ChartBox = styled.div`
-  flex: 1;
-  min-height: 300px;
-  position: relative;
+const Finding = styled.div`
+  min-width: 0;
+  padding-left: 0;
+  & h3 {
+    margin: 0 0 6px;
+    font-family: ${fonts.serif};
+    font-weight: 500;
+    font-size: 24px;
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    color: ${({ theme }) => theme.colors.textPrimary};
+  }
+  & p {
+    margin: 0;
+    max-width: 52ch;
+    font-family: ${fonts.serif};
+    font-style: italic;
+    font-size: 18px;
+    line-height: 1.45;
+    color: ${({ theme }) => theme.colors.textSecondary};
+  }
+  @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
+    padding-left: ${({ theme }) => theme.space[6]}px;
+    border-left: 1px solid ${({ theme }) => theme.colors.border};
+  }
 `;
 
-const Legend = styled.ul`
+const Plate = styled.figure`
+  margin: 0;
+  padding: ${({ theme }) => theme.space[5]}px 0 ${({ theme }) => theme.space[4]}px;
+  border-top: 1px solid ${({ theme }) => theme.colors.border};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  min-width: 0;
+  & figcaption {
+    display: flex;
+    justify-content: space-between;
+    gap: 4px 12px;
+    flex-wrap: wrap;
+    margin-bottom: ${({ theme }) => theme.space[3]}px;
+    font-family: ${fonts.mono};
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: ${({ theme }) => theme.colors.textMuted};
+  }
+  & figcaption b {
+    font-weight: 500;
+    color: ${({ theme }) => theme.colors.textPrimary};
+  }
+`;
+
+const Key = styled.ul`
   list-style: none;
-  margin: ${({ theme }) => theme.space[4]}px 0 0;
+  margin: ${({ theme }) => theme.space[3]}px 0 0;
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 18px;
-  font-size: 13px;
+  gap: 4px 18px;
+  font-family: ${fonts.mono};
+  font-size: 11px;
+  letter-spacing: 0.04em;
   color: ${({ theme }) => theme.colors.textSecondary};
   & li {
     display: inline-flex;
@@ -249,42 +224,214 @@ const Legend = styled.ul`
     display: inline-block;
     width: 14px;
     height: 4px;
-    border-radius: 2px;
+    border-radius: 1px;
   }
 `;
 
-interface LegendItem {
+const Back = styled.div`
+  display: grid;
+  gap: ${({ theme }) => theme.space[6]}px;
+  padding-top: ${({ theme }) => theme.space[5]}px;
+  @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: ${({ theme }) => theme.space[12]}px;
+  }
+`;
+
+const Ledger = styled.dl`
+  margin: 0;
+  display: grid;
+  gap: 10px;
+  & > div {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+  }
+  & > div::after {
+    content: '';
+    grid-column: 2;
+    grid-row: 1;
+    border-bottom: 1px dotted ${({ theme }) => theme.colors.textMuted};
+    transform: translateY(-4px);
+  }
+  & dt {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+    font-size: 14px;
+    color: ${({ theme }) => theme.colors.textSecondary};
+  }
+  & dd {
+    grid-column: 3;
+    grid-row: 1;
+    margin: 0;
+    font-family: ${fonts.serif};
+    font-size: 22px;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: ${({ theme }) => theme.colors.textPrimary};
+  }
+  & dd.good {
+    color: ${({ theme }) => theme.colors.income};
+  }
+  & dd.bad {
+    color: ${({ theme }) => theme.colors.expense};
+  }
+  @media (max-width: 420px) {
+    & dt {
+      font-size: 13px;
+    }
+    & dd {
+      font-size: 19px;
+    }
+  }
+`;
+
+const Notes = styled.ol`
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  counter-reset: note;
+  & li {
+    counter-increment: note;
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 6px;
+    font-size: 15px;
+    line-height: 1.55;
+    color: ${({ theme }) => theme.colors.textSecondary};
+  }
+  & li::before {
+    content: counter(note, lower-roman) '.';
+    font-family: ${fonts.serif};
+    font-style: italic;
+    color: ${({ theme }) => theme.colors.brandText};
+  }
+`;
+
+const Footnote = styled.p`
+  margin: ${({ theme }) => theme.space[6]}px 0 0;
+  font-family: ${fonts.mono};
+  font-size: 11px;
+  line-height: 1.6;
+  color: ${({ theme }) => theme.colors.textMuted};
+`;
+
+interface Figure {
+  value: string;
+  label: string;
+  tone?: 'good' | 'bad';
+}
+
+interface KeyItem {
   label: string;
   color: string;
   dashed?: boolean;
   opacity?: number;
 }
 
-function ChartLegend({ items }: { items: LegendItem[] }) {
+function ToolPage({
+  n,
+  status,
+  title,
+  description,
+  answer,
+  figures,
+  bullets,
+  footnote,
+  chartTitle,
+  chartNote,
+  chart,
+  keys,
+}: {
+  n: string;
+  status: ReactNode;
+  title: string;
+  description: string;
+  answer: Figure;
+  figures: Figure[];
+  bullets: ReactNode[];
+  footnote: string;
+  chartTitle: string;
+  chartNote?: string;
+  chart: ReactNode;
+  keys: KeyItem[];
+}) {
   return (
-    <Legend aria-hidden>
-      {items.map((it) => (
-        <li key={it.label}>
-          <i
-            style={
-              it.dashed
-                ? { background: `repeating-linear-gradient(90deg, ${it.color} 0 4px, transparent 4px 7px)` }
-                : { background: it.color, opacity: it.opacity ?? 1 }
-            }
-          />
-          {it.label}
-        </li>
-      ))}
-    </Legend>
+    <Page>
+      <Kicker>
+        <span>
+          Chapter {n} · {title}
+        </span>
+        {status}
+      </Kicker>
+      <Lede>
+        <Answer>
+          <div className="label">{answer.label}</div>
+          <div className={`value ${answer.tone ?? ''}`}>{answer.value}</div>
+        </Answer>
+        <Finding>
+          <h3>{title}</h3>
+          <p>{description}</p>
+        </Finding>
+      </Lede>
+      <Plate>
+        <figcaption>
+          <b>{chartTitle}</b>
+          {chartNote ? <span>{chartNote}</span> : null}
+        </figcaption>
+        {chart}
+        <Key aria-hidden>
+          {keys.map((k) => (
+            <li key={k.label}>
+              <i
+                style={
+                  k.dashed
+                    ? { background: `repeating-linear-gradient(90deg, ${k.color} 0 4px, transparent 4px 7px)` }
+                    : { background: k.color, opacity: k.opacity ?? 1 }
+                }
+              />
+              {k.label}
+            </li>
+          ))}
+        </Key>
+      </Plate>
+      <Back>
+        <Ledger>
+          {figures.map((f) => (
+            <div key={f.label}>
+              <dt>{f.label}</dt>
+              <dd className={f.tone}>{f.value}</dd>
+            </div>
+          ))}
+        </Ledger>
+        <Notes>
+          {bullets.map((b, i) => (
+            <li key={i}>
+              <div>{b}</div>
+            </li>
+          ))}
+        </Notes>
+      </Back>
+      <Footnote>{footnote}</Footnote>
+    </Page>
   );
 }
 
-/** Measures the chart box so SVG text renders at real pixel sizes instead of being scaled. */
-function useWidth<T extends HTMLElement>() {
-  const ref = useRef<T>(null);
+/* ---------- chart plumbing ---------- */
+
+/** Measures the plate so SVG text renders at real pixel sizes; the viewBox tracks the width. */
+function useChart(height: number) {
+  const box = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
+  const [io, on] = useInView<HTMLDivElement>(0.3);
   useEffect(() => {
-    const el = ref.current;
+    const el = box.current;
     if (!el) return;
     const update = () => setWidth(Math.floor(el.getBoundingClientRect().width));
     update();
@@ -293,324 +440,180 @@ function useWidth<T extends HTMLElement>() {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-  return [ref, width] as const;
+  return { width, on, frame: { box, io, width, height } };
 }
 
-const H = 300;
-const PAD = { top: 12, right: 12, bottom: 30, left: 56 };
+function Frame({
+  frame,
+  label,
+  children,
+}: {
+  frame: { box: RefObject<HTMLDivElement | null>; io: RefObject<HTMLDivElement | null>; width: number; height: number };
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div ref={frame.box} style={{ width: '100%', minWidth: 0 }}>
+      <div ref={frame.io} style={{ height: frame.height }}>
+        {frame.width > 0 ? (
+          <svg
+            viewBox={`0 0 ${frame.width} ${frame.height}`}
+            width="100%"
+            height={frame.height}
+            role="img"
+            aria-label={label}
+            style={{ display: 'block', overflow: 'visible' }}
+          >
+            {children}
+          </svg>
+        ) : null}
+      </div>
+    </div>
+  );
+}
 
-/* ---------- charts ---------- */
-
-const Stroke = styled.path<{ $on: boolean; $d: number }>`
+const Draw = styled.path<{ $on: boolean; $d: number }>`
   stroke-dasharray: 1;
   animation-name: ${drawStroke};
-  ${({ $on, $d }) => play($on, $d, '1500ms')}
+  ${({ $on, $d }) => play($on, $d, '1400ms')}
 `;
-
-const FadeG = styled.g<{ $on: boolean; $d: number }>`
+const Show = styled.g<{ $on: boolean; $d: number }>`
   animation-name: ${fadeIn};
-  ${({ $on, $d }) => play($on, $d, '500ms')}
+  ${({ $on, $d }) => play($on, $d, '600ms')}
 `;
-
-const VBar = styled.rect<{ $on: boolean; $d: number }>`
+const RiseRect = styled.rect<{ $on: boolean; $d: number }>`
   transform-box: fill-box;
   transform-origin: bottom;
   animation-name: ${growY};
-  ${({ $on, $d }) => play($on, $d, '800ms')}
+  ${({ $on, $d }) => play($on, $d, '700ms')}
 `;
-
-const HBar = styled.rect<{ $on: boolean; $d: number }>`
+const WideRect = styled.rect<{ $on: boolean; $d: number }>`
   transform-box: fill-box;
   transform-origin: left;
   animation-name: ${growX};
   ${({ $on, $d }) => play($on, $d, '800ms')}
 `;
 
-interface LineSeries {
-  label: string;
-  color: string;
-  /** [x, y] points in data units. */
-  points: [number, number][];
-  dashed?: boolean;
+const path = (pts: [number, number][]) => pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join(' ');
+
+function Hand({ x, y, children, color, anchor = 'start', size = 20 }: { x: number; y: number; children: ReactNode; color: string; anchor?: 'start' | 'middle' | 'end'; size?: number }) {
+  return (
+    <text x={x} y={y} fontFamily={fonts.hand} fontSize={size} fill={color} textAnchor={anchor}>
+      {children}
+    </text>
+  );
 }
 
-function YGrid({ w, max, ticks = 4 }: { w: number; max: number; ticks?: number }) {
-  const theme = useTheme();
-  const y = (v: number) => H - PAD.bottom - (v / max) * (H - PAD.top - PAD.bottom);
+function Mono({ x, y, children, color, anchor = 'start', weight }: { x: number; y: number; children: ReactNode; color: string; anchor?: 'start' | 'middle' | 'end'; weight?: number }) {
   return (
-    <g>
-      {Array.from({ length: ticks + 1 }, (_, i) => (max * i) / ticks).map((v) => (
-        <g key={v}>
-          <line
-            x1={PAD.left}
-            x2={w - PAD.right}
-            y1={y(v)}
-            y2={y(v)}
-            stroke={v === 0 ? theme.colors.border : theme.colors.borderSubtle}
-            strokeDasharray={v === 0 ? undefined : '3 4'}
-          />
-          <text x={PAD.left - 10} y={y(v) + 4} fontSize={12} textAnchor="end" fill={theme.colors.textMuted}>
-            {short(v)}
+    <text x={x} y={y} fontFamily={fonts.mono} fontSize={11} fill={color} textAnchor={anchor} fontWeight={weight}>
+      {children}
+    </text>
+  );
+}
+
+/* ---------- 01 Loan: balance ribbon, the gap between the two runs is what prepaying buys ---------- */
+
+function LoanRibbon() {
+  const theme = useTheme();
+  const loan = useMemo(homeLoanExample, []);
+  const H = 280;
+  const { width: w, on, frame } = useChart(H);
+  const pad = { t: 16, r: 12, b: 26, l: 44 };
+  const x = (yr: number) => pad.l + (yr / HOME_LOAN.years) * (w - pad.l - pad.r);
+  const y = (v: number) => H - pad.b - (v / HOME_LOAN.principal) * (H - pad.t - pad.b);
+  const base = loan.base.yearlyBalances.map((v, i) => [x(i), y(v)] as [number, number]);
+  const pre = loan.prepay.yearlyBalances.map((v, i) => [x(i), y(v)] as [number, number]);
+  const floor = y(0);
+  const baseArea = `${path(base)} L${x(loan.base.yearlyBalances.length - 1)} ${floor} L${pad.l} ${floor} Z`;
+  const preArea = `${path(pre)} L${x(loan.prepay.yearlyBalances.length - 1)} ${floor} L${pad.l} ${floor} Z`;
+  const closeYr = loan.prepay.yearlyBalances.length - 1;
+  const hatch = useId().replace(/:/g, '');
+  const gapYr = Math.min(closeYr + 1, HOME_LOAN.years - 3);
+  return (
+    <Frame
+      frame={frame}
+      label={`Outstanding home loan balance by year. With EMI only it reaches zero after ${HOME_LOAN.years} years; with ${formatINR(HOME_LOAN.prepayPerYear)} prepaid each year it closes after ${loan.prepay.months / 12} years.`}
+    >
+      <defs>
+        <pattern id={hatch} width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <line x1="0" y1="0" x2="0" y2="6" stroke={theme.colors.textMuted} strokeWidth="1" opacity="0.45" />
+        </pattern>
+      </defs>
+      {[0, 0.5, 1].map((f) => (
+        <g key={f}>
+          <line x1={pad.l} x2={w - pad.r} y1={y(HOME_LOAN.principal * f)} y2={y(HOME_LOAN.principal * f)} stroke={f === 0 ? theme.colors.textPrimary : theme.colors.borderSubtle} strokeDasharray={f === 0 ? undefined : '2 4'} />
+          <Mono x={pad.l - 8} y={y(HOME_LOAN.principal * f) + 4} anchor="end" color={theme.colors.textMuted}>
+            {short(HOME_LOAN.principal * f)}
+          </Mono>
+        </g>
+      ))}
+      {[0, 5, 10, 15, 20].map((t, i, a) => (
+        <Mono key={t} x={x(t)} y={H - 6} anchor={i === 0 ? 'start' : i === a.length - 1 ? 'end' : 'middle'} color={theme.colors.textMuted}>
+          {t === 0 ? 'TODAY' : `YR ${t}`}
+        </Mono>
+      ))}
+      <Show $on={on} $d={200}>
+        <path d={baseArea} fill={`url(#${hatch})`} />
+      </Show>
+      <Show $on={on} $d={500}>
+        <path d={preArea} fill={theme.colors.brand} opacity={0.22} />
+      </Show>
+      <Draw $on={on} $d={0} d={path(base)} pathLength={1} fill="none" stroke={theme.colors.textMuted} strokeWidth={2} />
+      <Draw $on={on} $d={300} d={path(pre)} pathLength={1} fill="none" stroke={theme.colors.brand} strokeWidth={3} strokeLinejoin="round" />
+      <Show $on={on} $d={1500}>
+        <circle cx={x(closeYr)} cy={floor} r={5} fill={theme.colors.bgSurface} stroke={theme.colors.brand} strokeWidth={2.5} />
+        <Hand x={x(closeYr)} y={floor - 14} anchor="middle" color={theme.colors.brandText}>
+          debt-free in {loan.prepay.months / 12} yrs
+        </Hand>
+        <Hand x={x(gapYr)} y={y(loan.base.yearlyBalances[gapYr] ?? 0) - 12} anchor="middle" color={theme.colors.textSecondary} size={w < 480 ? 17 : 20}>
+          {short(loan.interestSaved)} less interest
+        </Hand>
+      </Show>
+    </Frame>
+  );
+}
+
+function DebtOrder() {
+  const theme = useTheme();
+  const debt = useMemo(debtExample, []);
+  const H = 96;
+  const { width: w, on, frame } = useChart(H);
+  const rows = [
+    { label: 'SMALLEST BALANCE FIRST', v: debt.snowball.totalInterest, color: theme.colors.textMuted },
+    { label: 'HIGHEST RATE FIRST', v: debt.avalanche.totalInterest, color: theme.colors.brand },
+  ];
+  const max = Math.max(...rows.map((r) => r.v));
+  const valW = 84;
+  return (
+    <Frame frame={frame} label={`Debt payoff interest: smallest balance first ${formatINR(debt.snowball.totalInterest)}, highest rate first ${formatINR(debt.avalanche.totalInterest)}.`}>
+      {rows.map((r, i) => (
+        <g key={r.label}>
+          <Mono x={0} y={i * 46 + 12} color={theme.colors.textMuted}>
+            {r.label}
+          </Mono>
+          <WideRect $on={on} $d={i * 200} x={0} y={i * 46 + 20} height={12} rx={1} width={Math.max(4, ((w - valW) * r.v) / max)} fill={r.color} opacity={i ? 1 : 0.5} />
+          <text x={w} y={i * 46 + 31} textAnchor="end" fontFamily={fonts.serif} fontSize={17} fill={theme.colors.textPrimary}>
+            {formatINR(r.v)}
           </text>
         </g>
       ))}
-    </g>
+    </Frame>
   );
 }
-
-function LineChart({
-  series,
-  xMax,
-  xTicks,
-  xLabel,
-  ariaLabel,
-  refLine,
-}: {
-  series: LineSeries[];
-  xMax: number;
-  xTicks: number[];
-  xLabel: (x: number) => string;
-  ariaLabel: string;
-  refLine?: { value: number; label: string };
-}) {
-  const theme = useTheme();
-  const [box, width] = useWidth<HTMLDivElement>();
-  const [ioRef, on] = useInView<HTMLDivElement>(0.3);
-  const max = niceMax(Math.max(...series.flatMap((s) => s.points.map((p) => p[1])), refLine?.value ?? 0));
-  const x = (v: number) => PAD.left + (v / xMax) * (width - PAD.left - PAD.right);
-  const y = (v: number) => H - PAD.bottom - (v / max) * (H - PAD.top - PAD.bottom);
-  return (
-    <ChartBox ref={box}>
-      <div ref={ioRef} style={{ height: H }}>
-        {width > 0 ? (
-          <svg width={width} height={H} role="img" aria-label={ariaLabel} style={{ display: 'block' }}>
-            <YGrid w={width} max={max} />
-            {xTicks.map((t, i) => (
-              <text
-                key={t}
-                x={x(t)}
-                y={H - 8}
-                fontSize={12}
-                textAnchor={i === 0 ? 'start' : i === xTicks.length - 1 ? 'end' : 'middle'}
-                fill={theme.colors.textMuted}
-              >
-                {xLabel(t)}
-              </text>
-            ))}
-            {refLine ? (
-              <g>
-                <line x1={PAD.left} x2={width - PAD.right} y1={y(refLine.value)} y2={y(refLine.value)} stroke={theme.colors.expense} strokeWidth={1.5} />
-                <text x={PAD.left + 6} y={y(refLine.value) - 8} fontSize={12} fontWeight={600} textAnchor="start" fill={theme.colors.expense}>
-                  {refLine.label}
-                </text>
-              </g>
-            ) : null}
-            {series.map((s, si) => {
-              const d = s.points.map(([px, py], i) => `${i ? 'L' : 'M'}${x(px).toFixed(1)} ${y(py).toFixed(1)}`).join(' ');
-              const last = s.points[s.points.length - 1] ?? [0, 0];
-              return (
-                <g key={s.label}>
-                  {s.dashed ? (
-                    <FadeG $on={on} $d={900 + si * 300}>
-                      <path d={d} fill="none" stroke={s.color} strokeWidth={2.5} strokeDasharray="6 5" strokeLinecap="round" />
-                    </FadeG>
-                  ) : (
-                    <Stroke $on={on} $d={si * 300} d={d} pathLength={1} fill="none" stroke={s.color} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
-                  )}
-                  <FadeG $on={on} $d={1300 + si * 300}>
-                    <circle cx={x(last[0])} cy={y(last[1])} r={4.5} fill={theme.colors.bgSurfaceRaised} stroke={s.color} strokeWidth={2.5} />
-                  </FadeG>
-                </g>
-              );
-            })}
-          </svg>
-        ) : null}
-      </div>
-    </ChartBox>
-  );
-}
-
-function BeforeAfterChart({ rows }: { rows: { name: string; before: number; after: number }[] }) {
-  const theme = useTheme();
-  const [box, width] = useWidth<HTMLDivElement>();
-  const [ioRef, on] = useInView<HTMLDivElement>(0.3);
-  const max = Math.max(...rows.map((r) => r.before));
-  const rowH = H / rows.length;
-  const valueW = 64;
-  const barMax = Math.max(40, width - valueW - 8);
-  return (
-    <ChartBox ref={box}>
-      <div ref={ioRef} style={{ height: H }}>
-        {width > 0 ? (
-          <svg
-            width={width}
-            height={H}
-            role="img"
-            aria-label={`Monthly spending before and after the plan: ${rows.map((r) => `${r.name} ${formatINR(r.before)} to ${formatINR(r.after)}`).join('; ')}`}
-            style={{ display: 'block' }}
-          >
-            {rows.map((r, i) => {
-              const y0 = i * rowH + 4;
-              return (
-                <g key={r.name}>
-                  <text x={0} y={y0 + 12} fontSize={13} fill={theme.colors.textPrimary}>
-                    {r.name}
-                  </text>
-                  <HBar $on={on} $d={i * 120} x={0} y={y0 + 20} height={10} rx={3} width={Math.max(3, (r.before / max) * barMax)} fill={theme.colors.expense} opacity={0.35} />
-                  <HBar $on={on} $d={i * 120 + 250} x={0} y={y0 + 34} height={10} rx={3} width={Math.max(3, (r.after / max) * barMax)} fill={theme.colors.brand} />
-                  <text x={width} y={y0 + 29} fontSize={12} textAnchor="end" fill={theme.colors.textMuted}>
-                    {formatINR(r.before)}
-                  </text>
-                  <text x={width} y={y0 + 43} fontSize={12} textAnchor="end" fontWeight={600} fill={theme.colors.textPrimary}>
-                    {formatINR(r.after)}
-                  </text>
-                </g>
-              );
-            })}
-          </svg>
-        ) : null}
-      </div>
-    </ChartBox>
-  );
-}
-
-function ColumnChart({
-  bars,
-  refLine,
-  ariaLabel,
-}: {
-  bars: { label: string; value: number; color: string }[];
-  refLine: { value: number; label: string };
-  ariaLabel: string;
-}) {
-  const theme = useTheme();
-  const [box, width] = useWidth<HTMLDivElement>();
-  const [ioRef, on] = useInView<HTMLDivElement>(0.3);
-  const max = niceMax(Math.max(...bars.map((b) => b.value), refLine.value) * 1.1);
-  const plotW = width - PAD.left - PAD.right;
-  const slot = plotW / bars.length;
-  const bw = Math.min(72, slot * 0.5);
-  const y = (v: number) => H - PAD.bottom - (v / max) * (H - PAD.top - PAD.bottom);
-  return (
-    <ChartBox ref={box}>
-      <div ref={ioRef} style={{ height: H }}>
-        {width > 0 ? (
-          <svg width={width} height={H} role="img" aria-label={ariaLabel} style={{ display: 'block' }}>
-            <YGrid w={width} max={max} />
-            {bars.map((b, i) => {
-              const cx = PAD.left + slot * i + slot / 2;
-              return (
-                <g key={b.label}>
-                  <VBar $on={on} $d={i * 150} x={cx - bw / 2} y={y(b.value)} width={bw} height={y(0) - y(b.value)} rx={5} fill={b.color} />
-                  <FadeG $on={on} $d={600 + i * 150}>
-                    <text x={cx} y={y(b.value) + 20} fontSize={12} fontWeight={600} textAnchor="middle" fill={theme.colors.onBrand}>
-                      {bw >= 64 ? formatINR(b.value) : short(b.value)}
-                    </text>
-                  </FadeG>
-                  <text x={cx} y={H - 8} fontSize={12} textAnchor="middle" fill={theme.colors.textMuted}>
-                    {b.label}
-                  </text>
-                </g>
-              );
-            })}
-            <line
-              x1={PAD.left}
-              x2={width - PAD.right}
-              y1={y(refLine.value)}
-              y2={y(refLine.value)}
-              stroke={theme.colors.textPrimary}
-              strokeWidth={1.5}
-              strokeDasharray="6 5"
-            />
-          </svg>
-        ) : null}
-      </div>
-    </ChartBox>
-  );
-}
-
-/* ---------- tool panes ---------- */
-
-interface Figure {
-  value: string;
-  label: string;
-  tone?: 'good' | 'bad';
-}
-
-function ToolPane({
-  status,
-  title,
-  description,
-  figures,
-  bullets,
-  footnote,
-  chartTitle,
-  chartNote,
-  chart,
-  legend,
-}: {
-  status: ReactNode;
-  title: string;
-  description: string;
-  figures: Figure[];
-  bullets: ReactNode[];
-  footnote: string;
-  chartTitle: string;
-  chartNote?: string;
-  chart: ReactNode;
-  legend: LegendItem[];
-}) {
-  return (
-    <Pane>
-      <Text>
-        <div>{status}</div>
-        <h3>{title}</h3>
-        <p className="desc">{description}</p>
-        <Figures>
-          {figures.map((f) => (
-            <div key={f.label}>
-              <dt>{f.label}</dt>
-              <dd className={f.tone}>{f.value}</dd>
-            </div>
-          ))}
-        </Figures>
-        <Bullets>
-          {bullets.map((b, i) => (
-            <li key={i}>
-              <CheckCircleFilled aria-hidden />
-              <span>{b}</span>
-            </li>
-          ))}
-        </Bullets>
-        <Footnote>{footnote}</Footnote>
-      </Text>
-      <ChartCard>
-        <ChartHead>
-          <h4>{chartTitle}</h4>
-          {chartNote ? <span>{chartNote}</span> : null}
-        </ChartHead>
-        {chart}
-        <ChartLegend items={legend} />
-      </ChartCard>
-    </Pane>
-  );
-}
-
-const roadmap = <Pill $tone="warning">On the roadmap</Pill>;
-const soon = <Pill $tone="warning">Coming soon</Pill>;
 
 function LoanPlanner() {
   const theme = useTheme();
   const loan = useMemo(homeLoanExample, []);
   const debt = useMemo(debtExample, []);
-  const toPoints = (b: number[]) => b.map((v, i) => [i, v] as [number, number]);
   return (
-    <ToolPane
-      status={roadmap}
+    <ToolPage
+      n="01"
+      status={<Pill $tone="warning">On the roadmap</Pill>}
       title="Loan planner"
       description={`See what prepaying ${short(HOME_LOAN.prepayPerYear)} a year does to a ${short(HOME_LOAN.principal)} home loan before you commit.`}
+      answer={{ value: formatINR(loan.base.emi), label: 'Monthly EMI' }}
       figures={[
-        { value: formatINR(loan.base.emi), label: 'Monthly EMI' },
         { value: formatINR(loan.interestSaved), label: 'Interest saved', tone: 'good' },
         { value: `${loan.monthsSaved / 12 === Math.floor(loan.monthsSaved / 12) ? `${loan.monthsSaved / 12} yrs` : `${loan.monthsSaved} mo`}`, label: 'Paid off sooner', tone: 'good' },
       ]}
@@ -622,24 +625,16 @@ function LoanPlanner() {
         <>
           Debt avalanche: clearing a 36% card first saves {formatINR(debt.snowball.totalInterest - debt.avalanche.totalInterest)} over
           smallest-balance-first.
+          <div style={{ marginTop: 10 }}>
+            <DebtOrder />
+          </div>
         </>,
       ]}
       footnote={`Illustrative: ${formatINR(HOME_LOAN.principal)} at ${HOME_LOAN.ratePct}% p.a., ${HOME_LOAN.years} years, prepaid yearly; ${HOME_LOAN.assumedReturnPct}% return assumed, taxes ignored. Not financial advice.`}
       chartTitle="Outstanding balance"
       chartNote={`${HOME_LOAN.years}-year loan`}
-      chart={
-        <LineChart
-          ariaLabel={`Outstanding home loan balance by year. With EMI only it reaches zero after ${HOME_LOAN.years} years; with ${formatINR(HOME_LOAN.prepayPerYear)} prepaid each year it closes after ${loan.prepay.months / 12} years.`}
-          xMax={HOME_LOAN.years}
-          xTicks={[0, 5, 10, 15, 20]}
-          xLabel={(v) => (v === 0 ? 'Today' : `Year ${v}`)}
-          series={[
-            { label: 'EMI only', color: theme.colors.textMuted, points: toPoints(loan.base.yearlyBalances) },
-            { label: 'With prepayment', color: theme.colors.brand, points: toPoints(loan.prepay.yearlyBalances) },
-          ]}
-        />
-      }
-      legend={[
+      chart={<LoanRibbon />}
+      keys={[
         { label: 'EMI only', color: theme.colors.textMuted },
         { label: `+ ${short(HOME_LOAN.prepayPerYear)} prepaid every year`, color: theme.colors.brand },
       ]}
@@ -647,56 +642,90 @@ function LoanPlanner() {
   );
 }
 
-function BudgetTool() {
+/* ---------- 02 Budget: pacing line against the budget, with the projected overshoot marked ---------- */
+
+function PacingChart() {
   const theme = useTheme();
   const pf = useMemo(personalFinanceExample, []);
+  const H = 260;
+  const { width: w, on, frame } = useChart(H);
   const days = 30;
   const today = Math.round(pf.pacing.elapsedPct * days);
   const budget = 8_000;
-  // Cumulative spend so far follows an uneven but deterministic path that lands on the actual total.
   const weights = Array.from({ length: today }, (_, i) => 1 + 0.6 * Math.sin(i * 1.7) + (i % 5 === 4 ? 1.2 : 0));
-  const wSum = weights.reduce((s, w) => s + w, 0);
+  const wSum = weights.reduce((s, v) => s + v, 0);
   let acc = 0;
-  const actual: [number, number][] = [[0, 0], ...weights.map((w, i) => [i + 1, (acc += (w / wSum) * 6_200)] as [number, number])];
-  const projected: [number, number][] = [
-    [today, 6_200],
-    [days, pf.pacing.projected],
-  ];
+  const actual: [number, number][] = [[0, 0], ...weights.map((v, i) => [i + 1, (acc += (v / wSum) * 6_200)] as [number, number])];
+  const max = 12_000;
+  const pad = { t: 14, r: 12, b: 26, l: 44 };
+  const x = (d: number) => pad.l + (d / days) * (w - pad.l - pad.r);
+  const y = (v: number) => H - pad.b - (v / max) * (H - pad.t - pad.b);
+  const px = (pts: [number, number][]) => pts.map(([d, v]) => [x(d), y(v)] as [number, number]);
+  const over = `M${x(days)} ${y(budget)} L${x(days)} ${y(pf.pacing.projected)}`;
+  return (
+    <Frame
+      frame={frame}
+      label={`Cumulative food and dining spend: ${formatINR(6_200)} by day ${today}, projected to ${formatINR(pf.pacing.projected)} by day ${days}, above the ${formatINR(budget)} budget.`}
+    >
+      <line x1={pad.l} x2={w - pad.r} y1={y(0)} y2={y(0)} stroke={theme.colors.textPrimary} />
+      {[0, 10, 20, 30].map((t, i, a) => (
+        <Mono key={t} x={x(t)} y={H - 6} anchor={i === 0 ? 'start' : i === a.length - 1 ? 'end' : 'middle'} color={theme.colors.textMuted}>
+          {t === 0 ? 'DAY 1' : `DAY ${t}`}
+        </Mono>
+      ))}
+      <line x1={pad.l} x2={w - pad.r} y1={y(budget)} y2={y(budget)} stroke={theme.colors.expense} strokeWidth={1.5} />
+      <Mono x={pad.l - 8} y={y(budget) + 4} anchor="end" color={theme.colors.expense} weight={600}>
+        {short(budget)}
+      </Mono>
+      <Mono x={pad.l - 8} y={y(0) + 4} anchor="end" color={theme.colors.textMuted}>
+        ₹0
+      </Mono>
+      <line x1={x(today)} x2={x(today)} y1={pad.t} y2={y(0)} stroke={theme.colors.border} strokeDasharray="2 4" />
+      <Draw $on={on} $d={0} d={path(px(actual))} pathLength={1} fill="none" stroke={theme.colors.brand} strokeWidth={3} strokeLinejoin="round" strokeLinecap="round" />
+      <Show $on={on} $d={1200}>
+        <path d={path(px([[today, 6_200], [days, pf.pacing.projected]]))} fill="none" stroke={theme.colors.warning} strokeWidth={2.5} strokeDasharray="6 5" />
+        <path d={over} stroke={theme.colors.expense} strokeWidth={6} opacity={0.35} />
+        <circle cx={x(today)} cy={y(6_200)} r={5} fill={theme.colors.bgSurface} stroke={theme.colors.brand} strokeWidth={2.5} />
+        <Hand x={x(today) - 8} y={y(6_200) - 14} anchor="end" color={theme.colors.brandText}>
+          today, day {today}
+        </Hand>
+        <Hand x={x(days) - 10} y={y(pf.pacing.projected) + 4} anchor="end" color={theme.colors.expense}>
+          +{formatINR(pf.pacing.overspend)} over
+        </Hand>
+      </Show>
+    </Frame>
+  );
+}
+
+function BudgetTool() {
+  const theme = useTheme();
+  const pf = useMemo(personalFinanceExample, []);
+  const today = Math.round(pf.pacing.elapsedPct * 30);
+  const budget = 8_000;
   const gym = pf.subscriptions.find((s) => s.name.startsWith('Gym'));
   return (
-    <ToolPane
-      status={soon}
+    <ToolPage
+      n="02"
+      status={<Pill $tone="warning">Coming soon</Pill>}
       title="Budget & subscriptions"
       description="Know mid-month whether a budget will hold, and catch recurring charges you no longer use."
+      answer={{ value: formatINR(pf.pacing.overspend), label: 'Projected overspend', tone: 'bad' }}
       figures={[
         { value: `${formatINR(6_200)}`, label: `of ${formatINR(budget)} used, day ${today}` },
-        { value: formatINR(pf.pacing.overspend), label: 'Projected overspend', tone: 'bad' },
         { value: formatINR(pf.emergency.monthly), label: `/month to a ${short(pf.emergency.target)} emergency fund` },
       ]}
       bullets={[
         <>
-          Found {pf.subscriptions.length} subscriptions worth {formatINR(pf.subscriptionTotal)}/month, including a gym
-          membership unused for 2 months.
+          Found {pf.subscriptions.length} subscriptions worth {formatINR(pf.subscriptionTotal)}/month, including a gym membership unused for 2
+          months.
         </>,
         <>Cancelling it saves {formatINR((gym?.amount ?? 0) * 12)} a year.</>,
       ]}
       footnote={`Illustrative: linear projection from spend to date; goal of ${formatINR(pf.emergency.target)} over ${pf.emergency.months} months. Not financial advice.`}
       chartTitle="Food & dining this month"
       chartNote={`${Math.round(pf.pacing.elapsedPct * 100)}% of the month gone`}
-      chart={
-        <LineChart
-          ariaLabel={`Cumulative food and dining spend: ${formatINR(6_200)} by day ${today}, projected to ${formatINR(pf.pacing.projected)} by day ${days}, above the ${formatINR(budget)} budget.`}
-          xMax={days}
-          xTicks={[0, 10, 20, 30]}
-          xLabel={(v) => (v === 0 ? 'Day 1' : `Day ${v}`)}
-          refLine={{ value: budget, label: `Budget ${short(budget)}` }}
-          series={[
-            { label: 'Spent', color: theme.colors.brand, points: actual },
-            { label: 'Projected', color: theme.colors.warning, points: projected, dashed: true },
-          ]}
-        />
-      }
-      legend={[
+      chart={<PacingChart />}
+      keys={[
         { label: 'Spent so far', color: theme.colors.brand },
         { label: 'Projected at this pace', color: theme.colors.warning, dashed: true },
         { label: 'Budget', color: theme.colors.expense },
@@ -705,43 +734,137 @@ function BudgetTool() {
   );
 }
 
+/* ---------- 03 Invest: yearly columns, contributions stacked under growth ---------- */
+
+function CorpusSteps() {
+  const theme = useTheme();
+  const inv = useMemo(investmentExample, []);
+  const H = 280;
+  const { width: w, on, frame } = useChart(H);
+  const pad = { t: 34, r: 8, b: 26, l: 44 };
+  const max = Math.ceil(inv.fv / 5_00_000) * 5_00_000;
+  const y = (v: number) => H - pad.b - (v / max) * (H - pad.t - pad.b);
+  const cols = inv.yearly.slice(1);
+  const slot = (w - pad.l - pad.r) / cols.length;
+  const bw = Math.max(10, Math.min(44, slot * 0.62));
+  const narrow = w < 480;
+  const last = cols[cols.length - 1];
+  const lastX = pad.l + slot * (cols.length - 1) + slot / 2;
+  return (
+    <Frame
+      frame={frame}
+      label={`SIP over ${SIP.years} years: amount invested reaches ${formatINR(inv.invested)} and estimated value reaches ${formatINR(inv.fv)} at an assumed ${SIP.assumedReturnPct}% return.`}
+    >
+      {[0, max / 2, max].map((v) => (
+        <g key={v}>
+          <line x1={pad.l} x2={w - pad.r} y1={y(v)} y2={y(v)} stroke={v === 0 ? theme.colors.textPrimary : theme.colors.borderSubtle} strokeDasharray={v === 0 ? undefined : '2 4'} />
+          <Mono x={pad.l - 8} y={y(v) + 4} anchor="end" color={theme.colors.textMuted}>
+            {short(v)}
+          </Mono>
+        </g>
+      ))}
+      {cols.map((c, i) => {
+        const cx = pad.l + slot * i + slot / 2;
+        return (
+          <g key={c.year}>
+            <RiseRect $on={on} $d={i * 70} x={cx - bw / 2} y={y(c.value)} width={bw} height={y(0) - y(c.value)} fill={theme.colors.income} rx={1} />
+            <RiseRect $on={on} $d={i * 70} x={cx - bw / 2} y={y(c.invested)} width={bw} height={y(0) - y(c.invested)} fill={theme.colors.bgMuted} stroke={theme.colors.border} rx={1} />
+            {!narrow || c.year % 2 === 0 ? (
+              <Mono x={cx} y={H - 6} anchor="middle" color={theme.colors.textMuted}>
+                {`Y${c.year}`}
+              </Mono>
+            ) : null}
+          </g>
+        );
+      })}
+      {last ? (
+        <Show $on={on} $d={1100}>
+          <path d={`M${lastX - bw / 2 - 6} ${y(last.value)} L${lastX - bw / 2 - 6} ${y(last.invested)}`} stroke={theme.colors.income} strokeWidth={1.5} />
+          <Hand x={lastX - bw / 2 - 12} y={(y(last.value) + y(last.invested)) / 2 + 6} anchor="end" color={theme.colors.income}>
+            {short(inv.gains)} of growth
+          </Hand>
+          <Hand x={lastX + bw / 2} y={y(last.value) - 10} anchor="end" color={theme.colors.textPrimary} size={narrow ? 18 : 20}>
+            {short(inv.fv)}
+          </Hand>
+        </Show>
+      ) : null}
+    </Frame>
+  );
+}
+
 function InvestmentTracker() {
   const theme = useTheme();
   const inv = useMemo(investmentExample, []);
   return (
-    <ToolPane
+    <ToolPage
+      n="03"
       status={<Pill $tone="warning">Projections on the roadmap</Pill>}
       title="Investment tracker"
       description="Track SIPs and broker accounts as assets in your net worth, and project where a SIP could go."
+      answer={{ value: short(inv.fv), label: `Est. value at ${SIP.assumedReturnPct}% p.a.`, tone: 'good' }}
       figures={[
         { value: short(inv.invested), label: `Invested over ${SIP.years} years` },
-        { value: short(inv.fv), label: `Est. value at ${SIP.assumedReturnPct}% p.a.`, tone: 'good' },
         { value: short(inv.gains), label: 'Est. gains', tone: 'good' },
       ]}
-      bullets={[
-        'SIP debits are transfers to an asset account, not spending.',
-        'Mutual funds, stocks, EPF, PPF and deposits all count toward net worth.',
-      ]}
+      bullets={['SIP debits are transfers to an asset account, not spending.', 'Mutual funds, stocks, EPF, PPF and deposits all count toward net worth.']}
       footnote={`Illustrative: ${formatINR(SIP.monthly)}/month for ${SIP.years} years at an assumed ${SIP.assumedReturnPct}% p.a., compounded monthly. Returns are not guaranteed. Not financial advice.`}
       chartTitle={`SIP of ${formatINR(SIP.monthly)}/month`}
       chartNote={`Value ${formatINR(inv.fv)} after ${SIP.years} years`}
-      chart={
-        <LineChart
-          ariaLabel={`SIP over ${SIP.years} years: amount invested reaches ${formatINR(inv.invested)} and estimated value reaches ${formatINR(inv.fv)} at an assumed ${SIP.assumedReturnPct}% return.`}
-          xMax={SIP.years}
-          xTicks={[0, 2, 4, 6, 8, 10]}
-          xLabel={(v) => (v === 0 ? 'Start' : `Year ${v}`)}
-          series={[
-            { label: 'Invested', color: theme.colors.textMuted, points: inv.yearly.map((p) => [p.year, p.invested]) },
-            { label: 'Estimated value', color: theme.colors.income, points: inv.yearly.map((p) => [p.year, p.value]) },
-          ]}
-        />
-      }
-      legend={[
-        { label: 'Amount invested', color: theme.colors.textMuted },
+      chart={<CorpusSteps />}
+      keys={[
+        { label: 'Amount invested', color: theme.colors.textMuted, opacity: 0.4 },
         { label: `Estimated value at ${SIP.assumedReturnPct}%`, color: theme.colors.income },
       ]}
     />
+  );
+}
+
+/* ---------- 04 Reduce: slope chart, last month on the left, the plan on the right ---------- */
+
+function SlopeChart() {
+  const theme = useTheme();
+  const rows = SPENDING_BEFORE_AFTER;
+  const H = 290;
+  const { width: w, on, frame } = useChart(H);
+  const narrow = w < 480;
+  const pad = { t: 34, b: 14 };
+  const lx = narrow ? 62 : 110;
+  const rx = w - (narrow ? 150 : 220);
+  const max = Math.max(...rows.map((r) => r.before));
+  const y = (v: number) => H - pad.b - (v / max) * (H - pad.t - pad.b);
+  return (
+    <Frame frame={frame} label={`Monthly spending before and after the plan: ${rows.map((r) => `${r.name} ${formatINR(r.before)} to ${formatINR(r.after)}`).join('; ')}`}>
+      <Mono x={lx} y={12} anchor="middle" color={theme.colors.textMuted}>
+        LAST MONTH
+      </Mono>
+      <Mono x={rx} y={12} anchor="middle" color={theme.colors.textMuted}>
+        WITH THE PLAN
+      </Mono>
+      <line x1={lx} x2={lx} y1={pad.t - 10} y2={H - pad.b} stroke={theme.colors.textPrimary} strokeWidth={1} />
+      <line x1={rx} x2={rx} y1={pad.t - 10} y2={H - pad.b} stroke={theme.colors.textPrimary} strokeWidth={1} />
+      {rows.map((r, i) => (
+        <g key={r.name}>
+          <Draw $on={on} $d={i * 150} d={`M${lx} ${y(r.before)} L${rx} ${y(r.after)}`} pathLength={1} stroke={theme.colors.brand} strokeWidth={2} opacity={0.75} />
+          <circle cx={lx} cy={y(r.before)} r={4} fill={theme.colors.expense} opacity={0.7} />
+          <Show $on={on} $d={600 + i * 150}>
+            <circle cx={rx} cy={y(r.after)} r={4.5} fill={theme.colors.brand} />
+          </Show>
+          <text x={lx - 10} y={y(r.before) + 4} textAnchor="end" fontFamily={fonts.mono} fontSize={11} fill={theme.colors.textMuted}>
+            {narrow ? short(r.before) : formatINR(r.before)}
+          </text>
+          <Show $on={on} $d={600 + i * 150}>
+            <text x={rx + 10} y={y(r.after) + 4} fontSize={narrow ? 12 : 13} fill={theme.colors.textPrimary}>
+              <tspan fontFamily={fonts.serif} fontWeight={500}>
+                {narrow ? short(r.after) : formatINR(r.after)}
+              </tspan>
+              <tspan fill={theme.colors.textSecondary} dx={6}>
+                {r.name}
+              </tspan>
+            </text>
+          </Show>
+        </g>
+      ))}
+    </Frame>
   );
 }
 
@@ -750,48 +873,102 @@ function SpendReducer() {
   const before = SPENDING_BEFORE_AFTER.reduce((s, r) => s + r.before, 0);
   const after = SPENDING_BEFORE_AFTER.reduce((s, r) => s + r.after, 0);
   return (
-    <ToolPane
-      status={soon}
+    <ToolPage
+      n="04"
+      status={<Pill $tone="warning">Coming soon</Pill>}
       title="Spend reducer"
       description="Find where spending crept up against your 3-month average and what cutting back would save."
+      answer={{ value: formatINR(before - after), label: 'Saved per month', tone: 'good' }}
       figures={[
         { value: formatINR(before), label: 'Last month' },
         { value: formatINR(after), label: 'With the plan' },
-        { value: formatINR(before - after), label: 'Saved per month', tone: 'good' },
       ]}
       bullets={['Flags merchant creep, spikes, unused subscriptions and avoidable fees.', 'You choose which cuts to make.']}
       footnote="Illustrative: estimated savings assume each cut is kept for the whole month. Not financial advice."
       chartTitle="Monthly spend by category"
       chartNote="Before and after"
-      chart={<BeforeAfterChart rows={SPENDING_BEFORE_AFTER} />}
-      legend={[
-        { label: 'Last month', color: theme.colors.expense, opacity: 0.35 },
+      chart={<SlopeChart />}
+      keys={[
+        { label: 'Last month', color: theme.colors.expense, opacity: 0.7 },
         { label: 'With the plan', color: theme.colors.brand },
       ]}
     />
   );
 }
 
+/* ---------- 05 Purchase: cash runway climbing back over the buffer ---------- */
+
+function RunwayChart() {
+  const theme = useTheme();
+  const a = useMemo(purchaseExample, []);
+  const H = 260;
+  const { width: w, on, frame } = useChart(H);
+  const clip = `runway-${useId().replace(/:/g, '')}`;
+  const months = [0, 1, 2];
+  const pts = months.map((m) => ({ m, v: PURCHASE.cash + m * PURCHASE.monthlySurplus - PURCHASE.price }));
+  const lo = 1_00_000;
+  const hi = 1_60_000;
+  const pad = { t: 30, r: 28, b: 26, l: 28 };
+  const x = (m: number) => pad.l + (m / 2) * (w - pad.l - pad.r);
+  const y = (v: number) => H - pad.b - ((v - lo) / (hi - lo)) * (H - pad.t - pad.b);
+  const line = pts.map((p) => [x(p.m), y(p.v)] as [number, number]);
+  const gap = `${path(line)} L${x(2)} ${y(PURCHASE.buffer)} L${x(0)} ${y(PURCHASE.buffer)} Z`;
+  return (
+    <Frame
+      frame={frame}
+      label={`Cash left after buying: ${pts.map((p) => `${p.m === 0 ? 'Buy now' : `In ${p.m} month${p.m > 1 ? 's' : ''}`} ${formatINR(p.v)}`).join(', ')}; emergency buffer ${formatINR(PURCHASE.buffer)}.`}
+    >
+      <clipPath id={clip}>
+        <rect x={0} y={y(PURCHASE.buffer)} width={w} height={H} />
+      </clipPath>
+      <line x1={0} x2={w} y1={H - pad.b} y2={H - pad.b} stroke={theme.colors.textPrimary} />
+      <Show $on={on} $d={700}>
+        <path d={gap} fill={theme.colors.expense} opacity={0.14} clipPath={`url(#${clip})`} />
+      </Show>
+      <line x1={0} x2={w} y1={y(PURCHASE.buffer)} y2={y(PURCHASE.buffer)} stroke={theme.colors.textPrimary} strokeWidth={1.5} strokeDasharray="6 5" />
+      <Mono x={w} y={y(PURCHASE.buffer) - 8} anchor="end" color={theme.colors.textPrimary}>
+        {`BUFFER ${short(PURCHASE.buffer)}`}
+      </Mono>
+      <Draw $on={on} $d={0} d={path(line)} pathLength={1} fill="none" stroke={theme.colors.textSecondary} strokeWidth={2} />
+      {pts.map((p, i) => {
+        const ok = p.v >= PURCHASE.buffer;
+        const c = ok ? theme.colors.income : theme.colors.expense;
+        return (
+          <g key={p.m}>
+            <Show $on={on} $d={400 + i * 250}>
+              <circle cx={x(p.m)} cy={y(p.v)} r={7} fill={c} stroke={theme.colors.bgSurface} strokeWidth={3} />
+              <text x={x(p.m)} y={y(p.v) + (ok ? -16 : 26)} textAnchor={i === 0 ? 'start' : i === 2 ? 'end' : 'middle'} fontFamily={fonts.serif} fontSize={17} fill={c}>
+                {formatINR(p.v)}
+              </text>
+            </Show>
+            <Mono x={x(p.m)} y={H - 6} anchor={i === 0 ? 'start' : i === 2 ? 'end' : 'middle'} color={theme.colors.textMuted}>
+              {p.m === 0 ? 'BUY NOW' : `IN ${p.m} MONTH${p.m > 1 ? 'S' : ''}`}
+            </Mono>
+          </g>
+        );
+      })}
+      <Show $on={on} $d={1300}>
+        <Hand x={x(0.5)} y={y(PURCHASE.buffer) + 34} anchor="middle" color={theme.colors.expense} size={w < 480 ? 17 : 20}>
+          {short(a.shortfall)} short
+        </Hand>
+      </Show>
+    </Frame>
+  );
+}
+
 function PurchasePlanner() {
   const theme = useTheme();
   const a = purchaseExample();
-  const bars = [0, 1, 2].map((m) => {
-    const left = PURCHASE.cash + m * PURCHASE.monthlySurplus - PURCHASE.price;
-    return {
-      label: m === 0 ? 'Buy now' : `In ${m} month${m > 1 ? 's' : ''}`,
-      value: left,
-      color: left >= PURCHASE.buffer ? theme.colors.income : theme.colors.expense,
-    };
-  });
   return (
-    <ToolPane
-      status={soon}
+    <ToolPage
+      n="05"
+      status={<Pill $tone="warning">Coming soon</Pill>}
       title="Purchase planner"
       description={`Ask "Can I afford a ${formatINR(PURCHASE.price)} laptop?" and see the impact on your buffer and goals.`}
+      answer={{ value: `${a.waitMonths} months`, label: 'Wait to stay above it', tone: 'good' }}
       figures={[
         { value: formatINR(a.afterPurchase), label: 'Cash left if bought today' },
         { value: formatINR(a.shortfall), label: 'Below emergency buffer', tone: 'bad' },
-        { value: `${a.waitMonths} months`, label: 'Wait to stay above it', tone: 'good' },
       ]}
       bullets={[
         `Waiting ${a.waitMonths} months leaves ${formatINR(a.afterWaiting)}, above the ${formatINR(PURCHASE.buffer)} buffer.`,
@@ -800,14 +977,8 @@ function PurchasePlanner() {
       footnote={`Illustrative: ${formatINR(PURCHASE.cash)} in savings, ${formatINR(PURCHASE.monthlySurplus)}/month surplus after goals. Not financial advice.`}
       chartTitle="Cash left after buying"
       chartNote={`Buffer ${formatINR(PURCHASE.buffer)}`}
-      chart={
-        <ColumnChart
-          ariaLabel={`Cash left after buying: ${bars.map((b) => `${b.label} ${formatINR(b.value)}`).join(', ')}; emergency buffer ${formatINR(PURCHASE.buffer)}.`}
-          bars={bars}
-          refLine={{ value: PURCHASE.buffer, label: 'Buffer' }}
-        />
-      }
-      legend={[
+      chart={<RunwayChart />}
+      keys={[
         { label: 'Below buffer', color: theme.colors.expense },
         { label: 'Above buffer', color: theme.colors.income },
         { label: 'Emergency buffer', color: theme.colors.textPrimary, dashed: true },
@@ -818,12 +989,12 @@ function PurchasePlanner() {
 
 /* ---------- section ---------- */
 
-const tools: { key: string; label: string; shortLabel?: string; icon: ReactNode; pane: () => ReactNode }[] = [
-  { key: 'loans', label: 'Loan planner', icon: <BankOutlined />, pane: () => <LoanPlanner /> },
-  { key: 'budget', label: 'Budget & subscriptions', shortLabel: 'Budgets', icon: <WalletOutlined />, pane: () => <BudgetTool /> },
-  { key: 'invest', label: 'Investment tracker', icon: <RiseOutlined />, pane: () => <InvestmentTracker /> },
-  { key: 'reduce', label: 'Spend reducer', icon: <FallOutlined />, pane: () => <SpendReducer /> },
-  { key: 'purchase', label: 'Purchase planner', icon: <LaptopOutlined />, pane: () => <PurchasePlanner /> },
+const tools: { key: string; label: string; pane: () => ReactNode }[] = [
+  { key: 'loans', label: 'Loan planner', pane: () => <LoanPlanner /> },
+  { key: 'budget', label: 'Budget & subscriptions', pane: () => <BudgetTool /> },
+  { key: 'invest', label: 'Investment tracker', pane: () => <InvestmentTracker /> },
+  { key: 'reduce', label: 'Spend reducer', pane: () => <SpendReducer /> },
+  { key: 'purchase', label: 'Purchase planner', pane: () => <PurchasePlanner /> },
 ];
 
 function ToolTabs() {
@@ -833,9 +1004,13 @@ function ToolTabs() {
     const last = tools.length - 1;
     const next =
       event.key === 'ArrowRight' || event.key === 'ArrowDown'
-        ? active === last ? 0 : active + 1
+        ? active === last
+          ? 0
+          : active + 1
         : event.key === 'ArrowLeft' || event.key === 'ArrowUp'
-          ? active === 0 ? last : active - 1
+          ? active === 0
+            ? last
+            : active - 1
           : event.key === 'Home'
             ? 0
             : event.key === 'End'
@@ -845,13 +1020,14 @@ function ToolTabs() {
     event.preventDefault();
     setActive(next);
     buttons.current[next]?.focus();
+    buttons.current[next]?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   };
   const tool = tools[active] ?? tools[0];
   return (
     <>
-      <TabList role="tablist" aria-label="Planning tools" onKeyDown={onKeyDown}>
+      <Index role="tablist" aria-label="Planning tools" onKeyDown={onKeyDown}>
         {tools.map((t, i) => (
-          <TabButton
+          <Chapter
             key={t.key}
             ref={(el) => {
               buttons.current[i] = el;
@@ -865,20 +1041,13 @@ function ToolTabs() {
             $active={i === active}
             onClick={() => setActive(i)}
           >
-            <span aria-hidden>{t.icon}</span>
-            <span>
-              {t.shortLabel ? (
-                <>
-                  <span className="full">{t.label}</span>
-                  <span className="short">{t.shortLabel}</span>
-                </>
-              ) : (
-                t.label
-              )}
+            <span className="num" aria-hidden>
+              Ch. {String(i + 1).padStart(2, '0')}
             </span>
-          </TabButton>
+            <span className="name">{t.label}</span>
+          </Chapter>
         ))}
-      </TabList>
+      </Index>
       {tool ? (
         <div role="tabpanel" id={`tool-panel-${tool.key}`} aria-labelledby={`tool-tab-${tool.key}`} key={tool.key}>
           {tool.pane()}
