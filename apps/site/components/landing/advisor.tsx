@@ -1,338 +1,408 @@
 'use client';
 
-import { CalculatorOutlined, CheckCircleFilled, CheckOutlined, DatabaseOutlined, RobotOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
-import { Button } from 'antd';
-import { useState, type ReactNode } from 'react';
-import styled, { css } from 'styled-components';
+import { useState } from 'react';
+import styled, { css, keyframes } from 'styled-components';
 import { OPPORTUNITIES, OPPORTUNITY_TOTAL } from '../../lib/finance-examples';
-import { fadeUp, formatINR, growX, play, popIn, pulse, useInView } from './motion';
-import { Body, Container, Pill, Reveal, SectionHeading, SectionShell } from './primitives';
+import { fadeIn, fadeUp, formatINR, growX, play, useInView } from './motion';
+import { Container, fonts, SectionHeading, SectionShell } from './primitives';
 
-const Grid = styled.div`
-  display: grid;
-  gap: ${({ theme }) => theme.space[10]}px;
-  /* Stacked: the explanation runs across the page, the chat sits offset to the right below it. */
-  & > :last-child {
-    width: 100%;
-    max-width: 760px;
-    justify-self: end;
-  }
-`;
+/*
+ * The advisor as a printed weekly briefing: a receipt that feeds out of a slot, line items with
+ * dotted leaders, and a rubber stamp you press to approve. The four principles are handwritten
+ * notes in the margin instead of an icon grid.
+ */
 
-const Points = styled.ul`
-  list-style: none;
-  margin: ${({ theme }) => theme.space[5]}px 0 0;
-  padding: 0;
-  display: grid;
-  gap: ${({ theme }) => theme.space[5]}px ${({ theme }) => theme.space[6]}px;
-  @media (min-width: ${({ theme }) => theme.breakpoints.sm}px) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-  & li {
-    display: grid;
-    grid-template-columns: 36px 1fr;
-    gap: 12px;
-    align-items: start;
-  }
-  & p {
-    font-size: 14px;
-    line-height: 1.55;
-  }
-  & .icon {
-    width: 36px;
-    height: 36px;
-    border-radius: ${({ theme }) => theme.radii.md}px;
-    display: grid;
-    place-items: center;
-    color: ${({ theme }) => theme.colors.brandText};
-    background: ${({ theme }) => theme.colors.brandSubtle};
-    font-size: 16px;
-  }
-  & strong {
-    display: block;
-    color: ${({ theme }) => theme.colors.textPrimary};
-    font-size: 15px;
-    margin-bottom: 2px;
-  }
-`;
-
-const Chat = styled.div`
-  border-radius: ${({ theme }) => theme.radii.xl}px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  background: ${({ theme }) => theme.colors.bgSurfaceRaised};
-  box-shadow: ${({ theme }) => theme.shadows.md};
-  overflow: hidden;
-  min-width: 0;
-`;
-
-const ChatBar = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  padding: 10px 14px;
-  background: ${({ theme }) => theme.colors.bgMuted};
-  border-bottom: 1px solid ${({ theme }) => theme.colors.borderSubtle};
-  font-size: 12px;
-  color: ${({ theme }) => theme.colors.textSecondary};
-  & i {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: ${({ theme }) => theme.colors.brand};
-    animation: ${pulse} 1.8s ease-in-out infinite;
-  }
-  & > :last-child {
-    margin-left: auto;
-  }
-`;
-
-const ChatBody = styled.div`
-  padding: ${({ theme }) => theme.space[5]}px;
-  display: grid;
-  gap: 14px;
-  font-size: 14px;
-  line-height: 1.55;
-  @media (max-width: 420px) {
-    padding: ${({ theme }) => theme.space[3]}px;
-  }
-`;
-
-const step = css<{ $on: boolean; $d: number }>`
-  animation-name: ${fadeUp};
-  ${({ $on, $d }) => play($on, $d, '550ms')}
-`;
-
-const UserMsg = styled.div<{ $on: boolean; $d: number }>`
-  ${step}
-  justify-self: end;
-  max-width: 90%;
-  padding: 10px 14px;
-  border-radius: 14px 14px 4px 14px;
-  background: ${({ theme }) => theme.colors.brand};
-  color: ${({ theme }) => theme.colors.onBrand};
-`;
-
-const Reply = styled.div<{ $on: boolean; $d: number }>`
-  ${step}
-  padding: 12px 14px;
-  border-radius: 14px 14px 14px 4px;
-  background: ${({ theme }) => theme.colors.bgMuted};
-  color: ${({ theme }) => theme.colors.textPrimary};
-  min-width: 0;
-`;
-
-const Opps = styled.ol`
-  list-style: none;
-  margin: 10px 0;
-  padding: 0;
-  display: grid;
-  gap: 8px;
-`;
-
-const Opp = styled.li<{ $on: boolean; $d: number }>`
-  ${step}
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 2px 12px;
-  padding: 10px 12px;
-  border-radius: ${({ theme }) => theme.radii.md}px;
-  background: ${({ theme }) => theme.colors.bgSurface};
-  border: 1px solid ${({ theme }) => theme.colors.borderSubtle};
-  & b {
-    font-weight: 600;
-  }
-  & .amt {
-    color: ${({ theme }) => theme.colors.income};
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-  }
-  & .detail {
-    grid-column: 1 / -1;
-    font-size: 12px;
-    color: ${({ theme }) => theme.colors.textSecondary};
-  }
-`;
-
-const Meter = styled.span<{ $on: boolean; $d: number; $pct: number }>`
-  grid-column: 1 / -1;
-  display: block;
-  height: 4px;
-  margin-top: 6px;
-  border-radius: 999px;
-  background: ${({ theme }) => theme.colors.bgMuted};
+const Stage = styled.div`
   position: relative;
-  overflow: hidden;
+  display: grid;
+  gap: ${({ theme }) => theme.space[8]}px;
+  justify-items: center;
+  @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
+    grid-template-columns: 1fr 440px 1fr;
+    align-items: center;
+    gap: ${({ theme }) => theme.space[6]}px;
+  }
+`;
+
+const Margin = styled.ul`
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: ${({ theme }) => theme.space[6]}px;
+  width: 100%;
+  max-width: 440px;
+  @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
+    gap: 72px;
+    &:first-child {
+      text-align: right;
+    }
+  }
+`;
+
+const Note = styled.li<{ $on: boolean; $d: number; $tilt: number; $side: 'left' | 'right' }>`
+  position: relative;
+  font-family: ${fonts.hand};
+  font-size: 24px;
+  line-height: 1.15;
+  color: ${({ theme }) => theme.colors.textPrimary};
+  transform: rotate(${({ $tilt }) => $tilt}deg);
+  animation-name: ${fadeIn};
+  ${({ $on, $d }) => play($on, $d, '700ms')}
+  small {
+    display: block;
+    margin-top: 4px;
+    font-family: ${fonts.mono};
+    font-size: 11px;
+    line-height: 1.5;
+    color: ${({ theme }) => theme.colors.textMuted};
+    transform: rotate(${({ $tilt }) => -$tilt}deg);
+  }
+  u {
+    text-decoration: none;
+    background: linear-gradient(transparent 62%, ${({ theme }) => theme.colors.brandSubtle} 62%);
+  }
+  /* A drawn arrow pointing at the receipt on wide screens. */
+  @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
+    &::after {
+      content: '';
+      position: absolute;
+      top: 14px;
+      ${({ $side }) => ($side === 'left' ? 'right: -44px;' : 'left: -44px;')}
+      width: 34px;
+      border-top: 1.5px dashed ${({ theme }) => theme.colors.textMuted};
+    }
+  }
+`;
+
+/* ---------- the receipt ---------- */
+
+const feed = keyframes`
+  from { clip-path: inset(0 0 100% 0); transform: translateY(-24px); }
+  to { clip-path: inset(0 0 -40px 0); transform: none; }
+`;
+
+const Slot = styled.div`
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  padding-top: 14px;
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -12px;
+    right: -12px;
+    height: 14px;
+    border-radius: 7px;
+    background: ${({ theme }) => theme.colors.textPrimary};
+    z-index: 2;
+  }
+`;
+
+const zigzag = (color: string) =>
+  `linear-gradient(135deg, ${color} 6px, transparent 0) 0 0 / 12px 12px repeat-x, linear-gradient(225deg, ${color} 6px, transparent 0) 0 0 / 12px 12px repeat-x`;
+
+const Paper = styled.article<{ $on: boolean }>`
+  position: relative;
+  padding: 26px 26px 34px;
+  background: ${({ theme }) => theme.colors.bgSurfaceRaised};
+  color: ${({ theme }) => theme.colors.textPrimary};
+  font-family: ${fonts.mono};
+  font-size: 13px;
+  box-shadow: 0 18px 40px rgba(16, 24, 40, 0.12);
+  animation-name: ${feed};
+  ${({ $on }) => play($on, 100, '1400ms')}
   &::after {
     content: '';
     position: absolute;
-    inset: 0;
-    width: ${({ $pct }) => $pct}%;
-    background: ${({ theme }) => theme.colors.income};
-    transform-origin: left;
-    animation-name: ${growX};
-    ${({ $on, $d }) => play($on, $d, '900ms')}
+    left: 0;
+    right: 0;
+    bottom: -12px;
+    height: 12px;
+    background: ${({ theme }) => zigzag(theme.colors.bgSurfaceRaised)};
+    transform: rotate(180deg);
+  }
+  @media (max-width: 420px) {
+    padding: 22px 16px 30px;
   }
 `;
 
-const Provenance = styled.p`
-  margin: 0;
-  font-size: 12px;
-  color: ${({ theme }) => theme.colors.textMuted};
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  flex-wrap: wrap;
+const Masthead = styled.header`
+  text-align: center;
+  padding-bottom: 14px;
+  border-bottom: 1.5px dashed ${({ theme }) => theme.colors.border};
+  h3 {
+    margin: 0;
+    font-family: ${fonts.serif};
+    font-weight: 500;
+    font-size: 30px;
+    letter-spacing: -0.02em;
+  }
+  p {
+    margin: 4px 0 0;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: ${({ theme }) => theme.colors.textMuted};
+  }
 `;
 
-const Suggestion = styled.div<{ $on: boolean; $d: number }>`
-  animation-name: ${popIn};
-  ${({ $on, $d }) => play($on, $d, '500ms')}
-  border-radius: ${({ theme }) => theme.radii.lg}px;
-  border: 1px dashed ${({ theme }) => theme.colors.warning};
-  background: ${({ theme }) => theme.colors.bgSurface};
-  padding: 12px 14px;
-  display: grid;
-  gap: 10px;
-  & .row {
+const Asked = styled.p`
+  margin: 14px 0 6px;
+  font-family: ${fonts.serif};
+  font-style: italic;
+  font-size: 17px;
+  color: ${({ theme }) => theme.colors.textSecondary};
+  &::before {
+    content: '“';
+  }
+  &::after {
+    content: '”';
+  }
+`;
+
+const Items = styled.ol`
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+`;
+
+const Item = styled.li<{ $on: boolean; $d: number }>`
+  padding: 9px 0;
+  animation-name: ${fadeUp};
+  ${({ $on, $d }) => play($on, $d, '450ms')}
+  .line {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px;
   }
-  & .title {
+  .line span:first-child {
     font-weight: 600;
-    color: ${({ theme }) => theme.colors.textPrimary};
+    white-space: nowrap;
   }
-  & .actions {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
+  .dots {
+    flex: 1;
+    min-width: 12px;
+    border-bottom: 1.5px dotted ${({ theme }) => theme.colors.textMuted};
+    transform: translateY(-3px);
+  }
+  .amt {
+    color: ${({ theme }) => theme.colors.income};
+    white-space: nowrap;
+  }
+  .why {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+    color: ${({ theme }) => theme.colors.textMuted};
   }
 `;
 
-function Point({ icon, title, children }: { icon: ReactNode; title: string; children: ReactNode }) {
-  return (
-    <li>
-      <span className="icon" aria-hidden>
-        {icon}
-      </span>
-      <div>
-        <strong>{title}</strong>
-        <Body>{children}</Body>
-      </div>
-    </li>
-  );
-}
+const Total = styled.div<{ $on: boolean }>`
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 3px double ${({ theme }) => theme.colors.textPrimary};
+  animation-name: ${fadeIn};
+  ${({ $on }) => play($on, 1900, '500ms')}
+  span {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  b {
+    font-family: ${fonts.serif};
+    font-weight: 500;
+    font-size: 34px;
+    letter-spacing: -0.03em;
+    color: ${({ theme }) => theme.colors.brandText};
+  }
+`;
 
-function AdvisorChat() {
+const Bar = styled.span<{ $on: boolean; $d: number; $pct: number }>`
+  display: block;
+  height: 3px;
+  margin-top: 6px;
+  width: ${({ $pct }) => $pct}%;
+  background: ${({ theme }) => theme.colors.income};
+  transform-origin: left;
+  animation-name: ${growX};
+  ${({ $on, $d }) => play($on, $d, '700ms')}
+`;
+
+const Proposal = styled.div`
+  margin-top: 20px;
+  padding: 12px;
+  border: 1.5px dashed ${({ theme }) => theme.colors.textMuted};
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+  p {
+    margin: 0;
+    line-height: 1.5;
+  }
+  p small {
+    display: block;
+    font-size: 11px;
+    color: ${({ theme }) => theme.colors.textMuted};
+  }
+`;
+
+const thump = keyframes`
+  0% { opacity: 0; transform: scale(2.2) rotate(-14deg); }
+  60% { opacity: 1; transform: scale(0.94) rotate(-14deg); }
+  100% { opacity: 1; transform: scale(1) rotate(-14deg); }
+`;
+
+const StampButton = styled.button<{ $state: 'pending' | 'approved' | 'dismissed' }>`
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  padding: 8px 12px;
+  border: 2.5px solid currentColor;
+  border-radius: 4px;
+  font-family: ${fonts.mono};
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: transform 150ms;
+  ${({ $state, theme }) =>
+    $state === 'pending'
+      ? css`
+          color: ${theme.colors.textPrimary};
+          border-style: dashed;
+          &:hover {
+            transform: rotate(-4deg);
+          }
+        `
+      : css`
+          color: ${$state === 'approved' ? theme.colors.brandText : theme.colors.expense};
+          animation: ${thump} 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+        `}
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.brand};
+    outline-offset: 3px;
+  }
+`;
+
+const Small = styled.button`
+  all: unset;
+  cursor: pointer;
+  grid-column: 1 / -1;
+  justify-self: start;
+  font-size: 11px;
+  color: ${({ theme }) => theme.colors.textMuted};
+  text-decoration: underline;
+`;
+
+const Footer = styled.footer`
+  margin-top: 18px;
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.colors.textMuted};
+  a {
+    color: inherit;
+  }
+`;
+
+function Briefing() {
   const [ref, on] = useInView<HTMLDivElement>(0.3);
-  const [decision, setDecision] = useState<'pending' | 'approved' | 'dismissed'>('pending');
-  const maxSaving = Math.max(...OPPORTUNITIES.map((o) => o.saving));
+  const [state, setState] = useState<'pending' | 'approved' | 'dismissed'>('pending');
+  const max = Math.max(...OPPORTUNITIES.map((o) => o.saving));
   const food = OPPORTUNITIES[0];
   return (
-    <Chat ref={ref} role="figure" aria-label="Illustration: the advisor answering a question about spending less">
-      <ChatBar>
-        <i aria-hidden />
-        <span>Arvo advisor · preview</span>
-        <Pill $tone="warning">Coming soon</Pill>
-      </ChatBar>
-      <ChatBody>
-        <UserMsg $on={on} $d={150}>
-          How can I spend {formatINR(5_000)} less per month?
-        </UserMsg>
-        <Reply $on={on} $d={700}>
-          I found three opportunities worth about <b>{formatINR(OPPORTUNITY_TOTAL)}/month</b>:
-          <Opps>
-            {OPPORTUNITIES.map((o, i) => (
-              <Opp key={o.label} $on={on} $d={1100 + i * 250}>
-                <b>{o.label}</b>
-                <span className="amt">−{formatINR(o.saving)}/mo</span>
-                <span className="detail">{o.detail}</span>
-                <Meter $on={on} $d={1300 + i * 250} $pct={(o.saving / maxSaving) * 100} aria-hidden />
-              </Opp>
-            ))}
-          </Opps>
-          <Provenance>
-            <DatabaseOutlined aria-hidden /> Data used: 127 transactions, Aug 1–31 · compared with May–Jul
-          </Provenance>
-        </Reply>
-        <Suggestion $on={on} $d={2200} aria-live="polite">
-          <div className="row">
-            <span className="title">
-              Suggested budget: {food?.label} {formatINR(food?.target ?? 0)}/month
-            </span>
-            <Pill $tone={decision === 'approved' ? 'income' : decision === 'dismissed' ? 'muted' : 'warning'}>
-              {decision === 'approved' ? 'Approved (demo)' : decision === 'dismissed' ? 'Dismissed' : 'Pending your approval'}
-            </Pill>
-          </div>
-          <Body style={{ fontSize: 13 }}>Nothing is saved until you approve it.</Body>
-          {decision === 'pending' ? (
-            <div className="actions">
-              <Button type="primary" size="small" icon={<CheckOutlined />} onClick={() => setDecision('approved')}>
-                Approve
-              </Button>
-              <Button size="small" onClick={() => setDecision('dismissed')}>
-                Dismiss
-              </Button>
-            </div>
+    <Slot ref={ref}>
+      <Paper $on={on} aria-label="Example weekly briefing from the planned Arvo advisor">
+        <Masthead>
+          <h3>Weekly briefing</h3>
+          <p>Arvo advisor · preview · wk 36</p>
+        </Masthead>
+        <Asked>How can I spend {formatINR(5_000)} less a month?</Asked>
+        <Items>
+          {OPPORTUNITIES.map((o, i) => (
+            <Item key={o.label} $on={on} $d={900 + i * 280}>
+              <div className="line">
+                <span>{o.label}</span>
+                <span className="dots" aria-hidden />
+                <span className="amt">−{formatINR(o.saving)}</span>
+              </div>
+              <span className="why">{o.detail}</span>
+              <Bar $on={on} $d={1100 + i * 280} $pct={(o.saving / max) * 100} aria-hidden />
+            </Item>
+          ))}
+        </Items>
+        <Total $on={on}>
+          <span>Back each month</span>
+          <b>{formatINR(OPPORTUNITY_TOTAL)}</b>
+        </Total>
+        <Proposal>
+          <p>
+            Budget {food?.label.toLowerCase()} at {formatINR(food?.target ?? 0)}/mo
+            <small>127 transactions · Aug vs May–Jul</small>
+          </p>
+          <StampButton
+            type="button"
+            $state={state}
+            aria-live="polite"
+            onClick={() => setState((s) => (s === 'pending' ? 'approved' : s))}
+          >
+            {state === 'pending' ? 'Approve?' : state === 'approved' ? 'Approved' : 'Dismissed'}
+          </StampButton>
+          {state === 'pending' ? (
+            <Small type="button" onClick={() => setState('dismissed')}>
+              not now
+            </Small>
           ) : (
-            <div className="actions">
-              <Button size="small" type="link" style={{ paddingInline: 0 }} onClick={() => setDecision('pending')}>
-                Reset demo
-              </Button>
-            </div>
+            <Small type="button" onClick={() => setState('pending')}>
+              reset demo
+            </Small>
           )}
-        </Suggestion>
-      </ChatBody>
-    </Chat>
+        </Proposal>
+        <Footer>
+          Coming soon · not financial advice · <a href="/disclaimer">disclaimer</a>
+        </Footer>
+      </Paper>
+    </Slot>
   );
 }
 
 export function AdvisorSection() {
+  const [ref, on] = useInView<HTMLDivElement>(0.2);
   return (
     <SectionShell id="advisor" aria-labelledby="advisor-title">
       <Container>
-        <Grid>
-          <div>
-            <SectionHeading
-              id="advisor-title"
-              compact
-              eyebrow="On the roadmap"
-              index="04"
-              title="Your personal finance manager"
-              lead="A planned advisor that finds savings and helps you plan. Arvo calculates the numbers; the AI only explains them."
-            />
-            <Reveal>
-              <Pill $tone="warning">Coming soon · not available yet</Pill>
-              <Points>
-                <Point icon={<CalculatorOutlined />} title="Numbers you can check">
-                  Savings, subscriptions, budget pacing and goals, calculated from your transactions with fixed rules.
-                </Point>
-                <Point icon={<RobotOutlined />} title="AI explains, never calculates">
-                  It explains the results and drafts plans, and shows the data it used.
-                </Point>
-                <Point icon={<SafetyCertificateOutlined />} title="You approve first">
-                  Drafted budgets, goals and rules are saved only when you approve. It never moves money.
-                </Point>
-                <Point icon={<CheckCircleFilled />} title="Weekly briefing">
-                  What changed, what is pacing over, and what needs a decision.
-                </Point>
-              </Points>
-              <Body style={{ marginTop: 20, fontSize: 13 }}>
-                Information and tools, not financial advice. <a href="/disclaimer">Read the disclaimer</a>.
-              </Body>
-            </Reveal>
-          </div>
-          <Reveal delay={150}>
-            <AdvisorChat />
-          </Reveal>
-        </Grid>
+        <SectionHeading id="advisor-title" eyebrow="On the roadmap" index="04" title="Your personal finance manager" />
+        <Stage ref={ref}>
+          <Margin>
+            <Note $on={on} $d={600} $tilt={-2} $side="left">
+              <u>Real math</u>, not vibes
+              <small>savings, pacing & goals from fixed rules</small>
+            </Note>
+            <Note $on={on} $d={900} $tilt={1.5} $side="left">
+              AI just <u>explains</u>
+              <small>and shows the data it used</small>
+            </Note>
+          </Margin>
+          <Briefing />
+          <Margin>
+            <Note $on={on} $d={1200} $tilt={2} $side="right">
+              Nothing saved till <u>you stamp it</u>
+              <small>never moves money</small>
+            </Note>
+            <Note $on={on} $d={1500} $tilt={-1.5} $side="right">
+              Every <u>Monday</u>
+              <small>what changed, what needs a decision</small>
+            </Note>
+          </Margin>
+        </Stage>
       </Container>
     </SectionShell>
   );
