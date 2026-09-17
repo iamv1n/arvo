@@ -156,7 +156,7 @@ export const palettes: Palette[] = [
   },
 ];
 
-export const DEFAULT_PALETTE: PaletteId = 'ledger';
+export const DEFAULT_PALETTE: PaletteId = 'dusk';
 
 export function isPaletteId(value: unknown): value is PaletteId {
   return palettes.some((p) => p.id === value);
