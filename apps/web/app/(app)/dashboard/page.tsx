@@ -1,23 +1,21 @@
 'use client';
 
-import { ArrowDownOutlined, ArrowUpOutlined, BankOutlined, WalletOutlined } from '@ant-design/icons';
 import { Alert, Col, Empty, Flex, Progress, Row, Segmented, Skeleton, Tag, Typography } from 'antd';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import styled, { useTheme } from 'styled-components';
 import { Amount } from '../../../components/amount';
 import { Highlights } from '../../../components/highlights';
+import { OverviewStats } from '../../../components/overview-stats';
 import { CategoryDonut, categoryColors, IncomeExpenseChart } from '../../../components/charts';
-import { CountUp } from '../../../components/count-up';
 import { PageHeader } from '../../../components/page-header';
 import { Panel } from '../../../components/panel';
 import { RowList } from '../../../components/row-list';
-import { StatCard } from '../../../components/stat-card';
 import { useAuth } from '../../../lib/auth';
 import { formatDate } from '../../../lib/format';
 import { PERIOD_OPTIONS, periodRange, type PeriodKey } from '../../../lib/periods';
 import { usePreferences } from '../../../lib/preferences';
-import { useAccounts, useCategories, useHighlights, useMonthly, useNetWorth, useRecurring, useSummary, useTransactions } from '../../../lib/queries';
+import { useAccounts, useCategories, useHighlights, useMonthly, useSummary, useTransactions } from '../../../lib/queries';
 import { useMoney } from '../../../lib/use-money';
 
 /** Fixed body heights keep rows aligned regardless of how much data a card holds. */
@@ -80,11 +78,9 @@ export default function DashboardPage() {
   const trendRange = useMemo(() => periodRange('last-6-months'), []);
   const summary = useSummary(range);
   const monthly = useMonthly(trendRange);
-  const netWorth = useNetWorth();
   const accounts = useAccounts();
   const categories = useCategories();
   const recent = useTransactions({ limit: 12 });
-  const recurring = useRecurring();
   const highlights = useHighlights();
 
   const categoryName = useMemo(() => new Map((categories.data ?? []).map((c) => [c.id, c.name])), [categories.data]);
@@ -115,52 +111,9 @@ export default function DashboardPage() {
         />
       )}
 
-      <Row gutter={[16, 16]} align="stretch">
-        <Col xs={24} sm={12} xl={6}>
-          <StatCard
-            variant="hero"
-            icon={<BankOutlined />}
-            label="Net worth"
-            loading={netWorth.isPending}
-            value={netWorth.data && <CountUp value={netWorth.data.netWorth} format={(v) => money(v, currency)} />}
-            hint={netWorth.data && `Assets ${compact(netWorth.data.assets)} · Owed ${compact(netWorth.data.liabilities)}`}
-          />
-        </Col>
-        <Col xs={24} sm={12} xl={6}>
-          <StatCard
-            icon={<ArrowDownOutlined />}
-            iconTone="positive"
-            label="Income"
-            loading={summary.isPending}
-            value={s && <CountUp value={s.income} format={(v) => money(v, currency)} />}
-            tone="positive"
-          />
-        </Col>
-        <Col xs={24} sm={12} xl={6}>
-          <StatCard
-            icon={<ArrowUpOutlined />}
-            iconTone="negative"
-            label="Expenses"
-            loading={summary.isPending}
-            value={s && <CountUp value={s.expenses} format={(v) => money(v, currency)} />}
-            hint={
-              s &&
-              `${s.transactionCount} transactions${recurring.data && Number(recurring.data.monthlyTotal) > 0 ? ` · ${compact(recurring.data.monthlyTotal)}/mo recurring` : ''}`
-            }
-          />
-        </Col>
-        <Col xs={24} sm={12} xl={6}>
-          <StatCard
-            icon={<WalletOutlined />}
-            iconTone="brand"
-            label="Net cashflow"
-            loading={summary.isPending}
-            value={s && <CountUp value={s.netCashflow} format={(v) => money(v, currency)} />}
-            tone={s && Number(s.netCashflow) < 0 ? 'negative' : 'positive'}
-            hint={s && (s.savingsRate === null ? 'No income yet' : `Savings rate ${s.savingsRate}%`)}
-          />
-        </Col>
+      <OverviewStats period={range} currency={currency} />
 
+      <Row gutter={[16, 16]} align="stretch" style={{ marginTop: 16 }}>
         {s && s.unclassified.transactionCount > 0 && (
           <Col span={24}>
             <Alert
@@ -175,9 +128,9 @@ export default function DashboardPage() {
         <Col span={24}>
           <SectionTitle>
             <span>This month, in numbers</span>
-            <small>Computed from your transactions · updated live</small>
+            <Link href="/insights">See all insights →</Link>
           </SectionTitle>
-          <Highlights items={highlights.data?.highlights} loading={highlights.isPending} currency={currency} />
+          <Highlights items={highlights.data?.highlights} loading={highlights.isPending} currency={currency} limit={3} />
         </Col>
 
         <Col xs={24} xl={15}>

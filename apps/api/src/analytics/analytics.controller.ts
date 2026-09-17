@@ -89,6 +89,15 @@ export class AnalyticsController {
     });
   }
 
+  @Get('patterns')
+  @ApiOperation({ summary: 'Spending patterns: daily totals, burn-up, weekday rhythm, size bands, waterfall, upcoming charges' })
+  async patterns(@UserId() userId: string, @Query() q: CurrencyQueryDto) {
+    return this.core.patterns.patterns(userId, {
+      currency: q.currency ?? (await this.baseCurrency(userId)),
+      asOf: new Date().toISOString().slice(0, 10),
+    });
+  }
+
   @Get('snapshot')
   @ApiOperation({ summary: 'Structured monthly financial snapshot' })
   async snapshot(@UserId() userId: string, @Query() q: MonthQueryDto) {

@@ -1,5 +1,6 @@
 import { HighlightsService } from './analytics/highlights.service';
 import { InsightsService } from './analytics/insights.service';
+import { PatternsService } from './analytics/patterns.service';
 import { ImportService, type ImportDependencies } from './imports/import.service';
 import type { FinanceStore } from './ports';
 import { RuleService } from './rules/rule.service';
@@ -19,6 +20,7 @@ export class FinanceCore {
   readonly analytics: AnalyticsService;
   readonly insights: InsightsService;
   readonly highlights: HighlightsService;
+  readonly patterns: PatternsService;
   readonly categories: CategoryService;
   readonly merchants: MerchantService;
   readonly transactions: TransactionService;
@@ -31,6 +33,7 @@ export class FinanceCore {
     this.analytics = new AnalyticsService(store);
     this.insights = new InsightsService(store);
     this.highlights = new HighlightsService(store);
+    this.patterns = new PatternsService(store);
     this.categories = new CategoryService(store);
     this.merchants = new MerchantService(store);
     this.transactions = new TransactionService(store);

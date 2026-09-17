@@ -382,7 +382,7 @@ function render(h: Highlight, money: (v: string | number, opts?: { compact?: boo
 }
 
 /** "This month, in numbers": deterministic findings rendered as annotated notes. */
-export function Highlights({ items, loading, currency }: { items: Highlight[] | undefined; loading: boolean; currency: string }) {
+export function Highlights({ items, loading, currency, limit }: { items: Highlight[] | undefined; loading: boolean; currency: string; limit?: number }) {
   const theme = useTheme();
   const format = useMoney();
   const reduced = useReducedMotion();
@@ -392,7 +392,7 @@ export function Highlights({ items, loading, currency }: { items: Highlight[] | 
   if (loading) {
     return (
       <Grid>
-        {Array.from({ length: 6 }, (_, i) => (
+        {Array.from({ length: limit ?? 6 }, (_, i) => (
           <Note key={i} $tone="neutral" $index={i} $animate={false}>
             <Skeleton active paragraph={{ rows: 2 }} />
           </Note>
@@ -407,10 +407,11 @@ export function Highlights({ items, loading, currency }: { items: Highlight[] | 
   // Featured findings first, then the rest in engine order.
   const rendered = items.map((h) => ({ h, r: render(h, money, count, theme) }));
   rendered.sort((a, b) => Number(!!b.r.featured) - Number(!!a.r.featured));
+  const shown = limit ? rendered.slice(0, limit).map((x) => ({ ...x, r: { ...x.r, featured: false } })) : rendered;
 
   return (
     <Grid>
-      {rendered.map(({ h, r }, index) => {
+      {shown.map(({ h, r }, index) => {
         const stamp = STAMP[h.tone];
         const IconComponent = r.icon;
         return (

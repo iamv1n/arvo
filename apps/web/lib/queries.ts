@@ -12,6 +12,7 @@ import type {
   ImportRowStatus,
   ImportSummary,
   HighlightsResult,
+  SpendingPatterns,
   Merchant,
   MerchantSpend,
   MonthlyPoint,
@@ -187,3 +188,6 @@ export const useRecurring = () =>
 
 export const useHighlights = () =>
   useQuery({ queryKey: [...keys.analytics, 'highlights'], queryFn: () => api<HighlightsResult>('/analytics/highlights') });
+
+export const usePatterns = () =>
+  useQuery({ queryKey: [...keys.analytics, 'patterns'], queryFn: () => api<SpendingPatterns>('/analytics/patterns') });

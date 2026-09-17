@@ -266,3 +266,52 @@ export interface HighlightsResult {
   month: string;
   highlights: Highlight[];
 }
+
+export interface DailySpend {
+  date: string;
+  spent: string;
+  count: number;
+}
+export interface BurnUpPoint {
+  day: number;
+  thisMonth: string | null;
+  lastMonth: string | null;
+  average: string;
+}
+export interface WeekdaySpend {
+  weekday: number;
+  total: string;
+  average: string;
+  count: number;
+}
+export interface SizeBand {
+  label: string;
+  min: string;
+  max: string | null;
+  count: number;
+  total: string;
+}
+export interface WaterfallStep {
+  label: string;
+  kind: 'income' | 'category' | 'other' | 'remaining';
+  amount: string;
+}
+export interface UpcomingCharge {
+  label: string;
+  amount: string;
+  date: string;
+  frequency: string;
+  priceIncreased: boolean;
+}
+export interface SpendingPatterns {
+  currency: string;
+  asOf: string;
+  month: string;
+  daily: DailySpend[];
+  burnUp: BurnUpPoint[];
+  weekdays: WeekdaySpend[];
+  sizeBands: SizeBand[];
+  waterfall: WaterfallStep[];
+  upcoming: UpcomingCharge[];
+  totals: { windowDays: number; spent: string; transactions: number; averagePerDay: string; busiestDay: DailySpend | null };
+}
