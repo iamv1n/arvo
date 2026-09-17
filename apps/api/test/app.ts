@@ -12,12 +12,15 @@ import { MemoryMailer } from '../src/mail/drivers';
 import { MAILER } from '../src/mail/mailer';
 import { testDatabaseUrl } from './env';
 
-export async function createTestApp(): Promise<INestApplication> {
+export async function createTestApp(env: Record<string, string> = {}): Promise<INestApplication> {
   process.env.DATABASE_URL = testDatabaseUrl();
   process.env.JWT_SECRET = 'e2e-test-secret-that-is-long-enough-000000';
   process.env.STORAGE_PATH = join(tmpdir(), 'arvo-e2e-storage');
   process.env.MAIL_DRIVER = 'memory';
   process.env.PUBLIC_WEB_URL ??= 'http://localhost:3300';
+  // The advisor is off unless a suite opts in; e2e runs never call a real AI provider.
+  process.env.AI_PROVIDER = 'none';
+  Object.assign(process.env, env);
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
   const app = moduleRef.createNestApplication({ logger: new JsonLogger(false) });
   configureApp(app, loadAppConfig());

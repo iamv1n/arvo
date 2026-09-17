@@ -215,4 +215,44 @@ export const templates = {
         'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
       },
     }),
+  weeklyBriefing: (
+    to: string,
+    input: {
+      name: string;
+      weekStart: string;
+      narrative: string | null;
+      narrativeBy: string | null;
+      decision: string;
+      budgets: string[];
+      goals: string[];
+      savings: string[];
+      upcoming: string[];
+      advisorUrl: string;
+      settingsUrl: string;
+      unsubscribeUrl: string;
+    },
+  ) => {
+    const section = (title: string, items: string[]): Block[] => (items.length ? [{ kind: 'p', text: title }, { kind: 'list', items }] : []);
+    return render({
+      to,
+      subject: 'Your weekly money briefing',
+      preheader: input.decision,
+      heading: `Week of ${input.weekStart}`,
+      blocks: [
+        { kind: 'p', text: `Hi ${input.name}, here is where your money stands this week.` },
+        ...(input.narrative ? [{ kind: 'p', text: input.narrative } as Block, { kind: 'note', text: `Summary written by ${input.narrativeBy ?? 'your AI provider'} from the figures below.` } as Block] : []),
+        { kind: 'p', text: `Decision for this week: ${input.decision}` },
+        ...section('Budgets that need attention:', input.budgets),
+        ...section('Goals:', input.goals),
+        ...section('Ways to spend less:', input.savings),
+        ...section('Coming up in the next 7 days:', input.upcoming),
+        { kind: 'button', label: 'Open the advisor', url: input.advisorUrl },
+        { kind: 'note', text: `Figures are computed from your imported statements. Educational, not investment advice. Change this in Settings → Preferences (${input.settingsUrl}) or unsubscribe: ${input.unsubscribeUrl}` },
+      ],
+      headers: {
+        'List-Unsubscribe': `<${input.unsubscribeUrl}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
+    });
+  },
 };

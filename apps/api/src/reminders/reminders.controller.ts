@@ -1,6 +1,6 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Inject, Patch, Post, Query, Res } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiProperty, ApiPropertyOptional, ApiTags } from '@nestjs/swagger';
-import { IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min, ValidateIf } from 'class-validator';
+import { IsBoolean, IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min, ValidateIf } from 'class-validator';
 import type { Response } from 'express';
 import type { ReminderFrequency } from '@arvo/database';
 import { escapeHtml } from '../mail/templates';
@@ -17,6 +17,7 @@ export class ReminderSettingsDto implements ReminderSettings {
   @ApiProperty({ nullable: true, type: Number }) daysSinceLastImport!: number | null;
   @ApiProperty({ nullable: true, type: Date }) nextReminderAt!: Date | null;
   @ApiProperty() overdue!: boolean;
+  @ApiProperty({ description: 'Email the weekly advisor briefing on Monday mornings' }) weeklyBriefing!: boolean;
 }
 
 export class UpdateReminderSettingsDto {
@@ -31,6 +32,11 @@ export class UpdateReminderSettingsDto {
   @Min(1)
   @Max(28)
   day?: number | null;
+
+  @ApiPropertyOptional({ description: 'Email the weekly advisor briefing on Monday mornings (08:00 in your timezone)' })
+  @IsOptional()
+  @IsBoolean()
+  weeklyBriefing?: boolean;
 }
 
 export class UnsubscribeQueryDto {
@@ -86,7 +92,8 @@ export class RemindersController {
   }
 }
 
-function page(title: string, body: string): string {
+/** Small standalone HTML page for one-click email links. */
+export function page(title: string, body: string): string {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)} · Arvo</title></head>
 <body style="margin:0;display:grid;place-items:center;min-height:100vh;background:#f6f5f1;color:#161a2e;font:16px/1.6 -apple-system,'Segoe UI',Roboto,sans-serif">
 <main style="max-width:440px;padding:32px;background:#fefdfb;border:1px solid #e1ded6;border-radius:14px">

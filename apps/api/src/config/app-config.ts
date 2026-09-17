@@ -1,3 +1,4 @@
+import { loadAIConfig, type AIConfig } from '@arvo/ai';
 import { createHash } from 'node:crypto';
 
 export interface AppConfig {
@@ -26,6 +27,10 @@ export interface AppConfig {
   loginAlerts: boolean;
   /** Run the hourly statement upload reminder job. */
   remindersEnabled: boolean;
+  /** AI advisor provider settings (API keys never leave the server). */
+  ai: AIConfig;
+  /** Run the hourly job that emails weekly briefings on Monday mornings. */
+  weeklyBriefingEnabled: boolean;
 }
 
 export type MailDriver = 'smtp' | 'console' | 'memory';
@@ -87,6 +92,9 @@ export function loadAppConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     twoFactorEncryptionKey = createHash('sha256').update(`arvo-2fa:${jwtSecret}`).digest();
   }
 
+  const ai = loadAIConfig(env);
+  problems.push(...ai.problems);
+
   const config: AppConfig = {
     nodeEnv,
     port: positiveInt('PORT', 3301),
@@ -115,6 +123,8 @@ export function loadAppConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     twoFactorKeyDerived: !rawKey,
     loginAlerts: bool('MAIL_LOGIN_ALERTS', false),
     remindersEnabled: bool('REMINDERS_ENABLED', nodeEnv !== 'test'),
+    ai: ai.config,
+    weeklyBriefingEnabled: bool('WEEKLY_BRIEFING_ENABLED', nodeEnv !== 'test'),
     mcpResourceUrl: (env.MCP_RESOURCE_URL?.trim() || env.NEXT_PUBLIC_MCP_URL?.trim() || 'http://localhost:3302/mcp').replace(/\/+$/, ''),
   };
   if (problems.length) {

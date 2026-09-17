@@ -1,4 +1,9 @@
 import { Global, Module, type MiddlewareConsumer, type NestModule } from '@nestjs/common';
+import { AdvisorController } from './advisor/advisor.controller';
+import { AdvisorProviders, AI_PROVIDER_FACTORY, defaultProviderFactory } from './advisor/advisor-providers';
+import { AdvisorService } from './advisor/advisor.service';
+import { BriefingsService } from './advisor/briefings.service';
+import { SuggestionsService } from './advisor/suggestions.service';
 import { AnalyticsController } from './analytics/analytics.controller';
 import { AccountsController } from './accounts/accounts.controller';
 import { AuthModule } from './auth/auth.module';
@@ -32,7 +37,15 @@ class ConfigModule {}
 
 @Module({
   imports: [ConfigModule, DatabaseModule, MailModule, AuthModule, ScheduleModule.forRoot()],
-  providers: [OAuthService, RemindersService],
+  providers: [
+    OAuthService,
+    RemindersService,
+    { provide: AI_PROVIDER_FACTORY, inject: [APP_CONFIG], useFactory: defaultProviderFactory },
+    AdvisorProviders,
+    SuggestionsService,
+    AdvisorService,
+    BriefingsService,
+  ],
   controllers: [
     HealthController,
     UsersController,
@@ -51,6 +64,7 @@ class ConfigModule {}
     GoalsController,
     PlanningController,
     ScenariosController,
+    AdvisorController,
   ],
 })
 export class AppModule implements NestModule {

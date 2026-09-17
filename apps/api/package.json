@@ -13,8 +13,10 @@
     "test:e2e": "NODE_OPTIONS=--experimental-vm-modules jest --config test/jest-e2e.config.js --runInBand"
   },
   "dependencies": {
+    "@arvo/ai": "workspace:*",
     "@arvo/database": "workspace:*",
     "@arvo/finance-core": "workspace:*",
+    "@arvo/finance-tools": "workspace:*",
     "@arvo/imports": "workspace:*",
     "@arvo/types": "workspace:*",
     "@nestjs/common": "^11.2.5",

@@ -55,6 +55,7 @@ describe('Statement upload reminders (e2e)', () => {
       daysSinceLastImport: null,
       nextReminderAt: null,
       overdue: false,
+      weeklyBriefing: false,
     });
     const updated = await user.patch('/me/reminders', { frequency: 'monthly', day: 5 }).expect(200);
     expect(updated.body).toMatchObject({ frequency: 'monthly', day: 5, overdue: false, nextReminderAt: expect.any(String) });

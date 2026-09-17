@@ -21,6 +21,8 @@ export interface ReminderSettings {
   nextReminderAt: Date | null;
   /** No committed import within the chosen period. */
   overdue: boolean;
+  /** Email the weekly advisor briefing on Monday mornings. */
+  weeklyBriefing: boolean;
 }
 
 @Injectable()
@@ -51,10 +53,11 @@ export class RemindersService implements OnApplicationBootstrap {
     return this.describe(user, await this.lastImportAt(userId), now);
   }
 
-  async updateSettings(userId: string, input: { frequency?: ReminderFrequency; day?: number | null }): Promise<ReminderSettings> {
+  async updateSettings(userId: string, input: { frequency?: ReminderFrequency; day?: number | null; weeklyBriefing?: boolean }): Promise<ReminderSettings> {
     const patch: Partial<UserEntity> = {};
     if (input.frequency !== undefined) patch.reminderFrequency = input.frequency;
     if (input.day !== undefined) patch.reminderDay = input.day;
+    if (input.weeklyBriefing !== undefined) patch.weeklyBriefing = input.weeklyBriefing;
     if (Object.keys(patch).length) await this.dataSource.getRepository(UserEntity).update({ id: userId }, patch);
     return this.getSettings(userId);
   }
@@ -138,6 +141,7 @@ export class RemindersService implements OnApplicationBootstrap {
       daysSinceLastImport: lastImportAt ? wholeDaysBetween(lastImportAt, now) : null,
       nextReminderAt: nextReminderDue(frequency, latest(base, user.lastReminderSentAt), user.reminderDay),
       overdue: !!overdueAt && now.getTime() >= overdueAt.getTime(),
+      weeklyBriefing: user.weeklyBriefing,
     };
   }
 
