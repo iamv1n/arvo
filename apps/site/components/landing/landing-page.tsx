@@ -103,7 +103,6 @@ const Wordmark = styled.a`
   }
 `;
 
-
 /* Brand lockup: the pixel mark in an ink tile (it rocks on hover), lowercase serif wordmark. */
 const Tile = styled.span`
   display: grid;
@@ -286,7 +285,8 @@ const Sheet = styled.div`
   z-index: 100;
   display: flex;
   flex-direction: column;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
   overscroll-behavior: contain;
   background: ${({ theme }) => theme.colors.bgCanvas};
   color: ${({ theme }) => theme.colors.textPrimary};
@@ -384,7 +384,9 @@ export function Nav({ base = '' }: { base?: string }) {
       // Keep Tab and Shift+Tab cycling inside the open sheet.
       if (event.key !== 'Tab' || !sheetRef.current) return;
       const focusable = Array.from(
-        sheetRef.current.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'),
+        sheetRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
       ).filter((el) => el.offsetParent !== null);
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
@@ -430,7 +432,13 @@ export function Nav({ base = '' }: { base?: string }) {
           <AppLink>
             <OpenAppLink>Open Arvo →</OpenAppLink>
           </AppLink>
-          <MenuButton ref={menuRef} type="button" aria-expanded={open} aria-controls="site-menu" onClick={() => setOpen(true)}>
+          <MenuButton
+            ref={menuRef}
+            type="button"
+            aria-expanded={open}
+            aria-controls="site-menu"
+            onClick={() => setOpen(true)}
+          >
             <MenuOutlined aria-hidden /> Menu
           </MenuButton>
         </NavRight>
@@ -458,9 +466,12 @@ export function Nav({ base = '' }: { base?: string }) {
               </li>
             ))}
           </ol>
-          <div className="foot" onClickCapture={(event) => {
+          <div
+            className="foot"
+            onClickCapture={(event) => {
               if ((event.target as HTMLElement).closest('a')) setOpen(false);
-            }}>
+            }}
+          >
             <OpenAppLink>Open Arvo →</OpenAppLink>
             <ThemeToggle />
           </div>
@@ -540,8 +551,8 @@ function PrivacyBand() {
             </div>
             <div>
               <p>
-                No bank logins, no data brokers, no ads, no tracking. Your statements stay in a database you own, and AI
-                only sees what you choose to share.
+                No bank logins, no data brokers, no ads, no tracking. Your statements stay in a
+                database you own, and AI only sees what you choose to share.
               </p>
               <span className="mono">Open source · Runs on your machine</span>
             </div>
@@ -554,16 +565,24 @@ function PrivacyBand() {
 
 /* ---------- FAQ ---------- */
 
-const Drawer = styled.div`
-  position: relative;
+/* Heading sticks on the left while a single stack of cards runs on the right, so opening one never leaves holes. */
+const FaqLayout = styled.div`
   display: grid;
-  gap: 10px;
-  counter-reset: card;
+  gap: ${({ theme }) => theme.space[6]}px;
   @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.5fr);
+    gap: ${({ theme }) => theme.space[12]}px;
     align-items: start;
-    gap: 14px 24px;
+    & > :first-child {
+      position: sticky;
+      top: 96px;
+    }
   }
+`;
+
+const Drawer = styled.div`
+  display: grid;
+  gap: 8px;
 `;
 
 const flip = keyframes`
@@ -588,7 +607,7 @@ const IndexCard = styled.details<{ $tilt: number }>`
     gap: 14px;
     align-items: baseline;
     min-height: 44px;
-    padding: 16px 18px;
+    padding: 12px 16px;
     cursor: pointer;
   }
   & summary::-webkit-details-marker {
@@ -631,7 +650,7 @@ const IndexCard = styled.details<{ $tilt: number }>`
     transform: rotate(45deg);
   }
   & .body {
-    padding: 4px 18px 20px;
+    padding: 0 16px 14px;
     border-top: 1px dashed ${({ theme }) => theme.colors.border};
     background: repeating-linear-gradient(
       180deg,
@@ -643,7 +662,7 @@ const IndexCard = styled.details<{ $tilt: number }>`
   }
   & .gist {
     display: inline-block;
-    margin: 10px 0 6px;
+    margin: 8px 0 2px;
     font-family: ${fonts.hand};
     font-size: 26px;
     line-height: 1.1;
@@ -701,7 +720,7 @@ const faqs = [
   {
     g: 'Only what you ask about, only where you point it.',
     q: 'What data does the AI advisor see, and where does it go?',
-    a: 'AI features are optional. When you ask a question, Arvo sends the question and the relevant computed figures and transactions to the provider you configured. With a private AI on your own computer, that stays on your machine. With a cloud AI such as Anthropic, OpenAI or Gemini, the data is handled under that company\'s terms, and Arvo tells you when a cloud AI is in use. Connected AI assistants only get what you allow.',
+    a: "AI features are optional. When you ask a question, Arvo sends the question and the relevant computed figures and transactions to the provider you configured. With a private AI on your own computer, that stays on your machine. With a cloud AI such as Anthropic, OpenAI or Gemini, the data is handled under that company's terms, and Arvo tells you when a cloud AI is in use. Connected AI assistants only get what you allow.",
   },
   {
     g: 'No — information, not advice.',
@@ -729,28 +748,36 @@ function Faq() {
   return (
     <SectionShell id="faq" aria-labelledby="faq-title">
       <Container>
-        <SectionHeading id="faq-title" eyebrow="Questions" index="07" title="Asked, and answered" />
-        <Reveal>
-          <Drawer>
-            {faqs.map((f, i) => (
-              <IndexCard key={f.q} $tilt={i % 2 ? 0.6 : -0.6}>
-                <summary>
-                  <span className="tab" aria-hidden>
-                    Q.{String(i + 1).padStart(2, '0')}
-                  </span>
-                  <span className="q">{f.q}</span>
-                  <span className="mark" aria-hidden>
-                    +
-                  </span>
-                </summary>
-                <div className="body">
-                  <span className="gist">{f.g}</span>
-                  <p>{f.a}</p>
-                </div>
-              </IndexCard>
-            ))}
-          </Drawer>
-        </Reveal>
+        <FaqLayout>
+          <SectionHeading
+            id="faq-title"
+            compact
+            eyebrow="Questions"
+            index="07"
+            title="Asked, and answered"
+          />
+          <Reveal>
+            <Drawer>
+              {faqs.map((f, i) => (
+                <IndexCard key={f.q} $tilt={i % 2 ? 0.6 : -0.6}>
+                  <summary>
+                    <span className="tab" aria-hidden>
+                      Q.{String(i + 1).padStart(2, '0')}
+                    </span>
+                    <span className="q">{f.q}</span>
+                    <span className="mark" aria-hidden>
+                      +
+                    </span>
+                  </summary>
+                  <div className="body">
+                    <span className="gist">{f.g}</span>
+                    <p>{f.a}</p>
+                  </div>
+                </IndexCard>
+              ))}
+            </Drawer>
+          </Reveal>
+        </FaqLayout>
       </Container>
     </SectionShell>
   );
@@ -759,7 +786,7 @@ function Faq() {
 /* ---------- Closing + footer ---------- */
 
 const Closing = styled.section<{ $on: boolean }>`
-  padding: ${({ theme }) => theme.space[16]}px 0 96px;
+  padding: ${({ theme }) => theme.space[10]}px 0 72px;
   & h2 {
     margin: 0;
     max-width: 16ch;
@@ -840,7 +867,9 @@ function ClosingCta() {
           </h2>
           <div className="row">
             <OpenAppLink>Open Arvo →</OpenAppLink>
-            <Body>See where your money goes, with numbers you can trace back to the statement line.</Body>
+            <Body>
+              See where your money goes, with numbers you can trace back to the statement line.
+            </Body>
           </div>
           <span className="aside">
             questions? write to <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
