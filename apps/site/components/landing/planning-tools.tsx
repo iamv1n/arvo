@@ -15,7 +15,7 @@ import {
   purchaseExample,
 } from '../../lib/finance-examples';
 import { drawStroke, fadeIn, formatINR, growX, growY, play, useInView } from './motion';
-import { Card, Container, Pill, Reveal, SectionHeading, SectionShell } from './primitives';
+import { Card, Container, fonts, Pill, Reveal, SectionHeading, SectionShell } from './primitives';
 
 /* ---------- formatting ---------- */
 
@@ -37,61 +37,57 @@ function niceMax(v: number) {
 
 /* ---------- layout ---------- */
 
+/* Horizontally scrolling strip of tools; snaps on touch devices. */
 const TabList = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  margin-bottom: ${({ theme }) => theme.space[8]}px;
-  @media (min-width: ${({ theme }) => theme.breakpoints.md}px) {
-    display: flex;
-    flex-wrap: wrap;
+  display: flex;
+  gap: 0;
+  margin: 0 0 ${({ theme }) => theme.space[8]}px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  & > button {
+    scroll-snap-align: start;
+    flex: 0 0 auto;
   }
 `;
 
 const TabButton = styled.button<{ $active: boolean }>`
+  all: unset;
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  min-width: 0;
-  padding: 9px 16px;
-  border-radius: ${({ theme }) => theme.radii.pill}px;
-  border: 1px solid ${({ theme, $active }) => ($active ? theme.colors.brand : theme.colors.border)};
-  background: ${({ theme, $active }) => ($active ? theme.colors.brandSubtle : theme.colors.bgSurfaceRaised)};
-  color: ${({ theme, $active }) => ($active ? theme.colors.brandText : theme.colors.textSecondary)};
-  font: inherit;
-  font-size: 14px;
-  font-weight: ${({ theme, $active }) => ($active ? theme.typography.fontWeight.semibold : theme.typography.fontWeight.medium)};
-  text-align: left;
+  padding: 12px 20px 12px 0;
+  margin-right: 20px;
+  border-bottom: 2px solid ${({ theme, $active }) => ($active ? theme.colors.textPrimary : 'transparent')};
+  margin-bottom: -1px;
+  color: ${({ theme, $active }) => ($active ? theme.colors.textPrimary : theme.colors.textSecondary)};
+  font-family: ${fonts.serif};
+  font-size: 19px;
+  font-weight: ${({ $active }) => ($active ? 500 : 400)};
+  letter-spacing: -0.01em;
+  white-space: nowrap;
   cursor: pointer;
   transition:
-    background ${({ theme }) => theme.motion.fast},
-    border-color ${({ theme }) => theme.motion.fast},
-    color ${({ theme }) => theme.motion.fast};
-  & > span:last-child {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  &:hover {
-    color: ${({ theme }) => theme.colors.textPrimary};
-    border-color: ${({ theme }) => theme.colors.brand};
-  }
-  &:focus-visible {
-    outline: 2px solid ${({ theme }) => theme.colors.brand};
-    outline-offset: 2px;
+    color ${({ theme }) => theme.motion.fast},
+    border-color ${({ theme }) => theme.motion.fast};
+  & .anticon {
+    font-size: 14px;
+    color: ${({ theme, $active }) => ($active ? theme.colors.brandText : theme.colors.textMuted)};
   }
   & .short {
     display: none;
   }
-  @media (max-width: 480px) {
-    padding: 8px 12px;
-    font-size: 13px;
-    & .full {
-      display: none;
-    }
-    & .short {
-      display: inline;
-    }
+  &:hover {
+    color: ${({ theme }) => theme.colors.textPrimary};
+  }
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.brand};
+    outline-offset: 2px;
   }
 `;
 
@@ -893,6 +889,7 @@ export function PlanningToolsSection() {
         <SectionHeading
           id="planning-tools-title"
           eyebrow="Planning tools"
+          index="03"
           title="Plan loans, investments and spending inside Arvo"
           lead="Tools that work on your own ledger, with every figure computed by formulas, not guessed."
         />

@@ -12,7 +12,7 @@ import type { ReactNode } from 'react';
 import styled, { useTheme } from 'styled-components';
 import { CategoryDonut, IncomeExpenseBars, NetWorthLine, categories } from './charts';
 import { drawStroke, fadeIn, fadeUp, growX, play, popIn, useInView } from './motion';
-import { Body, Card, Container, H3, Pill, Reveal, SectionHeading, SectionShell } from './primitives';
+import { Body, Card, Container, fonts, H3, Pill, Reveal, SectionHeading, SectionShell } from './primitives';
 
 /* ---------- layout ---------- */
 
@@ -60,7 +60,7 @@ function Copy({ kicker, title, body, bullets }: { kicker?: ReactNode; title: str
   return (
     <Reveal>
       {kicker ? <div style={{ marginBottom: 12 }}>{kicker}</div> : null}
-      <H3 style={{ fontSize: 26, letterSpacing: '-0.01em' }}>{title}</H3>
+      <H3 style={{ fontFamily: fonts.serif, fontWeight: 500, fontSize: 30, lineHeight: 1.1, letterSpacing: '-0.02em' }}>{title}</H3>
       <Body>{body}</Body>
       {bullets ? (
         <Bullets>
@@ -685,6 +685,8 @@ export function Features() {
         <SectionHeading
           id="features-title"
           eyebrow="Features"
+          index="02"
+          split
           title="Everything you need to see your money clearly"
           lead="Every chart, total and answer comes from the same record of your transactions, calculated the same way every time."
         />

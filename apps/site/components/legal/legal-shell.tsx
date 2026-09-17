@@ -4,7 +4,7 @@ import { ArrowLeftOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import type { ReactNode } from 'react';
 import styled, { createGlobalStyle } from 'styled-components';
 import { LandingGlobals, Nav, Root, SiteFooter, SkipLink } from '../landing/landing-page';
-import { Container, Eyebrow } from '../landing/primitives';
+import { Container, Eyebrow, fonts } from '../landing/primitives';
 
 export interface LegalTocItem {
   id: string;
@@ -109,6 +109,9 @@ const Doc = styled.article`
   line-height: 1.75;
   & h1 {
     margin: 0;
+    font-family: ${fonts.serif};
+    font-weight: 450;
+    font-variation-settings: 'opsz' 144;
     font-size: clamp(30px, 5vw, 44px);
     line-height: 1.15;
     letter-spacing: -0.02em;
@@ -122,6 +125,8 @@ const Doc = styled.article`
   }
   & h2 {
     margin: 0 0 12px;
+    font-family: ${fonts.serif};
+    font-weight: 500;
     font-size: 22px;
     line-height: 1.3;
     letter-spacing: -0.01em;

@@ -125,7 +125,7 @@ export function OpenAppButton({ children = 'Open Arvo', ...props }: Omit<ButtonP
 }
 
 /** Plain-text link variant for footers. */
-export function OpenAppLink({ children = 'Open Arvo' }: { children?: ReactNode }) {
+export function OpenAppLink({ children = 'Open Arvo', className }: { children?: ReactNode; className?: string }) {
   const openBeta = useOpenBeta();
   const onClick = useMemo(
     () =>
@@ -138,7 +138,7 @@ export function OpenAppLink({ children = 'Open Arvo' }: { children?: ReactNode }
     [openBeta],
   );
   return (
-    <a href={DASHBOARD ?? '#'} onClick={onClick} aria-haspopup={DASHBOARD ? undefined : 'dialog'}>
+    <a className={className} href={DASHBOARD ?? '#'} onClick={onClick} aria-haspopup={DASHBOARD ? undefined : 'dialog'}>
       {children}
     </a>
   );

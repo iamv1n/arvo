@@ -11,10 +11,11 @@ import { Body, Container, Pill, Reveal, SectionHeading, SectionShell } from './p
 const Grid = styled.div`
   display: grid;
   gap: ${({ theme }) => theme.space[10]}px;
-  align-items: center;
-  @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
-    grid-template-columns: 0.9fr 1.1fr;
-    gap: ${({ theme }) => theme.space[16]}px;
+  /* Stacked: the explanation runs across the page, the chat sits offset to the right below it. */
+  & > :last-child {
+    width: 100%;
+    max-width: 760px;
+    justify-self: end;
   }
 `;
 
@@ -26,6 +27,9 @@ const Points = styled.ul`
   gap: ${({ theme }) => theme.space[5]}px ${({ theme }) => theme.space[6]}px;
   @media (min-width: ${({ theme }) => theme.breakpoints.sm}px) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
   & li {
     display: grid;
@@ -300,6 +304,7 @@ export function AdvisorSection() {
               id="advisor-title"
               compact
               eyebrow="On the roadmap"
+              index="04"
               title="Your personal finance manager"
               lead="A planned advisor that finds savings and helps you plan. Arvo calculates the numbers; the AI only explains them."
             />

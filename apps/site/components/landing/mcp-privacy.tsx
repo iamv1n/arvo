@@ -16,13 +16,16 @@ import { Body, Container, H3, Pill, Reveal, SectionHeading, SectionShell } from 
 
 /* ================= MCP ================= */
 
+/* Stacked: intro and tool chips across the top, the client demo below at reading width. */
 const McpGrid = styled.div`
   display: grid;
   gap: ${({ theme }) => theme.space[10]}px;
-  align-items: center;
-  @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
-    grid-template-columns: 0.9fr 1.1fr;
-    gap: ${({ theme }) => theme.space[16]}px;
+  & > :first-child {
+    max-width: 820px;
+  }
+  & > :last-child {
+    width: 100%;
+    max-width: 860px;
   }
 `;
 
@@ -246,6 +249,7 @@ export function McpSection() {
               id="mcp-title"
               compact
               eyebrow="MCP server"
+              index="05"
               title="Connect the AI assistant you already use"
               lead="Assistants call Arvo's finance tools over the Model Context Protocol and get computed results for your account only."
             />
@@ -503,6 +507,7 @@ export function PrivacySection() {
         <SectionHeading
           id="privacy-title"
           eyebrow="Local-first"
+          index="06"
           title="Your finances never leave your machine unless you say so"
           lead="Arvo runs next to your data. No bank credentials, no third-party aggregators, no hosted database."
         />

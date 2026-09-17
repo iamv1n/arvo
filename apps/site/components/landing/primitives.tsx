@@ -4,6 +4,13 @@ import type { ReactNode } from 'react';
 import styled from 'styled-components';
 import { fadeUp, play, useInView } from './motion';
 
+/** Font stacks backed by the next/font variables set on <html>. */
+export const fonts = {
+  serif: "var(--font-serif), 'Iowan Old Style', Georgia, serif",
+  mono: "var(--font-mono), ui-monospace, 'SF Mono', Menlo, monospace",
+  hand: "var(--font-hand), 'Bradley Hand', cursive",
+} as const;
+
 export const Container = styled.div`
   width: 100%;
   max-width: 1180px;
@@ -27,20 +34,30 @@ export const SectionShell = styled.section<{ $muted?: boolean }>`
 
 export const Eyebrow = styled.p`
   margin: 0 0 ${({ theme }) => theme.space[3]}px;
-  color: ${({ theme }) => theme.colors.brand};
-  font-size: ${({ theme }) => theme.typography.fontSize.sm}px;
-  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-  letter-spacing: 0.08em;
+  color: ${({ theme }) => theme.colors.textSecondary};
+  font-family: ${fonts.mono};
+  font-size: 12px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  letter-spacing: 0.06em;
   text-transform: uppercase;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  & b {
+    font-weight: 500;
+    color: ${({ theme }) => theme.colors.brandText};
+  }
 `;
 
 export const H2 = styled.h2`
   margin: 0;
   color: ${({ theme }) => theme.colors.textPrimary};
-  font-size: clamp(26px, 4vw, ${({ theme }) => theme.typography.fontSize['4xl']}px);
-  line-height: ${({ theme }) => theme.typography.lineHeight.tight};
-  letter-spacing: -0.02em;
-  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  font-family: ${fonts.serif};
+  font-size: clamp(30px, 4.4vw, 50px);
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+  font-weight: 500;
+  font-variation-settings: 'opsz' 96;
 `;
 
 export const H3 = styled.h3`
@@ -69,8 +86,8 @@ export const Body = styled.p`
 export const Card = styled.div`
   background: ${({ theme }) => theme.colors.bgSurfaceRaised};
   border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radii.xl}px;
-  box-shadow: ${({ theme }) => theme.shadows.md};
+  border-radius: ${({ theme }) => theme.radii.sm + 2}px;
+  box-shadow: ${({ theme }) => theme.shadows.sm};
 `;
 
 export const Pill = styled.span<{ $tone?: 'brand' | 'warning' | 'income' | 'expense' | 'transfer' | 'muted' }>`
@@ -101,15 +118,33 @@ export function Reveal({ children, delay = 0, className }: { children: ReactNode
   );
 }
 
-const HeadWrap = styled.div<{ $center?: boolean; $compact?: boolean }>`
+const HeadWrap = styled.div<{ $center?: boolean; $compact?: boolean; $split?: boolean }>`
   margin-bottom: ${({ theme, $compact }) => ($compact ? theme.space[6] : theme.space[12])}px;
+  text-align: ${({ $center }) => ($center ? 'center' : 'left')};
+  ${({ $center }) => ($center ? '& p:last-child { margin-left: auto; margin-right: auto; }' : '')}
   & > :last-child {
     margin-bottom: 0;
   }
-  text-align: ${({ $center }) => ($center ? 'center' : 'left')};
-  ${({ $center }) => ($center ? '& > p:last-child { margin-left: auto; margin-right: auto; }' : '')}
+  ${({ $split, theme }) =>
+    $split
+      ? `
+    padding-top: ${theme.space[5]}px;
+    border-top: 1px solid ${theme.colors.textPrimary};
+    @media (min-width: ${theme.breakpoints.lg}px) {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      gap: ${theme.space[16]}px;
+      align-items: end;
+      & > p:last-child { margin-top: 0; }
+    }
+  `
+      : ''}
 `;
 
+/**
+ * Section heading. `split` gives an editorial layout: a hairline rule, the heading on the left
+ * and the lead on the right. `index` prints a section number such as "03" beside the eyebrow.
+ */
 export function SectionHeading({
   eyebrow,
   title,
@@ -117,6 +152,8 @@ export function SectionHeading({
   id,
   center,
   compact,
+  split,
+  index,
 }: {
   eyebrow: string;
   title: ReactNode;
@@ -125,12 +162,19 @@ export function SectionHeading({
   center?: boolean;
   /** Smaller bottom gap, for headings that sit in a column above their own content. */
   compact?: boolean;
+  split?: boolean;
+  index?: string;
 }) {
   return (
     <Reveal>
-      <HeadWrap $center={center} $compact={compact}>
-        <Eyebrow>{eyebrow}</Eyebrow>
-        <H2 id={id}>{title}</H2>
+      <HeadWrap $center={center} $compact={compact} $split={split}>
+        <div>
+          <Eyebrow>
+            {index ? <b>{index}</b> : null}
+            {eyebrow}
+          </Eyebrow>
+          <H2 id={id}>{title}</H2>
+        </div>
         {lead ? <Lead>{lead}</Lead> : null}
       </HeadWrap>
     </Reveal>
