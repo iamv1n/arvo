@@ -37,6 +37,7 @@ export const palettes: Palette[] = [
       border: '#e1ded6',
       borderSubtle: '#eceae4',
       ...ink('#161a2e', '#4b4f63', '#6f7285'),
+      inkSurface: '#161a2e',
       chart: ['#a4552a', '#3b5b92', '#c08a2b', '#2f7d62', '#b04a5a', '#6b5b95', '#3a8a91', '#8a7a64', '#a3a6b0'],
     },
   },

@@ -64,6 +64,9 @@ export interface ColorTokens {
   brandGradient: string;
   /** Text on top of brand or gradient surfaces. */
   onBrand: string;
+  /** Solid "ink" emphasis surface (hero cards, stamps) and the text on it; stays dark in both modes. */
+  inkSurface: string;
+  onInk: string;
   bgCanvas: string;
   bgSurface: string;
   bgSurfaceRaised: string;
@@ -98,6 +101,8 @@ export const colors: Record<ColorMode, ColorTokens> = {
     brandText: palette.teal[700],
     brandGradient: `linear-gradient(135deg, ${palette.teal[700]} 0%, ${palette.teal[500]} 55%, #22b8c9 100%)`,
     onBrand: palette.slate[0],
+    inkSurface: palette.slate[900],
+    onInk: palette.slate[50],
     bgCanvas: palette.slate[50],
     bgSurface: palette.slate[0],
     bgSurfaceRaised: palette.slate[0],
@@ -128,6 +133,8 @@ export const colors: Record<ColorMode, ColorTokens> = {
     brandText: palette.teal[200],
     brandGradient: `linear-gradient(135deg, ${palette.teal[700]} 0%, ${palette.teal[500]} 55%, #1fa3b3 100%)`,
     onBrand: palette.slate[0],
+    inkSurface: palette.night[800],
+    onInk: palette.slate[50],
     bgCanvas: palette.night[950],
     bgSurface: palette.night[900],
     bgSurfaceRaised: palette.night[850],

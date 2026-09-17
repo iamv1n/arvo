@@ -26,8 +26,8 @@ const Hero = styled.section`
   align-items: end;
   padding: ${({ theme }) => theme.space[6]}px ${({ theme }) => theme.space[8]}px;
   border-radius: ${({ theme }) => theme.radii.lg}px;
-  background: ${({ theme }) => theme.colors.textPrimary};
-  color: ${({ theme }) => theme.colors.bgCanvas};
+  background: ${({ theme }) => theme.colors.inkSurface};
+  color: ${({ theme }) => theme.colors.onInk};
   border-top: 4px solid ${({ theme }) => theme.colors.brand};
 
   .big {
