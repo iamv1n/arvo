@@ -5,7 +5,7 @@ import type { ColorTokens } from './tokens';
  * (income, expense, transfer) stay recognisable. Dark mode always uses the default tokens.
  */
 
-export type PaletteId = 'ledger' | 'paper' | 'blueprint' | 'marigold' | 'rosewood' | 'sage';
+export type PaletteId = 'ledger' | 'dusk' | 'paper' | 'blueprint' | 'marigold' | 'rosewood' | 'sage';
 
 export interface Palette {
   id: PaletteId;
@@ -19,6 +19,27 @@ const ink = (textPrimary: string, textSecondary: string, textMuted: string) => (
 
 export const palettes: Palette[] = [
   { id: 'ledger', name: 'Ledger', swatch: ['#f4f6fb', '#101828', '#0b8f74'], light: {} },
+  {
+    /* Marigold at a whisper: near-neutral canvas with a faint warm cast, a muted copper accent. */
+    id: 'dusk',
+    name: 'Dusk',
+    swatch: ['#f6f5f1', '#161a2e', '#a4552a'],
+    light: {
+      brand: '#a4552a',
+      brandHover: '#b8653a',
+      brandActive: '#874522',
+      brandSubtle: '#f5ebe3',
+      brandText: '#874522',
+      bgCanvas: '#f6f5f1',
+      bgSurface: '#fefdfb',
+      bgSurfaceRaised: '#ffffff',
+      bgMuted: '#eeece6',
+      border: '#e1ded6',
+      borderSubtle: '#eceae4',
+      ...ink('#161a2e', '#4b4f63', '#6f7285'),
+      chart: ['#a4552a', '#3b5b92', '#c08a2b', '#2f7d62', '#b04a5a', '#6b5b95', '#3a8a91', '#8a7a64', '#a3a6b0'],
+    },
+  },
   {
     id: 'paper',
     name: 'Paper',
