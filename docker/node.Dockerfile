@@ -20,6 +20,7 @@ COPY apps/web/package.json apps/web/
 COPY apps/site/package.json apps/site/
 COPY apps/mcp/package.json apps/mcp/
 COPY packages/finance-tools/package.json packages/finance-tools/
+COPY packages/ai/package.json packages/ai/
 COPY packages/config/package.json packages/config/
 COPY packages/types/package.json packages/types/
 COPY packages/finance-core/package.json packages/finance-core/

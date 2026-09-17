@@ -1,0 +1,35 @@
+{
+  "name": "@arvo/ai",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI advisor: provider drivers (Anthropic, OpenAI, Gemini, Ollama), the tool-calling agent loop, advisor-only draft tools and the weekly briefing",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.126.0",
+    "@arvo/finance-core": "workspace:*",
+    "@arvo/finance-tools": "workspace:*",
+    "@arvo/types": "workspace:*",
+    "@google/genai": "^2.23.0",
+    "openai": "^7.17.0",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "@arvo/config": "workspace:*",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.19.0",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.5",
+    "typescript": "5.9.3"
+  }
+}
