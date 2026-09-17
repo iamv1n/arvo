@@ -3,6 +3,8 @@ import { InsightsService } from './analytics/insights.service';
 import { PatternsService } from './analytics/patterns.service';
 import { ImportService, type ImportDependencies } from './imports/import.service';
 import type { FinanceStore } from './ports';
+import { BudgetService } from './planning/budget.service';
+import { GoalService } from './planning/goal.service';
 import { RuleService } from './rules/rule.service';
 import { AnalyticsService } from './services/analytics.service';
 import { AccountService } from './services/account.service';
@@ -26,6 +28,8 @@ export class FinanceCore {
   readonly transactions: TransactionService;
   readonly transfers: TransferService;
   readonly rules: RuleService;
+  readonly budgets: BudgetService;
+  readonly goals: GoalService;
   private readonly importService?: ImportService;
 
   constructor(store: FinanceStore, deps?: { imports?: ImportDependencies }) {
@@ -39,6 +43,8 @@ export class FinanceCore {
     this.transactions = new TransactionService(store);
     this.transfers = new TransferService(store);
     this.rules = new RuleService(store);
+    this.budgets = new BudgetService(store);
+    this.goals = new GoalService(store);
     if (deps?.imports) this.importService = new ImportService(store, deps.imports);
   }
 

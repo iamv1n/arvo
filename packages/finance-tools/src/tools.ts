@@ -413,6 +413,40 @@ export const getHighlights = defineTool({
   },
 });
 
+export const getBudgetStatus = defineTool({
+  name: 'finance_get_budget_status',
+  title: 'Get budget status',
+  description:
+    'Category budgets with pacing for a month (default: current month): limit, spent (expenses and fees, including subcategories), remaining, percent used versus percent of month elapsed, projected month-end spend and overspend, and status on_track | at_risk | over. Read-only.',
+  inputSchema: z.object({
+    month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'Use YYYY-MM').optional().describe('Month to report, YYYY-MM'),
+  }),
+  async run(ctx, input) {
+    const result = await ctx.core.budgets.status(ctx.userId, { asOf: ctx.today, month: input.month });
+    return {
+      ...result,
+      budgets: result.budgets.map(({ userId: _u, ...b }) => b),
+      provenance: { as_of: result.asOf, month: result.month, budgets: result.budgets.length },
+    };
+  },
+});
+
+export const getGoals = defineTool({
+  name: 'finance_get_goals',
+  title: 'Get goals',
+  description:
+    'Savings goals with progress (linked account balance or saved amount), remaining amount, months left, required monthly contribution and status on_track | behind | achieved based on linear progress since the goal was created. Read-only.',
+  inputSchema: z.object({}),
+  async run(ctx) {
+    const result = await ctx.core.goals.status(ctx.userId, { asOf: ctx.today });
+    return {
+      ...result,
+      goals: result.goals.map(({ userId: _u, ...g }) => g),
+      provenance: { as_of: result.asOf, goals: result.goals.length },
+    };
+  },
+});
+
 export const FINANCE_TOOLS: FinanceTool[] = [
   getAccounts,
   getAccountBalance,
@@ -428,6 +462,8 @@ export const FINANCE_TOOLS: FinanceTool[] = [
   analyzeSpending,
   analyzeCashflow,
   getHighlights,
+  getBudgetStatus,
+  getGoals,
 ] as unknown as FinanceTool[];
 
 export class ToolInputError extends Error {

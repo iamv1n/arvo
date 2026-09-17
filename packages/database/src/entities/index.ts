@@ -3,6 +3,7 @@ import { ApiTokenEntity } from './api-token.entity';
 import { OAuthAuthorizationEntity, OAuthClientEntity, OAuthTokenEntity } from './oauth.entities';
 import { ImportBatchEntity, ImportColumnMappingEntity, ImportErrorEntity, ImportRowEntity } from './import.entities';
 import { RecurringSeriesEntity } from './recurring.entity';
+import { BudgetEntity, GoalEntity } from './planning.entities';
 import { RuleEntity } from './rule.entity';
 import { CategoryEntity } from './category.entity';
 import { MerchantEntity } from './merchant.entity';
@@ -12,6 +13,8 @@ import { TransferEntity } from './transfer.entity';
 import { UserEntity } from './user.entity';
 
 export {
+  BudgetEntity,
+  GoalEntity,
   ApiTokenEntity,
   OAuthAuthorizationEntity,
   OAuthClientEntity,
@@ -49,4 +52,6 @@ export const ENTITIES = [
   OAuthClientEntity,
   OAuthAuthorizationEntity,
   OAuthTokenEntity,
+  BudgetEntity,
+  GoalEntity,
 ];

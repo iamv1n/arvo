@@ -28,10 +28,28 @@ async function fixture() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return result.data as Record<string, any>;
   };
-  return { core, bank, call, ctx };
+  return { core, bank, call, ctx, food };
 }
 
 describe('finance tools', () => {
+  it('report budget pacing and goal progress for the caller only', async () => {
+    const { core, call, food } = await fixture();
+    await core.budgets.create(USER_A, { categoryId: food.id, amount: '5000', currency: 'INR' });
+    await core.goals.create(USER_A, { name: 'Trip', targetAmount: '12000', currency: 'INR', targetDate: '2026-12-31', savedAmount: '2000' });
+
+    // 3,500 spent in 20 of 31 days → 5,425 projected.
+    const budgets = await call('finance_get_budget_status', {});
+    expect(budgets).toMatchObject({ month: '2026-08', provenance: { as_of: '2026-08-20', budgets: 1 } });
+    expect(budgets.budgets[0]).toMatchObject({ categoryName: 'Food', spent: '3500.00', projected: '5425.00', projectedOverspend: '425.00', status: 'at_risk' });
+    expect(budgets.budgets[0].userId).toBeUndefined();
+    expect((await call('finance_get_budget_status', { month: '2026-07' })).budgets[0]).toMatchObject({ spent: '2000.00', status: 'on_track' });
+
+    const goals = await call('finance_get_goals', {});
+    expect(goals.goals[0]).toMatchObject({ name: 'Trip', remaining: '10000.00', monthsLeft: 5, requiredMonthly: '2000.00' });
+    expect((await call('finance_get_goals', {}, USER_B)).goals).toEqual([]);
+    expect(FINANCE_TOOLS).toHaveLength(16);
+  });
+
   it('have unique, provider-safe names and JSON-schema-convertible inputs', () => {
     const names = FINANCE_TOOLS.map((t) => t.name);
     expect(new Set(names).size).toBe(names.length);

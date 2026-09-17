@@ -1,4 +1,6 @@
 import type {
+  BudgetRepository,
+  GoalRepository,
   RecurringRepository,
   ImportRepository,
   ImportRowStatus,
@@ -14,6 +16,8 @@ import type {
 import { ImportStatus, type TransactionType } from '@arvo/types';
 import { Between, In, IsNull, Not, type DataSource, type EntityManager, type EntityTarget, type ObjectLiteral } from 'typeorm';
 import {
+  BudgetEntity,
+  GoalEntity,
   RecurringSeriesEntity,
   ImportBatchEntity,
   ImportColumnMappingEntity,
@@ -28,6 +32,8 @@ import {
 } from '../entities';
 import {
   toAccount,
+  toBudget,
+  toGoal,
   toCategory,
   toImportBatch,
   toImportError,
@@ -422,7 +428,29 @@ export function createRepositories(manager: EntityManager): Repositories {
     setDismissed: async (userId, id, isDismissed) => toRecurring(await updateOwned(RecurringSeriesEntity, userId, id, { isDismissed })),
   };
 
-  return { accounts, categories, merchants, transactions, transfers, imports, rules, recurring };
+  const budgets: BudgetRepository = {
+    findAll: async (userId) => (await manager.find(BudgetEntity, { where: { userId }, order: { createdAt: 'ASC' } })).map(toBudget),
+    findById: async (userId, id) => {
+      const row = await manager.findOneBy(BudgetEntity, { id, userId });
+      return row ? toBudget(row) : null;
+    },
+    create: async (input) => toBudget(await manager.save(manager.create(BudgetEntity, input))),
+    update: async (userId, id, patch) => toBudget(await updateOwned(BudgetEntity, userId, id, patch)),
+    delete: async (userId, id) => void (await manager.delete(BudgetEntity, { id, userId })),
+  };
+
+  const goals: GoalRepository = {
+    findAll: async (userId) => (await manager.find(GoalEntity, { where: { userId }, order: { createdAt: 'ASC' } })).map(toGoal),
+    findById: async (userId, id) => {
+      const row = await manager.findOneBy(GoalEntity, { id, userId });
+      return row ? toGoal(row) : null;
+    },
+    create: async (input) => toGoal(await manager.save(manager.create(GoalEntity, input))),
+    update: async (userId, id, patch) => toGoal(await updateOwned(GoalEntity, userId, id, patch)),
+    delete: async (userId, id) => void (await manager.delete(GoalEntity, { id, userId })),
+  };
+
+  return { accounts, categories, merchants, transactions, transfers, imports, rules, recurring, budgets, goals };
 }
 
 export function createFinanceStore(dataSource: DataSource): FinanceStore {

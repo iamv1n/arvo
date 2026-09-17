@@ -204,3 +204,37 @@ export interface RecurringSeriesRecord {
 }
 
 export type RecurringSeriesUpsert = Omit<RecurringSeriesRecord, 'id' | 'createdAt' | 'updatedAt' | 'isDismissed'>;
+
+export interface BudgetRecord {
+  id: string;
+  userId: string;
+  categoryId: string;
+  /** Positive monthly limit. */
+  amount: string;
+  currency: string;
+  /** Carry last month's unspent amount into this month's limit. */
+  rollover: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type NewBudget = Omit<BudgetRecord, Generated>;
+export type BudgetPatch = Partial<Pick<BudgetRecord, 'categoryId' | 'amount' | 'rollover'>>;
+
+export interface GoalRecord {
+  id: string;
+  userId: string;
+  name: string;
+  /** Positive target. */
+  targetAmount: string;
+  currency: string;
+  targetDate: string;
+  /** When set, the account balance is the progress; savedAmount is ignored. */
+  accountId: string | null;
+  savedAmount: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type NewGoal = Omit<GoalRecord, Generated>;
+export type GoalPatch = Partial<Pick<GoalRecord, 'name' | 'targetAmount' | 'targetDate' | 'accountId' | 'savedAmount'>>;

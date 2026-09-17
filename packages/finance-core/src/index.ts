@@ -21,3 +21,5 @@ export * from './analytics/insights.service';
 export * from './analytics/recurring';
 export * from './analytics/highlights.service';
 export * from './analytics/patterns.service';
+export * from './planning/budget.service';
+export * from './planning/goal.service';

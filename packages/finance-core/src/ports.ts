@@ -1,5 +1,11 @@
 import type {
   AccountPatch,
+  BudgetPatch,
+  BudgetRecord,
+  GoalPatch,
+  GoalRecord,
+  NewBudget,
+  NewGoal,
   AccountRecord,
   CategoryPatch,
   CategoryRecord,
@@ -116,6 +122,22 @@ export interface RecurringRepository {
   setDismissed(userId: string, id: string, isDismissed: boolean): Promise<RecurringSeriesRecord>;
 }
 
+export interface BudgetRepository {
+  findAll(userId: string): Promise<BudgetRecord[]>;
+  findById(userId: string, id: string): Promise<BudgetRecord | null>;
+  create(input: NewBudget): Promise<BudgetRecord>;
+  update(userId: string, id: string, patch: BudgetPatch): Promise<BudgetRecord>;
+  delete(userId: string, id: string): Promise<void>;
+}
+
+export interface GoalRepository {
+  findAll(userId: string): Promise<GoalRecord[]>;
+  findById(userId: string, id: string): Promise<GoalRecord | null>;
+  create(input: NewGoal): Promise<GoalRecord>;
+  update(userId: string, id: string, patch: GoalPatch): Promise<GoalRecord>;
+  delete(userId: string, id: string): Promise<void>;
+}
+
 export interface Repositories {
   accounts: AccountRepository;
   categories: CategoryRepository;
@@ -125,6 +147,8 @@ export interface Repositories {
   imports: ImportRepository;
   rules: RuleRepository;
   recurring: RecurringRepository;
+  budgets: BudgetRepository;
+  goals: GoalRepository;
 }
 
 /** Storage entry point: plain repositories plus an atomic unit of work. */
