@@ -45,67 +45,21 @@ const HEAD_H = 30;
 
 /* ---------- sequencing ---------- */
 
-/**
- * Rows print on a short timer once the page loads. On wide screens the annotations then advance
- * with scroll progress through the tall sticky hero; on small screens they keep playing on the
- * timer. Reduced motion shows the finished statement.
- */
+/** Rows print and annotations appear on a timer once the page loads. Reduced motion shows the finished statement. */
 function useStatementStage() {
   const sectionRef = useRef<HTMLElement>(null);
   const reduced = usePrefersReducedMotion();
-  const [timeStage, setTimeStage] = useState(0);
-  const [scrollStage, setScrollStage] = useState<number>(STAGES.rows);
-  const [wide, setWide] = useState(false);
+  const [stage, setStage] = useState(0);
 
   useEffect(() => {
-    const query = window.matchMedia('(min-width: 992px)');
-    const update = () => setWide(query.matches);
-    update();
-    query.addEventListener('change', update);
-    return () => query.removeEventListener('change', update);
-  }, []);
-
-  useEffect(() => {
-    if (reduced) return;
-    const limit = wide ? STAGES.rows : LAST_STAGE;
-    if (timeStage >= limit) return;
-    // Small screens: the full sequence takes about 4s (400 + 5×280 + 5×450 ms).
-    const delay = timeStage === 0 ? 400 : timeStage < STAGES.rows ? 280 : 450;
-    const id = window.setTimeout(() => setTimeStage((s) => s + 1), delay);
+    if (reduced || stage >= LAST_STAGE) return;
+    // The full sequence takes about 4s (400 + 5×280 + 5×450 ms).
+    const delay = stage === 0 ? 400 : stage < STAGES.rows ? 280 : 450;
+    const id = window.setTimeout(() => setStage((s) => s + 1), delay);
     return () => window.clearTimeout(id);
-  }, [timeStage, wide, reduced]);
+  }, [stage, reduced]);
 
-  useEffect(() => {
-    if (!wide || reduced) return;
-    let frame = 0;
-    const onScroll = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        const el = sectionRef.current;
-        if (!el) return;
-        const rect = el.getBoundingClientRect();
-        const travel = Math.max(1, rect.height - window.innerHeight);
-        const progress = Math.min(1, Math.max(0, -rect.top / travel));
-        // Each annotation claims an equal slice of the first 80% of the scroll.
-        const annotations = LAST_STAGE - STAGES.rows;
-        const done = Math.min(annotations, Math.floor((progress / 0.8) * annotations + 0.35));
-        setScrollStage(STAGES.rows + done);
-      });
-    };
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
-    return () => {
-      cancelAnimationFrame(frame);
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
-    };
-  }, [wide, reduced]);
-
-  let stage = timeStage;
-  if (reduced) stage = LAST_STAGE;
-  else if (wide && timeStage >= STAGES.rows) stage = scrollStage;
-  return [sectionRef, stage] as const;
+  return [sectionRef, reduced ? LAST_STAGE : stage] as const;
 }
 
 /* ---------- layout ---------- */
@@ -113,18 +67,12 @@ function useStatementStage() {
 const HeroSection = styled.section`
   position: relative;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
-    height: 185vh;
-  }
 `;
 
 const Stick = styled.div`
   padding: ${({ theme }) => theme.space[10]}px 0 ${({ theme }) => theme.space[12]}px;
   @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
-    position: sticky;
-    top: 56px;
-    height: calc(100vh - 56px);
-    min-height: 660px;
+    min-height: max(660px, calc(100vh - 56px));
     display: flex;
     align-items: center;
     padding: 24px 0;
