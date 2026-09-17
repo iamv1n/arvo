@@ -60,6 +60,17 @@ export class UserEntity {
   @Column({ name: 'last_reminder_sent_at', type: 'timestamptz', nullable: true })
   lastReminderSentAt!: Date | null;
 
+  /** Per-user AI provider override (keys stay in the server environment). */
+  @Column({ name: 'ai_provider', type: 'varchar', length: 16, nullable: true })
+  aiProvider!: string | null;
+
+  @Column({ name: 'ai_model', type: 'varchar', length: 80, nullable: true })
+  aiModel!: string | null;
+
+  /** Email the weekly briefing on Monday mornings. */
+  @Column({ name: 'weekly_briefing', type: 'boolean', default: false })
+  weeklyBriefing!: boolean;
+
   @CreatedAt()
   createdAt!: Date;
 

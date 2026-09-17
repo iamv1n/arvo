@@ -1,4 +1,5 @@
 import { AccountEntity } from './account.entity';
+import { AdvisorBriefingEntity, AdvisorConversationEntity, AdvisorMessageEntity, AdvisorSuggestionEntity } from './advisor.entities';
 import { ApiTokenEntity } from './api-token.entity';
 import { AuthTokenEntity, RecoveryCodeEntity } from './auth-token.entity';
 import { OAuthAuthorizationEntity, OAuthClientEntity, OAuthTokenEntity } from './oauth.entities';
@@ -14,6 +15,10 @@ import { TransferEntity } from './transfer.entity';
 import { UserEntity } from './user.entity';
 
 export {
+  AdvisorBriefingEntity,
+  AdvisorConversationEntity,
+  AdvisorMessageEntity,
+  AdvisorSuggestionEntity,
   AuthTokenEntity,
   RecoveryCodeEntity,
   BudgetEntity,
@@ -61,4 +66,8 @@ export const ENTITIES = [
   ScenarioEntity,
   AuthTokenEntity,
   RecoveryCodeEntity,
+  AdvisorConversationEntity,
+  AdvisorMessageEntity,
+  AdvisorSuggestionEntity,
+  AdvisorBriefingEntity,
 ];

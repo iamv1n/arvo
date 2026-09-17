@@ -5,3 +5,4 @@ export * from './api-tokens';
 export type { ApiTokenScope } from './entities/api-token.entity';
 export type { AuthTokenPurpose } from './entities/auth-token.entity';
 export type { ReminderFrequency } from './entities/user.entity';
+export type { AdvisorMessageRole, AdvisorMessageStatus, AdvisorSuggestionKind, AdvisorSuggestionStatus } from './entities/advisor.entities';
