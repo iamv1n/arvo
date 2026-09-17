@@ -490,4 +490,5 @@ export interface ReminderSettings {
   daysSinceLastImport: number | null;
   nextReminderAt: string | null;
   overdue: boolean;
+  weeklyBriefing: boolean;
 }

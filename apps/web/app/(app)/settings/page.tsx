@@ -5,6 +5,7 @@ import { Flex, Grid, Tabs } from 'antd';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { AiConnections } from '../../../components/ai-connections';
+import { AdvisorSettings } from '../../../components/settings/advisor-settings';
 import { PageHeader } from '../../../components/page-header';
 import { AppearanceSettings, TableSettings } from '../../../components/settings/appearance-settings';
 import { CategorySettings } from '../../../components/settings/category-settings';
@@ -29,6 +30,7 @@ const TABS = [
       <Flex vertical gap={16}>
         <AppearanceSettings />
         <ReminderSettings />
+        <AdvisorSettings />
         <TableSettings />
       </Flex>
     ),

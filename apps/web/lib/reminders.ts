@@ -11,7 +11,7 @@ export const useReminderSettings = () => useQuery({ queryKey: KEY, queryFn: () =
 export function useUpdateReminderSettings() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: { frequency?: ReminderFrequency; day?: number | null }) => api<ReminderSettings>('/me/reminders', { method: 'PATCH', body: input }),
+    mutationFn: (input: { frequency?: ReminderFrequency; day?: number | null; weeklyBriefing?: boolean }) => api<ReminderSettings>('/me/reminders', { method: 'PATCH', body: input }),
     onSuccess: (data) => queryClient.setQueryData(KEY, data),
   });
 }

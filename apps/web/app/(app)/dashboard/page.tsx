@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import styled, { useTheme } from 'styled-components';
 import { Amount } from '../../../components/amount';
+import { BriefingCard } from '../../../components/advisor/briefing-card';
 import { Highlights } from '../../../components/highlights';
 import { OverviewStats } from '../../../components/overview-stats';
 import { CategoryDonut, categoryColors, IncomeExpenseChart } from '../../../components/charts';
@@ -176,7 +177,11 @@ export default function DashboardPage() {
           </Panel>
         </Col>
 
-        <Col xs={24} lg={10}>
+        <Col xs={24} lg={12} xl={8}>
+          <BriefingCard height={LIST_HEIGHT} compact />
+        </Col>
+
+        <Col xs={24} lg={12} xl={7}>
           <Panel height={LIST_HEIGHT} title="Accounts" extra={<Link href="/accounts">Manage</Link>}>
             {accounts.isPending ? (
               <Skeleton active />
@@ -196,7 +201,7 @@ export default function DashboardPage() {
           </Panel>
         </Col>
 
-        <Col xs={24} lg={14}>
+        <Col xs={24} xl={9}>
           <Panel height={LIST_HEIGHT} title="Recent transactions" extra={<Link href="/transactions">View all</Link>}>
             {recent.isPending ? (
               <Skeleton active />

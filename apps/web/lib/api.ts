@@ -103,6 +103,56 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
   return payload as T;
 }
 
+/**
+ * POST that answers with server-sent events. Calls onEvent for each `event:`/`data:` block until
+ * the stream ends. Errors before the stream starts throw ApiError like api().
+ */
+export async function apiStream(path: string, body: unknown, onEvent: (event: string, data: unknown) => void, signal?: AbortSignal): Promise<void> {
+  const send = () =>
+    fetch(new URL(path, API_URL), {
+      method: 'POST',
+      credentials: 'include',
+      signal,
+      headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream', ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}) },
+      body: JSON.stringify(body),
+    });
+  let res = await send();
+  if (res.status === 401 && (await refreshSession())) res = await send();
+  if (!res.ok || !res.body) {
+    const payload: unknown = await res.json().catch(() => null);
+    const error = (payload as ApiErrorBody | null)?.error;
+    throw new ApiError(res.status, error?.code ?? 'HTTP_ERROR', error?.message ?? res.statusText, error?.details);
+  }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  const flush = (block: string) => {
+    let event = 'message';
+    const data: string[] = [];
+    for (const line of block.split('\n')) {
+      if (line.startsWith('event:')) event = line.slice(6).trim();
+      else if (line.startsWith('data:')) data.push(line.slice(5).trimStart());
+    }
+    if (!data.length) return;
+    try {
+      onEvent(event, JSON.parse(data.join('\n')));
+    } catch {
+      onEvent(event, data.join('\n'));
+    }
+  };
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    let index: number;
+    while ((index = buffer.indexOf('\n\n')) >= 0) {
+      flush(buffer.slice(0, index));
+      buffer = buffer.slice(index + 2);
+    }
+  }
+  if (buffer.trim()) flush(buffer);
+}
+
 /** Multipart upload with the same auth and error handling as api(). */
 export async function apiUpload<T>(path: string, form: FormData): Promise<T> {
   const send = () =>
