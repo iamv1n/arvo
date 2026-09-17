@@ -31,86 +31,51 @@ const Badge = styled.span<{ $tone: StatTone }>`
 
 const Value = styled.div<{ $tone?: 'positive' | 'negative' }>`
   margin-top: ${({ theme }) => theme.space[3]}px;
-  font-size: ${({ theme }) => theme.typography.fontSize['2xl']}px;
-  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
-  font-variant-numeric: tabular-nums;
+  font-family: ${({ theme }) => theme.typography.fontFamilySerif};
+  font-size: 30px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  font-variant-numeric: lining-nums tabular-nums;
   letter-spacing: -0.02em;
-  line-height: 1.15;
+  line-height: 1.1;
   color: ${({ theme, $tone }) =>
     $tone === 'positive' ? theme.colors.income : $tone === 'negative' ? theme.colors.expense : theme.colors.textPrimary};
 `;
 
+/** Headline figure card: ink on paper inverted, with a ruled top edge. No gradients. */
 const Hero = styled.div`
   position: relative;
-  overflow: hidden;
   height: 100%;
   padding: ${({ theme }) => theme.space[6]}px;
   border-radius: ${({ theme }) => theme.radii.lg}px;
-  background: ${({ theme }) => theme.colors.brandGradient};
-  color: ${({ theme }) => theme.colors.onBrand};
-  box-shadow: ${({ theme }) => theme.shadows.brand};
-
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.12);
-    pointer-events: none;
-  }
-  &::before {
-    right: -60px;
-    top: -70px;
-    width: 190px;
-    height: 190px;
-  }
-  &::after {
-    right: 40px;
-    bottom: -90px;
-    width: 160px;
-    height: 160px;
-    background: rgba(255, 255, 255, 0.07);
-  }
-
-  .sheen {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.18) 45%, transparent 60%);
-    transform: translateX(-100%);
-    animation: arvo-sheen 3.2s ${({ theme }) => theme.motion.easing} 0.6s 1 both;
-    pointer-events: none;
-  }
-
-  @keyframes arvo-sheen {
-    to {
-      transform: translateX(100%);
-    }
-  }
-
-  > * {
-    position: relative;
-  }
+  background: ${({ theme }) => theme.colors.textPrimary};
+  color: ${({ theme }) => theme.colors.bgCanvas};
+  border-top: 4px solid ${({ theme }) => theme.colors.brand};
 
   .label {
     display: flex;
     align-items: center;
     gap: ${({ theme }) => theme.space[2]}px;
-    opacity: 0.85;
+    font-family: ${({ theme }) => theme.typography.fontFamilyMono};
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.75;
   }
 
   .value {
     margin-top: ${({ theme }) => theme.space[3]}px;
-    font-size: ${({ theme }) => theme.typography.fontSize['3xl']}px;
-    font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
-    font-variant-numeric: tabular-nums;
+    font-family: ${({ theme }) => theme.typography.fontFamilySerif};
+    font-size: 38px;
+    font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+    font-variant-numeric: lining-nums tabular-nums;
     letter-spacing: -0.02em;
-    line-height: 1.1;
+    line-height: 1.05;
   }
 
   .hint {
     margin-top: ${({ theme }) => theme.space[2]}px;
     font-size: ${({ theme }) => theme.typography.fontSize.sm}px;
-    opacity: 0.85;
+    opacity: 0.7;
   }
 `;
 
@@ -136,7 +101,6 @@ export function StatCard({
   if (variant === 'hero') {
     return (
       <Hero>
-        <span className="sheen" aria-hidden />
         <div className="label">
           {icon}
           {label}

@@ -161,7 +161,10 @@ export const typography = {
   fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
   /** Tabular figures keep columns of amounts aligned. */
   fontFamilyNumeric: "'Inter', ui-sans-serif, system-ui, sans-serif",
-  fontFamilyMono: "ui-monospace, 'SF Mono', Menlo, Consolas, monospace",
+  /** Editorial display serif for titles and headline figures (loaded as --font-serif). */
+  fontFamilySerif: "var(--font-serif), 'Iowan Old Style', Georgia, serif",
+  /** Ledger monospace for amounts and statement details (loaded as --font-mono). */
+  fontFamilyMono: "var(--font-mono), ui-monospace, 'SF Mono', Menlo, Consolas, monospace",
   fontSize: { xs: 12, sm: 13, md: 14, lg: 16, xl: 20, '2xl': 26, '3xl': 32, '4xl': 40 },
   fontWeight: { regular: 400, medium: 500, semibold: 600, bold: 700 },
   lineHeight: { tight: 1.2, normal: 1.5 },

@@ -39,9 +39,10 @@ const Brand = styled(Link)`
   gap: ${({ theme }) => theme.space[3]}px;
   height: 72px;
   padding: 0 ${({ theme }) => theme.space[6]}px;
-  font-size: ${({ theme }) => theme.typography.fontSize.xl}px;
-  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
-  letter-spacing: -0.03em;
+  font-family: ${({ theme }) => theme.typography.fontFamilySerif};
+  font-size: 26px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  letter-spacing: -0.02em;
   color: ${({ theme }) => theme.colors.textPrimary};
 
   &:hover {
@@ -55,11 +56,11 @@ export const LogoMark = styled.span`
   width: 34px;
   height: 34px;
   border-radius: ${({ theme }) => theme.radii.md}px;
-  background: ${({ theme }) => theme.colors.brandGradient};
-  box-shadow: ${({ theme }) => theme.shadows.brand};
-  color: ${({ theme }) => theme.colors.onBrand};
-  font-size: 18px;
-  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  background: ${({ theme }) => theme.colors.textPrimary};
+  color: ${({ theme }) => theme.colors.bgCanvas};
+  font-family: ${({ theme }) => theme.typography.fontFamilySerif};
+  font-size: 19px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
   letter-spacing: 0;
 
   &::before {
@@ -179,7 +180,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 ],
               }}
             >
-              <Avatar style={{ cursor: 'pointer', background: theme.colors.brandGradient, fontWeight: 600 }}>
+              <Avatar style={{ cursor: 'pointer', background: theme.colors.textPrimary, color: theme.colors.bgCanvas, fontWeight: 600 }}>
                 {user?.name.charAt(0).toUpperCase() || <UserOutlined />}
               </Avatar>
             </Dropdown>

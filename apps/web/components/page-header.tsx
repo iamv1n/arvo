@@ -17,7 +17,10 @@ export function PageHeader({ title, subtitle, extra }: { title: string; subtitle
   return (
     <Header>
       <div>
-        <Typography.Title level={3} style={{ margin: 0 }}>
+        <Typography.Title
+          level={3}
+          style={{ margin: 0, fontFamily: 'var(--font-serif), Georgia, serif', fontWeight: 500, fontSize: 32, letterSpacing: '-0.02em' }}
+        >
           {title}
         </Typography.Title>
         {subtitle && (

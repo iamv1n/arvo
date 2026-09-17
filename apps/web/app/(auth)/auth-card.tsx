@@ -10,10 +10,15 @@ const Page = styled.main`
   place-items: center;
   min-height: 100dvh;
   padding: ${({ theme }) => theme.space[6]}px;
-  background:
-    radial-gradient(50rem 36rem at 0% 0%, ${({ theme }) => theme.colors.brandSubtle}, transparent 60%),
-    radial-gradient(40rem 30rem at 100% 100%, ${({ theme }) => theme.colors.incomeSubtle}, transparent 60%),
-    ${({ theme }) => theme.colors.bgCanvas};
+  /* Faint ledger ruling, like the statement paper on the site. */
+  background-color: ${({ theme }) => theme.colors.bgCanvas};
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 31px,
+    ${({ theme }) => theme.colors.borderSubtle} 31px,
+    ${({ theme }) => theme.colors.borderSubtle} 32px
+  );
 `;
 
 const Corner = styled.div`
@@ -27,8 +32,9 @@ const Wordmark = styled.div`
   align-items: center;
   gap: ${({ theme }) => theme.space[2]}px;
   margin-bottom: ${({ theme }) => theme.space[2]}px;
-  font-size: ${({ theme }) => theme.typography.fontSize['2xl']}px;
-  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+  font-family: ${({ theme }) => theme.typography.fontFamilySerif};
+  font-size: 32px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
   letter-spacing: -0.02em;
 
   &::before {
@@ -38,10 +44,9 @@ const Wordmark = styled.div`
     width: 38px;
     height: 38px;
     border-radius: ${({ theme }) => theme.radii.md}px;
-    background: ${({ theme }) => theme.colors.brandGradient};
-    box-shadow: ${({ theme }) => theme.shadows.brand};
-    color: ${({ theme }) => theme.colors.onBrand};
-    font-size: 20px;
+    background: ${({ theme }) => theme.colors.textPrimary};
+    color: ${({ theme }) => theme.colors.bgCanvas};
+    font-size: 21px;
   }
 `;
 

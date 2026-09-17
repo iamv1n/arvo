@@ -64,7 +64,7 @@ export function createAntdTheme(mode: ColorMode): ThemeConfig {
       Layout: { headerBg: c.bgSurface, siderBg: c.bgSurface, bodyBg: c.bgCanvas, headerHeight: 64 },
       Button: {
         fontWeight: typography.fontWeight.semibold,
-        primaryShadow: s.brand,
+        primaryShadow: 'none',
         defaultShadow: s.sm,
         dangerShadow: 'none',
         paddingInline: space[4] + 2,

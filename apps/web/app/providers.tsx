@@ -13,11 +13,7 @@ import { ThemeModeProvider, useThemeMode } from '../lib/theme-mode';
 
 const GlobalStyle = createGlobalStyle`
   body {
-    background:
-      radial-gradient(60rem 30rem at 12% -8%, ${({ theme }) => theme.colors.brandSubtle}, transparent 70%),
-      radial-gradient(40rem 24rem at 100% 0%, ${({ theme }) => (theme.mode === 'light' ? 'rgba(34, 184, 201, 0.07)' : 'rgba(31, 163, 179, 0.08)')}, transparent 70%),
-      ${({ theme }) => theme.colors.bgCanvas};
-    background-attachment: fixed;
+    background: ${({ theme }) => theme.colors.bgCanvas};
     color: ${({ theme }) => theme.colors.textPrimary};
     font-family: ${({ theme }) => theme.typography.fontFamily};
     -webkit-font-smoothing: antialiased;
@@ -28,21 +24,16 @@ const GlobalStyle = createGlobalStyle`
     color: ${({ theme }) => theme.colors.brandText};
   }
 
-  /* Primary actions carry the brand gradient. */
-  .ant-btn.ant-btn-variant-solid.ant-btn-color-primary:not(:disabled) {
-    background: ${({ theme }) => theme.colors.brandGradient};
-    background-size: 160% 100%;
-    background-position: 0% 0%;
-    border: none;
-    transition: background-position ${({ theme }) => theme.motion.normal} ${({ theme }) => theme.motion.easing},
-      transform ${({ theme }) => theme.motion.fast}, box-shadow ${({ theme }) => theme.motion.normal};
+  /* Editorial type: serif card titles and page-level headings, mono ledger figures. */
+  .ant-card-head-title,
+  .ant-modal-title,
+  .ant-result-title {
+    font-family: ${({ theme }) => theme.typography.fontFamilySerif};
+    font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+    letter-spacing: -0.01em;
   }
-  .ant-btn.ant-btn-variant-solid.ant-btn-color-primary:not(:disabled):hover {
-    background-position: 100% 0%;
-    transform: translateY(-1px);
-  }
-  .ant-btn.ant-btn-variant-solid.ant-btn-color-primary:not(:disabled):active {
-    transform: translateY(0);
+  .ant-card-head-title {
+    font-size: 18px;
   }
 
   /* Tables inside cards follow the card's rounded shape instead of drawing their own corners. */
@@ -114,7 +105,7 @@ const GlobalStyle = createGlobalStyle`
     bottom: 9px;
     width: 3px;
     border-radius: 0 3px 3px 0;
-    background: ${({ theme }) => theme.colors.brandGradient};
+    background: ${({ theme }) => theme.colors.brand};
   }
 
   /* Thin, theme-aware scrollbars. */
