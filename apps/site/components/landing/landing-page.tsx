@@ -84,7 +84,7 @@ const Wordmark = styled.a`
     letter-spacing: -0.03em;
     font-variation-settings: 'opsz' 144;
   }
-  & span {
+  & > span:last-child {
     display: none;
     padding-left: 14px;
     border-left: 1px solid ${({ theme }) => theme.colors.border};
@@ -95,8 +95,60 @@ const Wordmark = styled.a`
     white-space: nowrap;
   }
   @media (min-width: ${({ theme }) => theme.breakpoints.md}px) {
-    & span {
+    & > span:last-child {
       display: inline;
+    }
+  }
+`;
+
+
+/* Brand lockup: the pixel mark in an ink tile (it rocks on hover), lowercase serif wordmark. */
+const Tile = styled.span`
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 4px;
+  background: ${({ theme }) => theme.colors.textPrimary};
+  color: ${({ theme }) => theme.colors.bgCanvas};
+  --arvo-logo-accent: #2fc4a0;
+  box-shadow: 3px 3px 0 ${({ theme }) => theme.colors.brand};
+  transition:
+    transform 240ms cubic-bezier(0.34, 1.4, 0.64, 1),
+    box-shadow 240ms cubic-bezier(0.34, 1.4, 0.64, 1);
+`;
+
+const Brand = styled.a`
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  color: ${({ theme }) => theme.colors.textPrimary};
+  text-decoration: none;
+  & strong {
+    font-family: ${fonts.serif};
+    font-weight: 600;
+    font-size: 28px;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    font-variation-settings: 'opsz' 144;
+  }
+  & sup {
+    align-self: flex-start;
+    margin: 2px 0 0 -6px;
+    font-family: ${fonts.mono};
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: ${({ theme }) => theme.colors.brandText};
+  }
+  &:hover ${Tile}, &:focus-visible ${Tile} {
+    transform: translate(-2px, -2px) rotate(-6deg);
+    box-shadow: 5px 5px 0 ${({ theme }) => theme.colors.brand};
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &:hover ${Tile} {
+      transform: none;
     }
   }
 `;
@@ -126,19 +178,38 @@ const underline = `
 const NavLinks = styled.ul`
   display: none;
   list-style: none;
-  margin: 0 0 0 auto;
+  margin: 0 auto;
   padding: 0;
-  gap: ${({ theme }) => theme.space[6]}px;
+  gap: ${({ theme }) => theme.space[5]}px;
   & a {
     ${underline}
+    display: inline-flex;
+    align-items: baseline;
+    gap: 5px;
     color: ${({ theme }) => theme.colors.textSecondary};
     font-size: 14px;
+    white-space: nowrap;
+  }
+  & small {
+    display: none;
+    font-family: ${fonts.mono};
+    font-size: 10px;
+    color: ${({ theme }) => theme.colors.textMuted};
+    transition: color 200ms;
   }
   & a:hover {
     color: ${({ theme }) => theme.colors.textPrimary};
   }
-  @media (min-width: ${({ theme }) => theme.breakpoints.xl}px) {
+  & a:hover small {
+    color: ${({ theme }) => theme.colors.brandText};
+  }
+  @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
     display: flex;
+  }
+  @media (min-width: ${({ theme }) => theme.breakpoints.xl}px) {
+    & small {
+      display: inline;
+    }
   }
 `;
 
@@ -146,20 +217,40 @@ const NavRight = styled.div`
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: ${({ theme }) => theme.space[5]}px;
-  @media (min-width: ${({ theme }) => theme.breakpoints.xl}px) {
-    margin-left: ${({ theme }) => theme.space[6]}px;
+  gap: ${({ theme }) => theme.space[4]}px;
+  flex-shrink: 0;
+  @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
+    margin-left: 0;
   }
 `;
 
+/* Open-app button: square ink block that shifts onto its teal shadow when pressed. */
 const AppLink = styled.span`
   display: none;
   & a {
-    ${underline}
+    display: inline-flex;
+    align-items: center;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 4px;
+    background: ${({ theme }) => theme.colors.textPrimary};
+    color: ${({ theme }) => theme.colors.bgCanvas};
     font-weight: 600;
     font-size: 14px;
-    color: ${({ theme }) => theme.colors.brandText};
     white-space: nowrap;
+    text-decoration: none;
+    box-shadow: 3px 3px 0 ${({ theme }) => theme.colors.brand};
+    transition:
+      transform 160ms,
+      box-shadow 160ms;
+  }
+  & a:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 ${({ theme }) => theme.colors.brand};
+  }
+  & a:active {
+    transform: translate(3px, 3px);
+    box-shadow: 0 0 0 ${({ theme }) => theme.colors.brand};
   }
   @media (min-width: ${({ theme }) => theme.breakpoints.sm}px) {
     display: inline;
@@ -182,7 +273,7 @@ const MenuButton = styled.button`
     outline: 2px solid ${({ theme }) => theme.colors.brand};
     outline-offset: 4px;
   }
-  @media (min-width: ${({ theme }) => theme.breakpoints.xl}px) {
+  @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
     display: none;
   }
 `;
@@ -252,7 +343,6 @@ const navItems: { href: string; label: string }[] = [
   { href: '#planning-tools', label: 'Planning' },
   { href: '#advisor', label: 'Advisor' },
   { href: '#mcp', label: 'MCP' },
-  { href: '#privacy', label: 'Privacy' },
   { href: '#faq', label: 'FAQ' },
 ];
 
@@ -316,15 +406,20 @@ export function Nav({ base = '' }: { base?: string }) {
   return (
     <Header $compact={compact}>
       <Bar as="nav" aria-label="Primary" $compact={compact}>
-        <Wordmark href={base ? '/' : '#top'} aria-label="Arvo home">
-          <PixelLogo size={26} />
-          <strong>Arvo</strong>
-          <span>Personal finance, on your own machine</span>
-        </Wordmark>
+        <Brand href={base ? '/' : '#top'} aria-label="Arvo home">
+          <Tile aria-hidden>
+            <PixelLogo size={20} animate={false} />
+          </Tile>
+          <strong>arvo</strong>
+          <sup>beta</sup>
+        </Brand>
         <NavLinks>
-          {navItems.map((item) => (
+          {navItems.map((item, i) => (
             <li key={item.href}>
-              <a href={`${base}${item.href}`}>{item.label}</a>
+              <a href={`${base}${item.href}`}>
+                <small>{String(i + 1).padStart(2, '0')}</small>
+                {item.label}
+              </a>
             </li>
           ))}
         </NavLinks>
@@ -341,10 +436,12 @@ export function Nav({ base = '' }: { base?: string }) {
       {open ? (
         <Sheet ref={sheetRef} id="site-menu" role="dialog" aria-modal="true" aria-label="Site menu">
           <div className="top">
-            <Wordmark href={base ? '/' : '#top'} onClick={() => setOpen(false)}>
-              <PixelLogo size={26} />
-          <strong>Arvo</strong>
-            </Wordmark>
+            <Brand href={base ? '/' : '#top'} onClick={() => setOpen(false)}>
+              <Tile aria-hidden>
+                <PixelLogo size={20} animate={false} />
+              </Tile>
+              <strong>arvo</strong>
+            </Brand>
             <MenuButton ref={closeRef} type="button" onClick={close}>
               <CloseOutlined aria-hidden /> Close
             </MenuButton>
@@ -672,8 +769,12 @@ export function SiteFooter({ base = '' }: { base?: string }) {
     <Footer>
       <FooterInner>
         <Wordmark href={base ? '/' : '#top'} aria-label={base ? 'Arvo home' : 'Arvo, back to top'}>
-          <PixelLogo size={26} />
-          <strong>Arvo</strong>
+          <Brand as="span">
+            <Tile aria-hidden>
+              <PixelLogo size={20} animate={false} />
+            </Tile>
+            <strong>arvo</strong>
+          </Brand>
           <span>Personal finance, on your own machine</span>
         </Wordmark>
         <nav aria-label="Footer">
