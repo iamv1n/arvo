@@ -19,6 +19,8 @@ import { PlanningToolsSection } from './planning-tools';
 
 export const LandingGlobals = createGlobalStyle`
   html { scroll-behavior: smooth; }
+  /* Keep illustrations calm on wide screens. */
+  [data-landing] svg[role='img'] { max-height: 340px; }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
     [data-landing] *, [data-landing] *::before, [data-landing] *::after {

@@ -517,7 +517,7 @@ function Mono({ x, y, children, color, anchor = 'start', weight }: { x: number; 
 function LoanRibbon() {
   const theme = useTheme();
   const loan = useMemo(homeLoanExample, []);
-  const H = 280;
+  const H = 210;
   const { width: w, on, frame } = useChart(H);
   const pad = { t: 16, r: 12, b: 26, l: 44 };
   const x = (yr: number) => pad.l + (yr / HOME_LOAN.years) * (w - pad.l - pad.r);
@@ -647,7 +647,7 @@ function LoanPlanner() {
 function PacingChart() {
   const theme = useTheme();
   const pf = useMemo(personalFinanceExample, []);
-  const H = 260;
+  const H = 200;
   const { width: w, on, frame } = useChart(H);
   const days = 30;
   const today = Math.round(pf.pacing.elapsedPct * days);
@@ -739,7 +739,7 @@ function BudgetTool() {
 function CorpusSteps() {
   const theme = useTheme();
   const inv = useMemo(investmentExample, []);
-  const H = 280;
+  const H = 210;
   const { width: w, on, frame } = useChart(H);
   const pad = { t: 34, r: 8, b: 26, l: 44 };
   const max = Math.ceil(inv.fv / 5_00_000) * 5_00_000;
@@ -824,7 +824,7 @@ function InvestmentTracker() {
 function SlopeChart() {
   const theme = useTheme();
   const rows = SPENDING_BEFORE_AFTER;
-  const H = 290;
+  const H = 220;
   const { width: w, on, frame } = useChart(H);
   const narrow = w < 480;
   const pad = { t: 34, b: 14 };
@@ -901,7 +901,7 @@ function SpendReducer() {
 function RunwayChart() {
   const theme = useTheme();
   const a = useMemo(purchaseExample, []);
-  const H = 260;
+  const H = 200;
   const { width: w, on, frame } = useChart(H);
   const clip = `runway-${useId().replace(/:/g, '')}`;
   const months = [0, 1, 2];

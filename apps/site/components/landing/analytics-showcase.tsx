@@ -140,7 +140,7 @@ function CashflowMirror({ on }: { on: boolean }) {
   const saved = monthly.map((m) => m.income - m.expense);
   const savedLine = saved.map((s, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${(mid - s * scale).toFixed(1)}`).join(' ');
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} width="100%" role="img" aria-label="Mirror chart: monthly income above the line, spending below, and what was saved each month drawn across the middle">
+    <svg viewBox={`0 0 ${w} ${h}`} width="100%" style={{ maxWidth: 480, display: 'block' }} role="img" aria-label="Mirror chart: monthly income above the line, spending below, and what was saved each month drawn across the middle">
       <text x={0} y={mid - 118} fontSize={11} fontFamily={fonts.mono} fill={theme.colors.income}>
         IN
       </text>
@@ -279,7 +279,7 @@ function NetWorthMilestones({ on }: { on: boolean }) {
     { i: 9, text: '₹13.5L' },
   ];
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} width="100%" role="img" aria-label="Stepped line of net worth rising from ₹9.4 lakh to ₹14.5 lakh over twelve months, with ₹10 lakh crossed in January">
+    <svg viewBox={`0 0 ${w} ${h}`} width="100%" style={{ maxWidth: 360, display: 'block' }} role="img" aria-label="Stepped line of net worth rising from ₹9.4 lakh to ₹14.5 lakh over twelve months, with ₹10 lakh crossed in January">
       {[10, 12, 14].map((v) => (
         <g key={v}>
           <line x1={0} x2={w} y1={y(v)} y2={y(v)} stroke={theme.colors.borderSubtle} strokeDasharray="2 4" />

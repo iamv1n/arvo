@@ -494,7 +494,7 @@ function TransfersFeature() {
     <Block>
       <Head n="Feature 03" title={<>Transfers <em>aren&rsquo;t spending</em></>} note="Paying your card moves money. It doesn't spend it." />
       <Ledgers ref={ref}>
-        <svg viewBox="0 0 400 230" width="100%" role="img" aria-label="A balance with HDFC Savings on one pan and ICICI Card on the other; a ₹32,400 transfer moves between them and the beam stays level.">
+        <svg viewBox="0 0 400 230" width="100%" style={{ maxWidth: 400, display: 'block', margin: '0 auto' }} role="img" aria-label="A balance with HDFC Savings on one pan and ICICI Card on the other; a ₹32,400 transfer moves between them and the beam stays level.">
           <path d="M200 30 L200 214 M160 214 L240 214" stroke={ink} strokeWidth={2} fill="none" />
           <line x1={80} y1={60} x2={320} y2={60} stroke={ink} strokeWidth={3} strokeLinecap="round" />
           <circle cx={200} cy={60} r={6} fill={theme.colors.bgCanvas} stroke={ink} strokeWidth={2} />
@@ -607,7 +607,7 @@ function ScenarioFeature() {
   const months = (BALANCE - purchase) / MONTHLY_SPEND;
   const safe = months >= 3;
   const W = 520;
-  const H = 220;
+  const H = 180;
   const x = (i: number) => 20 + (i * (W - 40)) / 5;
   const y = (m: number) => H - 30 - (m / 7) * (H - 50);
   const baseMonths = BALANCE / MONTHLY_SPEND;
