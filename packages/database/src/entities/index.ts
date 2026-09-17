@@ -1,5 +1,6 @@
 import { AccountEntity } from './account.entity';
 import { ApiTokenEntity } from './api-token.entity';
+import { OAuthAuthorizationEntity, OAuthClientEntity, OAuthTokenEntity } from './oauth.entities';
 import { ImportBatchEntity, ImportColumnMappingEntity, ImportErrorEntity, ImportRowEntity } from './import.entities';
 import { RecurringSeriesEntity } from './recurring.entity';
 import { RuleEntity } from './rule.entity';
@@ -12,6 +13,9 @@ import { UserEntity } from './user.entity';
 
 export {
   ApiTokenEntity,
+  OAuthAuthorizationEntity,
+  OAuthClientEntity,
+  OAuthTokenEntity,
   RecurringSeriesEntity,
   AccountEntity,
   ImportBatchEntity,
@@ -42,4 +46,7 @@ export const ENTITIES = [
   RuleEntity,
   RecurringSeriesEntity,
   ApiTokenEntity,
+  OAuthClientEntity,
+  OAuthAuthorizationEntity,
+  OAuthTokenEntity,
 ];

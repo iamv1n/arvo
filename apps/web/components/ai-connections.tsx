@@ -8,6 +8,15 @@ import styled from 'styled-components';
 import { api, errorMessage, MCP_URL } from '../lib/api';
 import { formatDate } from '../lib/format';
 
+interface Connection {
+  clientId: string;
+  name: string;
+  clientUri: string | null;
+  scope: string;
+  connectedAt: string;
+  lastUsedAt: string | null;
+}
+
 interface ApiToken {
   id: string;
   name: string;
@@ -106,6 +115,16 @@ export function AiConnections() {
   const [created, setCreated] = useState<string | null>(null);
   const [form] = Form.useForm<{ name: string; expiresInDays?: number }>();
 
+  const connections = useQuery({ queryKey: ['connections'], queryFn: () => api<{ items: Connection[] }>('/me/connections').then((r) => r.items) });
+  const disconnect = useMutation({
+    mutationFn: (clientId: string) => api(`/me/connections?client_id=${encodeURIComponent(clientId)}`, { method: 'DELETE' }),
+    onSuccess: async () => {
+      message.success('Disconnected');
+      await queryClient.invalidateQueries({ queryKey: ['connections'] });
+    },
+    onError: (e) => message.error(errorMessage(e)),
+  });
+
   const create = useMutation({
     mutationFn: (body: { name: string; expiresInDays?: number }) => api<ApiToken & { token: string }>('/me/tokens', { method: 'POST', body }),
     onSuccess: async (result) => {
@@ -126,8 +145,54 @@ export function AiConnections() {
   });
 
   return (
+    <Flex vertical gap={16}>
+    <Card title="Connect with sign-in (ChatGPT, Claude)">
+      <Typography.Paragraph type="secondary" style={{ marginTop: -4 }}>
+        Assistants that support MCP connectors let you sign in to Arvo and approve read-only access. No token to copy.
+      </Typography.Paragraph>
+      <ol style={{ paddingInlineStart: 20, margin: '0 0 12px', lineHeight: 1.8 }}>
+        <li>
+          In <strong>Claude</strong>: Settings → Connectors → Add custom connector. In <strong>ChatGPT</strong>: Settings → Apps &amp;
+          Connectors → Create (developer mode).
+        </li>
+        <li>Paste this server URL:</li>
+      </ol>
+      <CopyableCode text={MCP_URL} />
+      <Typography.Paragraph type="secondary" style={{ margin: '12px 0 0', fontSize: 13 }}>
+        You&apos;ll be sent here to sign in and approve. Web apps like claude.ai and chatgpt.com connect from the internet, so this
+        URL must be public HTTPS (for example via your domain or a tunnel); localhost only works for desktop and local clients.
+      </Typography.Paragraph>
+
+      <Typography.Text strong style={{ display: 'block', margin: '20px 0 8px' }}>
+        Connected apps
+      </Typography.Text>
+      {connections.data?.length === 0 ? (
+        <Typography.Text type="secondary">No apps connected yet.</Typography.Text>
+      ) : (
+        <Flex vertical gap={8}>
+          {connections.data?.map((c) => (
+            <Flex key={c.clientId} justify="space-between" align="center" gap={12} wrap style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--ant-color-border-secondary)' }}>
+              <div style={{ minWidth: 0 }}>
+                <Typography.Text strong>{c.name}</Typography.Text>
+                <Typography.Text type="secondary" style={{ display: 'block', fontSize: 12 }}>
+                  Connected {formatDate(c.connectedAt)} · {c.lastUsedAt ? `last used ${formatDate(c.lastUsedAt)}` : 'not used yet'}
+                </Typography.Text>
+              </div>
+              <Flex gap={8} align="center">
+                <Tag variant="filled">read-only</Tag>
+                <Popconfirm title={`Disconnect ${c.name}?`} description="It loses access immediately." okButtonProps={{ danger: true }} onConfirm={() => disconnect.mutate(c.clientId)}>
+                  <Button danger size="small">
+                    Disconnect
+                  </Button>
+                </Popconfirm>
+              </Flex>
+            </Flex>
+          ))}
+        </Flex>
+      )}
+    </Card>
     <Card
-      title="AI assistants"
+      title="Access tokens (Claude Code, Cursor, VS Code, scripts)"
       extra={
         <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreating(true)}>
           New token
@@ -214,14 +279,12 @@ export function AiConnections() {
                 </Button>
               ))}
             </Flex>
-            <Typography.Text type="secondary" style={{ fontSize: 12, marginTop: -8 }}>
-              ChatGPT and Claude (web and desktop) connect with sign-in instead of a token; that option is coming soon.
-            </Typography.Text>
             <Typography.Text strong>Or set it up manually</Typography.Text>
             <Tabs items={setupSnippets(created).map((s) => ({ key: s.key, label: s.label, children: <CopyableCode text={s.text} /> }))} />
           </Flex>
         )}
       </Modal>
     </Card>
+    </Flex>
   );
 }

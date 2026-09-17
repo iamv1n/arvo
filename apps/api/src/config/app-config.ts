@@ -7,6 +7,12 @@ export interface AppConfig {
   refreshTokenTtlDays: number;
   corsOrigins: string[];
   storagePath: string;
+  /** Public base URL of this API; also the OAuth issuer. */
+  publicApiUrl: string;
+  /** Public base URL of the web app (OAuth consent page). */
+  publicWebUrl: string;
+  /** Canonical URI of the MCP server; OAuth tokens are bound to it (RFC 8707). */
+  mcpResourceUrl: string;
 }
 
 export const APP_CONFIG = Symbol('APP_CONFIG');
@@ -46,6 +52,9 @@ export function loadAppConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       .map((origin) => origin.trim())
       .filter(Boolean),
     storagePath: env.STORAGE_PATH?.trim() || './storage',
+    publicApiUrl: (env.PUBLIC_API_URL?.trim() || env.NEXT_PUBLIC_API_URL?.trim() || 'http://localhost:3301').replace(/\/+$/, ''),
+    publicWebUrl: (env.PUBLIC_WEB_URL?.trim() || 'http://localhost:3300').replace(/\/+$/, ''),
+    mcpResourceUrl: (env.MCP_RESOURCE_URL?.trim() || env.NEXT_PUBLIC_MCP_URL?.trim() || 'http://localhost:3302/mcp').replace(/\/+$/, ''),
   };
   if (problems.length) {
     throw new Error(`Invalid configuration:\n  - ${problems.join('\n  - ')}`);

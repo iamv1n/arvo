@@ -81,8 +81,14 @@ pnpm dev            # api :3301, web :3300, site :3400
 
 ## Connecting AI assistants (MCP)
 
-1. In the web app, open **Settings → Connect AI assistants** and create a token (read-only; shown once).
-2. Add Arvo to your MCP client:
+**ChatGPT and Claude (sign-in):** add a custom connector with the server URL `MCP_RESOURCE_URL` (e.g. `https://arvo.example.com/mcp`). The client discovers Arvo's OAuth server, you sign in and approve read-only access, and you can disconnect it in **Settings → AI assistants**. Cloud apps need a public HTTPS URL; set `PUBLIC_API_URL`, `PUBLIC_WEB_URL` and `MCP_RESOURCE_URL` accordingly.
+
+OAuth implements the MCP authorization spec: protected resource metadata (RFC 9728), authorization server metadata (RFC 8414), Client ID Metadata Documents and Dynamic Client Registration, PKCE S256, resource-bound tokens (RFC 8707), `iss` in responses (RFC 9207), refresh token rotation with reuse detection, and revocation.
+
+**Token-based clients (Claude Code, Cursor, VS Code, scripts):**
+
+1. In the web app, open **Settings → AI assistants** and create a token (read-only; shown once). The dialog has one-click install links for Cursor and VS Code.
+2. Or add Arvo manually:
 
 ```bash
 # Claude Code

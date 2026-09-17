@@ -1,20 +1,31 @@
-import { resolveApiToken, UserEntity } from '@arvo/database';
+import { OAUTH_SCOPE_READ, resolveApiToken, resolveOAuthAccessToken, UserEntity } from '@arvo/database';
 import type { FinanceCore } from '@arvo/finance-core';
 import type { ToolContext } from '@arvo/finance-tools';
 import type { DataSource } from 'typeorm';
 
 export interface AuthenticatedCaller {
   userId: string;
-  tokenId: string;
+  /** Personal access token id or OAuth client id. */
+  via: { kind: 'pat'; tokenId: string } | { kind: 'oauth'; clientId: string };
 }
 
-/** Resolves a bearer token to its user. The token, never tool input, decides whose data is used. */
-export async function authenticate(dataSource: DataSource, authorization: string | undefined): Promise<AuthenticatedCaller | null> {
+/**
+ * Resolves a bearer token to its user: a personal access token (arvo_pat_…) or an OAuth access
+ * token (arvo_oat_…) issued for this MCP server's resource URI. The token, never tool input,
+ * decides whose data is used; tokens for other audiences are rejected.
+ */
+export async function authenticate(
+  dataSource: DataSource,
+  authorization: string | undefined,
+  resource: string,
+): Promise<AuthenticatedCaller | null> {
   const [scheme, token] = (authorization ?? '').split(' ');
-  if (scheme !== 'Bearer' || !token) return null;
-  const resolved = await resolveApiToken(dataSource, token);
-  if (!resolved || !resolved.scopes.includes('read')) return null;
-  return { userId: resolved.userId, tokenId: resolved.tokenId };
+  if (scheme?.toLowerCase() !== 'bearer' || !token) return null;
+  const pat = await resolveApiToken(dataSource, token);
+  if (pat) return pat.scopes.includes('read') ? { userId: pat.userId, via: { kind: 'pat', tokenId: pat.tokenId } } : null;
+  const oauth = await resolveOAuthAccessToken(dataSource, token, resource);
+  if (oauth?.scopes.includes(OAUTH_SCOPE_READ)) return { userId: oauth.userId, via: { kind: 'oauth', clientId: oauth.clientId } };
+  return null;
 }
 
 /** Today's date in the user's timezone, so "this month" matches what the user sees. */

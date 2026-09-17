@@ -46,6 +46,9 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      PUBLIC_API_URL: ${PUBLIC_API_URL:-http://localhost:3301}
+      PUBLIC_WEB_URL: ${PUBLIC_WEB_URL:-http://localhost:3300}
+      MCP_RESOURCE_URL: ${MCP_RESOURCE_URL:-http://localhost:3302/mcp}
     ports:
       - '${API_PORT:-3301}:3301'
     volumes:
@@ -64,6 +67,8 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgres://${POSTGRES_USER:-arvo}:${POSTGRES_PASSWORD:-arvo}@postgres:5432/${POSTGRES_DB:-arvo}
+      PUBLIC_API_URL: ${PUBLIC_API_URL:-http://localhost:3301}
+      MCP_RESOURCE_URL: ${MCP_RESOURCE_URL:-http://localhost:3302/mcp}
     ports:
       - '${MCP_PORT:-3302}:3302'
 

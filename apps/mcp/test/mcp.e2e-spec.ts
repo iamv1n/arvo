@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { ApiTokenEntity, createFinanceStore, databaseOptions, generateApiToken, UserEntity } from '@arvo/database';
+import { ApiTokenEntity, createFinanceStore, databaseOptions, generateApiToken, generateOAuthTokens, OAuthClientEntity, OAuthTokenEntity, UserEntity } from '@arvo/database';
 import { FinanceCore } from '@arvo/finance-core';
 import { AccountType, TransactionType } from '@arvo/types';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
@@ -52,9 +52,14 @@ describe('MCP server over Streamable HTTP (e2e)', () => {
   beforeAll(async () => {
     dataSource = await testDataSource();
     core = new FinanceCore(createFinanceStore(dataSource));
-    server = createHttpServer(dataSource, core);
-    await new Promise<void>((done) => server.listen(0, '127.0.0.1', done));
-    endpoint = new URL(`http://127.0.0.1:${(server.address() as AddressInfo).port}/mcp`);
+    // Bind first to learn the port, then build the server with its real resource URL.
+    const probe = createHttpServer(dataSource, core, { resourceUrl: 'http://127.0.0.1/mcp', authorizationServer: 'http://auth.test' });
+    await new Promise<void>((done) => probe.listen(0, '127.0.0.1', done));
+    const port = (probe.address() as AddressInfo).port;
+    await new Promise((done) => probe.close(done));
+    endpoint = new URL(`http://127.0.0.1:${port}/mcp`);
+    server = createHttpServer(dataSource, core, { resourceUrl: endpoint.toString(), authorizationServer: 'http://auth.test' });
+    await new Promise<void>((done) => server.listen(port, '127.0.0.1', done));
   });
 
   afterAll(async () => {
@@ -65,7 +70,17 @@ describe('MCP server over Streamable HTTP (e2e)', () => {
   it('rejects requests without a valid token', async () => {
     const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
     expect(res.status).toBe(401);
-    expect(res.headers.get('www-authenticate')).toContain('Bearer');
+    expect(res.headers.get('www-authenticate')).toBe(
+      `Bearer resource_metadata="${endpoint.origin}/.well-known/oauth-protected-resource/mcp", scope="finance:read"`,
+    );
+    const metadata = await fetch(new URL('/.well-known/oauth-protected-resource/mcp', endpoint)).then((r) => r.json());
+    expect(metadata).toEqual({
+      resource: endpoint.toString(),
+      authorization_servers: ['http://auth.test'],
+      scopes_supported: ['finance:read'],
+      bearer_methods_supported: ['header'],
+      resource_name: 'Arvo personal finance',
+    });
     const bad = await fetch(endpoint, { method: 'POST', headers: { Authorization: 'Bearer arvo_pat_nope' }, body: '{}' });
     expect(bad.status).toBe(401);
     expect((await fetch(new URL('/health', endpoint))).status).toBe(200);
@@ -102,6 +117,28 @@ describe('MCP server over Streamable HTTP (e2e)', () => {
     expect(probe.isError).toBe(true);
     expect(JSON.stringify(probe.content)).toContain('ACCOUNT_NOT_FOUND');
     await bobClient.close();
+  });
+
+  it('accepts OAuth access tokens only when issued for this server', async () => {
+    const dana = await userWithToken('dana@mcp.test');
+    await dataSource.getRepository(OAuthClientEntity).save({ clientId: 'client-1', clientName: 'Test', redirectUris: ['https://c.test/cb'], clientUri: null, logoUri: null, registrationType: 'DCR', fetchedAt: null });
+    const issue = async (resource: string) => {
+      const t = generateOAuthTokens();
+      await dataSource.getRepository(OAuthTokenEntity).save({
+        userId: dana.user.id, clientId: 'client-1', scope: 'finance:read', resource,
+        accessTokenHash: t.accessHash, accessExpiresAt: new Date(Date.now() + 60_000),
+        refreshTokenHash: t.refreshHash, refreshExpiresAt: new Date(Date.now() + 60_000), lastUsedAt: null, revokedAt: null,
+      });
+      return t.accessToken;
+    };
+    const good = await connect(await issue(endpoint.toString()));
+    expect((await good.callTool({ name: 'finance_get_accounts', arguments: {} })).isError).toBeFalsy();
+    await good.close();
+
+    const otherAudience = await issue('https://someone-else.example.com/mcp');
+    const res = await fetch(endpoint, { method: 'POST', headers: { Authorization: `Bearer ${otherAudience}`, 'Content-Type': 'application/json' }, body: '{}' });
+    expect(res.status).toBe(401);
+    expect(res.headers.get('www-authenticate')).toContain('error="invalid_token"');
   });
 
   it('reports invalid tool input as a tool error and stops working after revocation', async () => {

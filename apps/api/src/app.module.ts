@@ -12,6 +12,8 @@ import { RulesController } from './rules/rules.controller';
 import { MerchantsController } from './merchants/merchants.controller';
 import { TransactionsController } from './transactions/transactions.controller';
 import { TransfersController } from './transfers/transfers.controller';
+import { OAuthController } from './oauth/oauth.controller';
+import { OAuthService } from './oauth/oauth.service';
 import { TokensController } from './tokens/tokens.controller';
 import { UsersController } from './users/users.controller';
 
@@ -24,10 +26,12 @@ class ConfigModule {}
 
 @Module({
   imports: [ConfigModule, DatabaseModule, AuthModule],
+  providers: [OAuthService],
   controllers: [
     HealthController,
     UsersController,
     TokensController,
+    OAuthController,
     AccountsController,
     AnalyticsController,
     CategoriesController,

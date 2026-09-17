@@ -19,9 +19,13 @@ async function main() {
   if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required');
   const dataSource = await new DataSource(databaseOptions(process.env.DATABASE_URL)).initialize();
   const core = new FinanceCore(createFinanceStore(dataSource));
+  const port = Number(process.env.MCP_PORT ?? process.env.PORT ?? 3302);
+  const resourceUrl = process.env.MCP_RESOURCE_URL?.trim() || process.env.NEXT_PUBLIC_MCP_URL?.trim() || `http://localhost:${port}/mcp`;
+  const authorizationServer = process.env.PUBLIC_API_URL?.trim() || process.env.NEXT_PUBLIC_API_URL?.trim() || 'http://localhost:3301';
 
   if (process.argv.includes('--stdio')) {
-    const caller = await authenticate(dataSource, `Bearer ${process.env.ARVO_TOKEN ?? ''}`);
+    // stdio uses a personal access token from the environment (the MCP spec's STDIO guidance).
+    const caller = await authenticate(dataSource, `Bearer ${process.env.ARVO_TOKEN ?? ''}`, resourceUrl);
     const context = caller ? await toolContext(dataSource, core, caller.userId) : null;
     if (!context) throw new Error('ARVO_TOKEN must be a valid, unrevoked Arvo personal access token');
     await createMcpServer(context).connect(new StdioServerTransport());
@@ -29,9 +33,8 @@ async function main() {
     return;
   }
 
-  const port = Number(process.env.MCP_PORT ?? process.env.PORT ?? 3302);
-  const server = createHttpServer(dataSource, core);
-  server.listen(port, '0.0.0.0', () => log('info', 'http server ready', { port, endpoint: '/mcp' }));
+  const server = createHttpServer(dataSource, core, { resourceUrl, authorizationServer });
+  server.listen(port, '0.0.0.0', () => log('info', 'http server ready', { port, resource: resourceUrl, authorization_server: authorizationServer }));
   const shutdown = () => server.close(() => void dataSource.destroy().finally(() => process.exit(0)));
   process.on('SIGTERM', shutdown);
   process.on('SIGINT', shutdown);

@@ -8,7 +8,14 @@ import type { AppConfig } from './config/app-config';
 /** Shared app wiring for main.ts and e2e tests. */
 export function configureApp(app: INestApplication, config: AppConfig): void {
   app.use(cookieParser());
-  app.enableCors({ origin: config.corsOrigins, credentials: true });
+  // OAuth discovery, registration, token and revocation endpoints are called cross-origin by MCP
+  // clients; they never use cookies, so any origin may call them. Everything else is limited to
+  // the web app's origins with credentials.
+  const publicCorsPaths = /^\/(\.well-known\/|oauth\/(register|token|revoke)$)/;
+  app.enableCors((req: { url?: string }, callback: (err: Error | null, options: object) => void) => {
+    const path = (req.url ?? '').split('?')[0];
+    callback(null, publicCorsPaths.test(path) ? { origin: '*', credentials: false } : { origin: config.corsOrigins, credentials: true });
+  });
   app.useGlobalPipes(createValidationPipe());
   app.useGlobalFilters(new ApiExceptionFilter());
   app.enableShutdownHooks();
