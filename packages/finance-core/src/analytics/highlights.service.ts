@@ -167,10 +167,13 @@ export class HighlightsService {
 
   private async topMerchant(userId: string, currency: string, period: { from: string; to: string }): Promise<Highlight | null> {
     const merchants = await this.insights.spendingByMerchant(userId, { ...period, currency });
-    // The most frequently paid merchant is more telling than the largest one-off (rent, EMI).
+    // Ranked by money spent; merchants paid only once (a one-off purchase) are skipped.
     const top = merchants
       .filter((m) => m.merchantId && parseMoney(m.amount) > 0n && m.transactionCount >= 2)
-      .sort((a, b) => b.transactionCount - a.transactionCount || (parseMoney(b.amount) > parseMoney(a.amount) ? 1 : -1))[0];
+      .sort((a, b) => {
+        const d = parseMoney(b.amount) - parseMoney(a.amount);
+        return d !== 0n ? (d > 0n ? 1 : -1) : b.transactionCount - a.transactionCount;
+      })[0];
     if (!top || !top.merchantId) return null;
     const amount = parseMoney(top.amount);
     return {
