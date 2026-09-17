@@ -10,7 +10,7 @@ import {
 } from '@ant-design/icons';
 import type { ReactNode } from 'react';
 import styled, { useTheme } from 'styled-components';
-import { CategoryDonut, IncomeExpenseBars, NetWorthLine, categories } from './charts';
+import { AnalyticsShowcase } from './analytics-showcase';
 import { drawStroke, fadeIn, fadeUp, growX, play, popIn, useInView } from './motion';
 import { Body, Card, Container, fonts, H3, Pill, Reveal, SectionHeading, SectionShell } from './primitives';
 
@@ -328,48 +328,13 @@ function RulesIllustration() {
   );
 }
 
-/* ---------- Analytics ---------- */
-
-const ChartGrid = styled.div`
-  display: grid;
-  gap: ${({ theme }) => theme.space[5]}px;
-  @media (min-width: ${({ theme }) => theme.breakpoints.md}px) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-  /* Equal-height cards with the chart in a fixed-height area and the legend pinned to the bottom. */
-  align-items: stretch;
-  & > * {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-  }
-`;
-
-/** Fixed-height area so all analytics charts render at the same size. */
-const ChartArea = styled.div<{ $h?: number }>`
-  height: ${({ $h = 200 }) => $h}px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 0;
-  & > svg {
-    max-width: 100%;
-  }
-`;
-
-const Spacer = styled.div`
-  flex: 1;
-`;
-
 const LegendRow = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 6px 14px;
   margin-top: 12px;
-  font-size: ${({ theme }) => theme.typography.fontSize.xs}px;
+  font-family: ${fonts.mono};
+  font-size: 11px;
   color: ${({ theme }) => theme.colors.textSecondary};
   & span {
     display: inline-flex;
@@ -379,77 +344,8 @@ const LegendRow = styled.div`
   & i {
     width: 8px;
     height: 8px;
-    border-radius: 2px;
   }
 `;
-
-const BigNum = styled.div`
-  font-size: ${({ theme }) => theme.typography.fontSize['2xl']}px;
-  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
-  color: ${({ theme }) => theme.colors.textPrimary};
-  font-variant-numeric: tabular-nums;
-  margin-bottom: 8px;
-`;
-
-function Analytics() {
-  const theme = useTheme();
-  const [ref, on] = useInView<HTMLDivElement>(0.2);
-  return (
-    <ChartGrid ref={ref}>
-      <Panel>
-        <PanelHead>
-          <strong>Income vs expenses</strong>
-          <span>Last 6 months</span>
-        </PanelHead>
-        <ChartArea>
-          <IncomeExpenseBars on={on} />
-        </ChartArea>
-        <Spacer />
-        <LegendRow>
-          <span>
-            <i style={{ background: theme.colors.income }} /> Income
-          </span>
-          <span>
-            <i style={{ background: theme.colors.expense }} /> Expenses
-          </span>
-        </LegendRow>
-      </Panel>
-      <Panel>
-        <PanelHead>
-          <strong>Spending by category</strong>
-          <span>Sep</span>
-        </PanelHead>
-        <ChartArea>
-          <CategoryDonut on={on} size={170} />
-        </ChartArea>
-        <Spacer />
-        <LegendRow>
-          {categories.map((c) => (
-            <span key={c.name}>
-              <i style={{ background: theme.colors[c.key] }} /> {c.name}
-            </span>
-          ))}
-        </LegendRow>
-      </Panel>
-      <Panel>
-        <PanelHead>
-          <strong>Net worth</strong>
-          <span>Assets − liabilities</span>
-        </PanelHead>
-        <BigNum>₹14,52,380</BigNum>
-        <ChartArea $h={160}>
-          <NetWorthLine on={on} />
-        </ChartArea>
-        <Spacer />
-        <LegendRow>
-          <span>
-            <i style={{ background: theme.colors.brand }} /> Net worth, last 12 months
-          </span>
-        </LegendRow>
-      </Panel>
-    </ChartGrid>
-  );
-}
 
 /* ---------- Transfers ---------- */
 
@@ -709,16 +605,7 @@ export function Features() {
           <RulesIllustration />
         </Row>
 
-        <Reveal>
-          <div style={{ margin: '96px 0 32px' }}>
-            <H3 style={{ fontSize: 26, letterSpacing: '-0.01em' }}>Analytics without the spreadsheet</H3>
-            <Body style={{ maxWidth: 640 }}>
-              Income, expenses and cash flow by month, spending by category, and net worth across bank, card, cash, broker and
-              loan accounts.
-            </Body>
-          </div>
-        </Reveal>
-        <Analytics />
+        <AnalyticsShowcase />
 
         <div style={{ height: 96 }} />
 
