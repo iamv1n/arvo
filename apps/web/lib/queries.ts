@@ -5,6 +5,8 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { api } from './api';
 import type {
   Account,
+  BudgetStatusResult,
+  GoalProgress,
   Category,
   ImportBatch,
   ImportRow,
@@ -33,6 +35,8 @@ export const keys = {
   transfers: ['transfers'] as const,
   analytics: ['analytics'] as const,
   imports: ['imports'] as const,
+  budgets: ['budgets'] as const,
+  goals: ['goals'] as const,
 };
 
 export interface TransactionFilters {
@@ -122,7 +126,7 @@ export function useLedgerMutation<TInput, TResult = unknown>(fn: (input: TInput)
     mutationFn: fn,
     onSuccess: async () => {
       await Promise.all(
-        [keys.accounts, keys.transactions, keys.transfers, keys.analytics, keys.merchants, keys.categories].map(
+        [keys.accounts, keys.transactions, keys.transfers, keys.analytics, keys.merchants, keys.categories, keys.budgets, keys.goals].map(
           (queryKey) => queryClient.invalidateQueries({ queryKey }),
         ),
       );
@@ -191,3 +195,13 @@ export const useHighlights = () =>
 
 export const usePatterns = () =>
   useQuery({ queryKey: [...keys.analytics, 'patterns'], queryFn: () => api<SpendingPatterns>('/analytics/patterns') });
+
+export const useBudgets = (month?: string) =>
+  useQuery({
+    queryKey: [...keys.budgets, month ?? 'current'],
+    queryFn: () => api<BudgetStatusResult>('/budgets', { query: { month } }),
+    placeholderData: keepPreviousData,
+  });
+
+export const useGoals = () =>
+  useQuery({ queryKey: keys.goals, queryFn: () => api<{ asOf: string; goals: GoalProgress[] }>('/goals').then((r) => r.goals) });

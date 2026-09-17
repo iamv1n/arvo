@@ -315,3 +315,59 @@ export interface SpendingPatterns {
   upcoming: UpcomingCharge[];
   totals: { windowDays: number; spent: string; transactions: number; averagePerDay: string; busiestDay: DailySpend | null };
 }
+
+export type BudgetStatus = 'on_track' | 'at_risk' | 'over';
+
+export interface BudgetPacing {
+  id: string;
+  categoryId: string;
+  categoryName: string;
+  amount: string;
+  currency: string;
+  rollover: boolean;
+  limit: string;
+  carriedOver: string;
+  spent: string;
+  remaining: string;
+  percentUsed: number;
+  percentOfMonthElapsed: number;
+  projected: string;
+  projectedOverspend: string;
+  status: BudgetStatus;
+  transactionCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BudgetStatusResult {
+  month: string;
+  asOf: string;
+  daysInMonth: number;
+  daysElapsed: number;
+  percentOfMonthElapsed: number;
+  budgets: BudgetPacing[];
+  totals: { currency: string; limit: string; spent: string; remaining: string; projected: string; percentUsed: number }[];
+}
+
+export type GoalStatus = 'on_track' | 'behind' | 'achieved';
+
+export interface GoalProgress {
+  id: string;
+  name: string;
+  targetAmount: string;
+  currency: string;
+  targetDate: string;
+  accountId: string | null;
+  accountName: string | null;
+  savedAmount: string;
+  current: string;
+  remaining: string;
+  percent: number;
+  expected: string;
+  expectedPercent: number;
+  monthsLeft: number;
+  requiredMonthly: string;
+  status: GoalStatus;
+  createdAt: string;
+  updatedAt: string;
+}
