@@ -40,6 +40,31 @@ export const Figure = styled.span<{ $size?: number }>`
   line-height: 1.1;
 `;
 
+/** Editorial section heading with a ruled underline and a small mono aside. */
+export const SectionTitle = styled.h2`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: ${({ theme }) => theme.space[2]}px;
+  margin: ${({ theme }) => theme.space[8]}px 0 ${({ theme }) => theme.space[4]}px;
+  padding-bottom: ${({ theme }) => theme.space[2]}px;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.textPrimary};
+  font-family: ${({ theme }) => theme.typography.fontFamilySerif};
+  font-size: 24px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  letter-spacing: -0.01em;
+
+  small {
+    font-family: ${({ theme }) => theme.typography.fontFamilyMono};
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: ${({ theme }) => theme.colors.textMuted};
+  }
+`;
+
 export const Eyebrow = styled.span`
   font-family: ${({ theme }) => theme.typography.fontFamilyMono};
   font-size: 11px;

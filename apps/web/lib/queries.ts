@@ -7,6 +7,9 @@ import type {
   Account,
   BudgetStatusResult,
   GoalProgress,
+  SavingsOpportunitiesResult,
+  Scenario,
+  ScenarioComparison,
   Category,
   ImportBatch,
   ImportRow,
@@ -37,6 +40,8 @@ export const keys = {
   imports: ['imports'] as const,
   budgets: ['budgets'] as const,
   goals: ['goals'] as const,
+  planning: ['planning'] as const,
+  scenarios: ['scenarios'] as const,
 };
 
 export interface TransactionFilters {
@@ -126,7 +131,7 @@ export function useLedgerMutation<TInput, TResult = unknown>(fn: (input: TInput)
     mutationFn: fn,
     onSuccess: async () => {
       await Promise.all(
-        [keys.accounts, keys.transactions, keys.transfers, keys.analytics, keys.merchants, keys.categories, keys.budgets, keys.goals].map(
+        [keys.accounts, keys.transactions, keys.transfers, keys.analytics, keys.merchants, keys.categories, keys.budgets, keys.goals, keys.planning].map(
           (queryKey) => queryClient.invalidateQueries({ queryKey }),
         ),
       );
@@ -205,3 +210,20 @@ export const useBudgets = (month?: string) =>
 
 export const useGoals = () =>
   useQuery({ queryKey: keys.goals, queryFn: () => api<{ asOf: string; goals: GoalProgress[] }>('/goals').then((r) => r.goals) });
+
+export const useSavingsOpportunities = () =>
+  useQuery({
+    queryKey: [...keys.planning, 'savings'],
+    queryFn: () => api<SavingsOpportunitiesResult>('/planning/savings-opportunities'),
+  });
+
+export const useScenarios = () =>
+  useQuery({ queryKey: keys.scenarios, queryFn: () => api<{ items: Scenario[] }>('/scenarios').then((r) => r.items) });
+
+export const useScenarioComparison = (ids: string[]) =>
+  useQuery({
+    queryKey: [...keys.scenarios, 'compare', ...ids],
+    queryFn: () => api<ScenarioComparison>('/scenarios/compare', { query: { ids: ids.join(',') } }),
+    enabled: ids.length > 0,
+    placeholderData: keepPreviousData,
+  });

@@ -371,3 +371,95 @@ export interface GoalProgress {
   createdAt: string;
   updatedAt: string;
 }
+
+export type SavingsKind = 'category_creep' | 'merchant_creep' | 'subscription_price_increase' | 'fees_and_interest' | 'one_off_spike';
+
+export interface SavingsOpportunity {
+  id: string;
+  kind: SavingsKind;
+  title: string;
+  monthlySaving: string;
+  includedInTotal: boolean;
+  informational: boolean;
+  confidence: 'high' | 'medium' | 'low';
+  rationale: { current: string; baseline: string | null; changePercent: number | null; period: { from: string; to: string }; basis: string };
+  categoryId: string | null;
+  merchantId: string | null;
+  evidence: { query: Record<string, string>; transactionIds: string[] };
+}
+
+export interface SavingsOpportunitiesResult {
+  currency: string;
+  asOf: string;
+  month: string;
+  totalMonthly: string;
+  totalYearly: string;
+  opportunities: SavingsOpportunity[];
+}
+
+export interface PlanningBaseline {
+  currency: string;
+  asOf: string;
+  liquid: string;
+  monthlyIncome: string;
+  monthlyExpenses: string;
+  goalContributions: string;
+  monthlySurplus: string;
+  months: string[];
+  categories: { categoryId: string; name: string; monthly: string }[];
+}
+
+export type AffordabilityStatus = 'affordable' | 'tight' | 'not_yet';
+
+export interface AffordabilityResult {
+  currency: string;
+  asOf: string;
+  amount: string;
+  date: string;
+  bufferMonths: number;
+  status: AffordabilityStatus;
+  baseline: PlanningBaseline;
+  bufferTarget: string;
+  cashBefore: string;
+  cashAfter: string;
+  bufferMonthsAfter: number | null;
+  monthsToRecover: number | null;
+  affordableFrom: string | null;
+  series: { month: string; without: string; with: string }[];
+}
+
+export type ScenarioAdjustment =
+  | { type: 'category'; categoryId: string; mode: 'amount' | 'percent'; value: string; fromMonth?: string }
+  | { type: 'income'; mode: 'amount' | 'percent'; value: string; fromMonth?: string }
+  | { type: 'one_off'; month: string; amount: string; label?: string };
+
+export interface WhatIfResult {
+  currency: string;
+  asOf: string;
+  baseline: PlanningBaseline;
+  adjustments: { adjustment: ScenarioAdjustment; label: string; monthlyImpact: string }[];
+  monthlyChange: string;
+  scenarioSurplus: string;
+  yearlyImpact: string;
+  endBalance: { baseline: string; scenario: string };
+  lowest: { month: string; amount: string };
+  series: { month: string; baseline: string; scenario: string }[];
+}
+
+export interface Scenario {
+  id: string;
+  name: string;
+  description: string | null;
+  adjustments: ScenarioAdjustment[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ScenarioComparison {
+  currency: string;
+  asOf: string;
+  baseline: PlanningBaseline;
+  months: string[];
+  baselineSeries: string[];
+  scenarios: { id: string; name: string; monthlyChange: string; yearlyImpact: string; endBalance: string; series: string[] }[];
+}
