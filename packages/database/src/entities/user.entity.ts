@@ -1,6 +1,8 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { CreatedAt, UpdatedAt } from './columns';
 
+export type ReminderFrequency = 'off' | 'every_15_days' | 'monthly';
+
 @Entity('users')
 export class UserEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -46,6 +48,17 @@ export class UserEntity {
 
   @Column({ name: 'two_factor_locked_until', type: 'timestamptz', nullable: true })
   twoFactorLockedUntil!: Date | null;
+
+  /** Statement upload reminder cadence. */
+  @Column({ name: 'reminder_frequency', type: 'varchar', length: 16, default: 'off' })
+  reminderFrequency!: ReminderFrequency;
+
+  /** Preferred day of month (1-28) for monthly reminders. */
+  @Column({ name: 'reminder_day', type: 'smallint', nullable: true })
+  reminderDay!: number | null;
+
+  @Column({ name: 'last_reminder_sent_at', type: 'timestamptz', nullable: true })
+  lastReminderSentAt!: Date | null;
 
   @CreatedAt()
   createdAt!: Date;

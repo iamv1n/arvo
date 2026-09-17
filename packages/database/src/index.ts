@@ -4,3 +4,4 @@ export { createFinanceStore, createRepositories } from './repositories/finance-s
 export * from './api-tokens';
 export type { ApiTokenScope } from './entities/api-token.entity';
 export type { AuthTokenPurpose } from './entities/auth-token.entity';
+export type { ReminderFrequency } from './entities/user.entity';
