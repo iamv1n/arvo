@@ -1,5 +1,6 @@
 'use client';
 
+import { PixelLogo } from '../logo';
 import { CloseOutlined, MenuOutlined } from '@ant-design/icons';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import styled, { createGlobalStyle } from 'styled-components';
@@ -70,8 +71,8 @@ const Bar = styled(Container)<{ $compact: boolean }>`
 
 const Wordmark = styled.a`
   display: inline-flex;
-  align-items: baseline;
-  gap: 14px;
+  align-items: center;
+  gap: 12px;
   min-width: 0;
   color: ${({ theme }) => theme.colors.textPrimary};
   text-decoration: none;
@@ -316,6 +317,7 @@ export function Nav({ base = '' }: { base?: string }) {
     <Header $compact={compact}>
       <Bar as="nav" aria-label="Primary" $compact={compact}>
         <Wordmark href={base ? '/' : '#top'} aria-label="Arvo home">
+          <PixelLogo size={26} />
           <strong>Arvo</strong>
           <span>Personal finance, on your own machine</span>
         </Wordmark>
@@ -340,7 +342,8 @@ export function Nav({ base = '' }: { base?: string }) {
         <Sheet ref={sheetRef} id="site-menu" role="dialog" aria-modal="true" aria-label="Site menu">
           <div className="top">
             <Wordmark href={base ? '/' : '#top'} onClick={() => setOpen(false)}>
-              <strong>Arvo</strong>
+              <PixelLogo size={26} />
+          <strong>Arvo</strong>
             </Wordmark>
             <MenuButton ref={closeRef} type="button" onClick={close}>
               <CloseOutlined aria-hidden /> Close
@@ -669,6 +672,7 @@ export function SiteFooter({ base = '' }: { base?: string }) {
     <Footer>
       <FooterInner>
         <Wordmark href={base ? '/' : '#top'} aria-label={base ? 'Arvo home' : 'Arvo, back to top'}>
+          <PixelLogo size={26} />
           <strong>Arvo</strong>
           <span>Personal finance, on your own machine</span>
         </Wordmark>
