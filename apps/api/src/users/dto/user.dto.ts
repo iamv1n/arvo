@@ -7,6 +7,8 @@ export class UserDto {
   @ApiProperty() name!: string;
   @ApiProperty({ example: 'INR' }) currency!: string;
   @ApiProperty({ example: 'Asia/Kolkata' }) timezone!: string;
+  @ApiProperty({ type: Date, nullable: true }) emailVerifiedAt!: Date | null;
+  @ApiProperty() twoFactorEnabled!: boolean;
   @ApiProperty() createdAt!: Date;
 }
 

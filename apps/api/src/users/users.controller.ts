@@ -38,6 +38,6 @@ export class UsersController {
 }
 
 function present(user: UserEntity): UserDto {
-  const { id, email, name, currency, timezone, createdAt } = user;
-  return { id, email, name, currency, timezone, createdAt };
+  const { id, email, name, currency, timezone, emailVerifiedAt, createdAt } = user;
+  return { id, email, name, currency, timezone, emailVerifiedAt, twoFactorEnabled: !!user.twoFactorEnabledAt, createdAt };
 }

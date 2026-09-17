@@ -6,6 +6,7 @@ import { CategoriesController } from './categories/categories.controller';
 import { RequestLoggingMiddleware } from './common/request-logging.middleware';
 import { APP_CONFIG, loadAppConfig } from './config/app-config';
 import { DatabaseModule } from './database/database.module';
+import { MailModule } from './mail/mail.module';
 import { HealthController } from './health/health.controller';
 import { ImportsController } from './imports/imports.controller';
 import { BudgetsController, GoalsController } from './planning/planning.controller';
@@ -27,7 +28,7 @@ import { UsersController } from './users/users.controller';
 class ConfigModule {}
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, AuthModule],
+  imports: [ConfigModule, DatabaseModule, MailModule, AuthModule],
   providers: [OAuthService],
   controllers: [
     HealthController,

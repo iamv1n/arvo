@@ -2,6 +2,7 @@ name: arvo
 
 # docker compose up -d                      → postgres, api, mcp, web, site
 # docker compose --profile ollama up -d     → also a local Ollama LLM (large download)
+# docker compose --profile mail up -d mailpit → local SMTP catcher; UI at http://localhost:8025
 
 x-api-url: &public-api-url ${NEXT_PUBLIC_API_URL:-http://localhost:3301}
 
@@ -49,6 +50,17 @@ services:
       PUBLIC_API_URL: ${PUBLIC_API_URL:-http://localhost:3301}
       PUBLIC_WEB_URL: ${PUBLIC_WEB_URL:-http://localhost:3300}
       MCP_RESOURCE_URL: ${MCP_RESOURCE_URL:-http://localhost:3302/mcp}
+      TWO_FACTOR_ENCRYPTION_KEY: ${TWO_FACTOR_ENCRYPTION_KEY:-}
+      REQUIRE_EMAIL_VERIFICATION: ${REQUIRE_EMAIL_VERIFICATION:-false}
+      MAIL_DRIVER: ${MAIL_DRIVER:-console}
+      MAIL_HOST: ${MAIL_HOST:-mailpit}
+      MAIL_PORT: ${MAIL_PORT:-1025}
+      MAIL_SECURE: ${MAIL_SECURE:-false}
+      MAIL_USER: ${MAIL_USER:-}
+      MAIL_PASS: ${MAIL_PASS:-}
+      MAIL_FROM: ${MAIL_FROM:-Arvo <no-reply@arvo.local>}
+      MAIL_LOGIN_ALERTS: ${MAIL_LOGIN_ALERTS:-false}
+      REMINDERS_ENABLED: ${REMINDERS_ENABLED:-true}
     ports:
       - '${API_PORT:-3301}:3301'
     volumes:
@@ -101,6 +113,14 @@ services:
     restart: unless-stopped
     ports:
       - '${SITE_PORT:-3400}:3400'
+
+  mailpit:
+    image: axllent/mailpit:latest
+    profiles: [mail]
+    restart: unless-stopped
+    ports:
+      - '${MAILPIT_SMTP_PORT:-1025}:1025'
+      - '${MAILPIT_UI_PORT:-8025}:8025'
 
   ollama:
     image: ollama/ollama:latest

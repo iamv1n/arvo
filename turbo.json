@@ -1,7 +1,7 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "globalEnv": ["NODE_ENV"],
-  "globalPassThroughEnv": ["DATABASE_URL", "TEST_DATABASE_URL", "JWT_SECRET", "PUBLIC_API_URL", "PUBLIC_WEB_URL", "MCP_RESOURCE_URL", "CORS_ORIGIN"],
+  "globalPassThroughEnv": ["DATABASE_URL", "TEST_DATABASE_URL", "JWT_SECRET", "PUBLIC_API_URL", "PUBLIC_WEB_URL", "MCP_RESOURCE_URL", "CORS_ORIGIN", "TWO_FACTOR_ENCRYPTION_KEY", "REQUIRE_EMAIL_VERIFICATION", "MAIL_*", "REMINDERS_ENABLED"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

@@ -8,17 +8,35 @@ import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/bootstrap';
 import { JsonLogger } from '../src/common/json-logger';
 import { loadAppConfig } from '../src/config/app-config';
+import { MemoryMailer } from '../src/mail/drivers';
+import { MAILER } from '../src/mail/mailer';
 import { testDatabaseUrl } from './env';
 
 export async function createTestApp(): Promise<INestApplication> {
   process.env.DATABASE_URL = testDatabaseUrl();
   process.env.JWT_SECRET = 'e2e-test-secret-that-is-long-enough-000000';
   process.env.STORAGE_PATH = join(tmpdir(), 'arvo-e2e-storage');
+  process.env.MAIL_DRIVER = 'memory';
+  process.env.PUBLIC_WEB_URL ??= 'http://localhost:3300';
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
   const app = moduleRef.createNestApplication({ logger: new JsonLogger(false) });
   configureApp(app, loadAppConfig());
   await app.init();
   return app;
+}
+
+/** The in-memory mailer used by e2e apps. */
+export function mailbox(app: INestApplication): MemoryMailer {
+  const mailer = app.get<MemoryMailer>(MAILER);
+  if (!(mailer instanceof MemoryMailer)) throw new Error('e2e app is not using the memory mailer');
+  return mailer;
+}
+
+/** Pulls the token query parameter out of the first matching link in an email. */
+export function linkToken(text: string, path: string): string {
+  const match = new RegExp(`${path}\\?token=([^\\s"&<]+)`).exec(text);
+  if (!match) throw new Error(`No ${path} link in email`);
+  return decodeURIComponent(match[1]!);
 }
 
 let counter = 0;
