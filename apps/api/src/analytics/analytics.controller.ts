@@ -80,6 +80,15 @@ export class AnalyticsController {
     return series;
   }
 
+  @Get('highlights')
+  @ApiOperation({ summary: 'Deterministic findings about this month: pace, spikes, merchants, subscriptions, runway and more' })
+  async highlights(@UserId() userId: string, @Query() q: CurrencyQueryDto) {
+    return this.core.highlights.highlights(userId, {
+      currency: q.currency ?? (await this.baseCurrency(userId)),
+      asOf: new Date().toISOString().slice(0, 10),
+    });
+  }
+
   @Get('snapshot')
   @ApiOperation({ summary: 'Structured monthly financial snapshot' })
   async snapshot(@UserId() userId: string, @Query() q: MonthQueryDto) {

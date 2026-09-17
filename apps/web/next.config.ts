@@ -6,6 +6,8 @@ const config: NextConfig = {
   outputFileTracingRoot: resolve(__dirname, '../..'),
   poweredByHeader: false,
   transpilePackages: ['@arvo/ui'],
+  // Tree-shake icon barrels so only used icons ship.
+  experimental: { optimizePackageImports: ['@phosphor-icons/react', '@ant-design/icons'] },
   compiler: { styledComponents: true },
 };
 

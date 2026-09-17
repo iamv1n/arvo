@@ -401,6 +401,18 @@ export const analyzeCashflow = defineTool({
   },
 });
 
+export const getHighlights = defineTool({
+  name: 'finance_get_highlights',
+  title: 'Get highlights',
+  description:
+    'Notable, pre-computed findings about the current month: spending pace and projection, category spikes versus the 3-month average, top merchant, biggest expense, small purchases, no-spend days, weekend spending, subscriptions, fees paid and cash runway. Good starting point for "how am I doing?" or "where can I cut back?".',
+  inputSchema: z.object({}),
+  async run(ctx) {
+    const result = await ctx.core.highlights.highlights(ctx.userId, { currency: ctx.currency, asOf: ctx.today });
+    return { ...result, provenance: { as_of: result.asOf, highlights: result.highlights.length } };
+  },
+});
+
 export const FINANCE_TOOLS: FinanceTool[] = [
   getAccounts,
   getAccountBalance,
@@ -415,6 +427,7 @@ export const FINANCE_TOOLS: FinanceTool[] = [
   getFinancialSnapshot,
   analyzeSpending,
   analyzeCashflow,
+  getHighlights,
 ] as unknown as FinanceTool[];
 
 export class ToolInputError extends Error {

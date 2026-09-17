@@ -19,3 +19,4 @@ export * from './rules/rule.service';
 export * from './rules/types';
 export * from './analytics/insights.service';
 export * from './analytics/recurring';
+export * from './analytics/highlights.service';

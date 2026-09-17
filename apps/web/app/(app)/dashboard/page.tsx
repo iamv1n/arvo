@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import styled, { useTheme } from 'styled-components';
 import { Amount } from '../../../components/amount';
+import { Highlights } from '../../../components/highlights';
 import { CategoryDonut, categoryColors, IncomeExpenseChart } from '../../../components/charts';
 import { CountUp } from '../../../components/count-up';
 import { PageHeader } from '../../../components/page-header';
@@ -16,12 +17,36 @@ import { useAuth } from '../../../lib/auth';
 import { formatDate } from '../../../lib/format';
 import { PERIOD_OPTIONS, periodRange, type PeriodKey } from '../../../lib/periods';
 import { usePreferences } from '../../../lib/preferences';
-import { useAccounts, useCategories, useMonthly, useNetWorth, useRecurring, useSummary, useTransactions } from '../../../lib/queries';
+import { useAccounts, useCategories, useHighlights, useMonthly, useNetWorth, useRecurring, useSummary, useTransactions } from '../../../lib/queries';
 import { useMoney } from '../../../lib/use-money';
 
 /** Fixed body heights keep rows aligned regardless of how much data a card holds. */
 const CHART_HEIGHT = 300;
 const LIST_HEIGHT = 340;
+
+const SectionTitle = styled.h2`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: ${({ theme }) => theme.space[2]}px;
+  margin: ${({ theme }) => theme.space[4]}px 0 ${({ theme }) => theme.space[3]}px;
+  padding-bottom: ${({ theme }) => theme.space[2]}px;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.textPrimary};
+  font-family: ${({ theme }) => theme.typography.fontFamilySerif};
+  font-size: 24px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  letter-spacing: -0.01em;
+
+  small {
+    font-family: ${({ theme }) => theme.typography.fontFamilyMono};
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: ${({ theme }) => theme.colors.textMuted};
+  }
+`;
 
 const CategoryRow = styled.div`
   display: grid;
@@ -60,6 +85,7 @@ export default function DashboardPage() {
   const categories = useCategories();
   const recent = useTransactions({ limit: 12 });
   const recurring = useRecurring();
+  const highlights = useHighlights();
 
   const categoryName = useMemo(() => new Map((categories.data ?? []).map((c) => [c.id, c.name])), [categories.data]);
   const accountName = useMemo(() => new Map((accounts.data ?? []).map((a) => [a.id, a.name])), [accounts.data]);
@@ -145,6 +171,14 @@ export default function DashboardPage() {
             />
           </Col>
         )}
+
+        <Col span={24}>
+          <SectionTitle>
+            <span>This month, in numbers</span>
+            <small>Computed from your transactions · updated live</small>
+          </SectionTitle>
+          <Highlights items={highlights.data?.highlights} loading={highlights.isPending} currency={currency} />
+        </Col>
 
         <Col xs={24} xl={15}>
           <Panel height={CHART_HEIGHT} title="Income vs expenses" extra={<Typography.Text type="secondary">Last 6 months</Typography.Text>}>

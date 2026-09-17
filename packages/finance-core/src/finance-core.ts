@@ -1,3 +1,4 @@
+import { HighlightsService } from './analytics/highlights.service';
 import { InsightsService } from './analytics/insights.service';
 import { ImportService, type ImportDependencies } from './imports/import.service';
 import type { FinanceStore } from './ports';
@@ -17,6 +18,7 @@ export class FinanceCore {
   readonly accounts: AccountService;
   readonly analytics: AnalyticsService;
   readonly insights: InsightsService;
+  readonly highlights: HighlightsService;
   readonly categories: CategoryService;
   readonly merchants: MerchantService;
   readonly transactions: TransactionService;
@@ -28,6 +30,7 @@ export class FinanceCore {
     this.accounts = new AccountService(store);
     this.analytics = new AnalyticsService(store);
     this.insights = new InsightsService(store);
+    this.highlights = new HighlightsService(store);
     this.categories = new CategoryService(store);
     this.merchants = new MerchantService(store);
     this.transactions = new TransactionService(store);

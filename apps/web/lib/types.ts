@@ -240,3 +240,29 @@ export interface RecurringOverview {
   annualTotal: string;
   priceIncreases: number;
 }
+
+export type HighlightTone = 'positive' | 'negative' | 'neutral' | 'warning';
+interface HighlightBase {
+  id: string;
+  tone: HighlightTone;
+  evidence?: Record<string, string>;
+}
+export type Highlight =
+  | (HighlightBase & { kind: 'spending_pace'; spentSoFar: string; projected: string; lastMonth: string; difference: string; dayOfMonth: number; daysInMonth: number })
+  | (HighlightBase & { kind: 'category_spike'; category: string; categoryId: string | null; month: string; amount: string; average: string; percentAbove: number })
+  | (HighlightBase & { kind: 'top_merchant'; merchant: string; merchantId: string; amount: string; count: number; perVisit: string })
+  | (HighlightBase & { kind: 'biggest_expense'; description: string; amount: string; date: string; transactionId: string })
+  | (HighlightBase & { kind: 'small_purchases'; count: number; total: string; threshold: string; days: number })
+  | (HighlightBase & { kind: 'no_spend_days'; days: number; daysSoFar: number })
+  | (HighlightBase & { kind: 'weekend_spending'; weekendPerDay: string; weekdayPerDay: string; ratio: number; days: number })
+  | (HighlightBase & { kind: 'subscriptions'; monthly: string; yearly: string; count: number; priceIncreases: string[] })
+  | (HighlightBase & { kind: 'fees_paid'; total: string; count: number; year: string })
+  | (HighlightBase & { kind: 'cash_runway'; months: number; liquid: string; averageMonthlyExpenses: string })
+  | (HighlightBase & { kind: 'savings_rate'; rate: number; previousRate: number | null; month: string });
+
+export interface HighlightsResult {
+  currency: string;
+  asOf: string;
+  month: string;
+  highlights: Highlight[];
+}

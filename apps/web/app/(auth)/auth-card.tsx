@@ -3,6 +3,7 @@
 import { Card, Typography } from 'antd';
 import type { ReactNode } from 'react';
 import styled, { useTheme } from 'styled-components';
+import { PixelLogo } from '../../components/logo';
 import { ThemeToggle } from '../../components/theme-toggle';
 
 const Page = styled.main`
@@ -37,17 +38,6 @@ const Wordmark = styled.div`
   font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
   letter-spacing: -0.02em;
 
-  &::before {
-    content: 'A';
-    display: inline-grid;
-    place-items: center;
-    width: 38px;
-    height: 38px;
-    border-radius: ${({ theme }) => theme.radii.md}px;
-    background: ${({ theme }) => theme.colors.textPrimary};
-    color: ${({ theme }) => theme.colors.bgCanvas};
-    font-size: 21px;
-  }
 `;
 
 export function AuthCard({ title, children, footer }: { title: string; children: ReactNode; footer: ReactNode }) {
@@ -58,7 +48,10 @@ export function AuthCard({ title, children, footer }: { title: string; children:
         <ThemeToggle />
       </Corner>
       <Card style={{ width: '100%', maxWidth: 420, boxShadow: theme.shadows.lg }} styles={{ body: { padding: 36 } }}>
-        <Wordmark>Arvo</Wordmark>
+        <Wordmark style={{ ['--arvo-logo-accent' as string]: theme.colors.brand }}>
+          <PixelLogo size={34} />
+          Arvo
+        </Wordmark>
         <Typography.Paragraph type="secondary">{title}</Typography.Paragraph>
         {children}
         <Typography.Paragraph type="secondary" style={{ marginTop: 16, marginBottom: 0, textAlign: 'center' }}>

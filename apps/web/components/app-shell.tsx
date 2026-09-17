@@ -1,17 +1,7 @@
 'use client';
 
-import {
-  BarChartOutlined,
-  BankOutlined,
-  SyncOutlined,
-  DashboardOutlined,
-  LogoutOutlined,
-  SettingOutlined,
-  SwapOutlined,
-  UnorderedListOutlined,
-  UploadOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
+import { LogoutOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons';
+import { ArrowsClockwise, ArrowsLeftRight, Bank, ChartLineUp, FileArrowUp, GearSix, Receipt, SquaresFour } from '@phosphor-icons/react';
 import { Avatar, Button, Drawer, Dropdown, Grid, Layout, Menu, Spin } from 'antd';
 import { MenuFoldOutlined, MenuOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import Link from 'next/link';
@@ -20,17 +10,20 @@ import { useEffect, useState, type ReactNode } from 'react';
 import styled, { useTheme } from 'styled-components';
 import { useAuth } from '../lib/auth';
 import { usePreferences } from '../lib/preferences';
+import { PixelLogo } from './logo';
 import { ThemeToggle } from './theme-toggle';
 
+const navIcon = (Icon: typeof SquaresFour) => <Icon size={19} weight="duotone" aria-hidden />;
+
 const NAV = [
-  { key: '/dashboard', icon: <DashboardOutlined />, label: 'Dashboard' },
-  { key: '/accounts', icon: <BankOutlined />, label: 'Accounts' },
-  { key: '/transactions', icon: <UnorderedListOutlined />, label: 'Transactions' },
-  { key: '/transfers', icon: <SwapOutlined />, label: 'Transfers' },
-  { key: '/analytics', icon: <BarChartOutlined />, label: 'Analytics' },
-  { key: '/recurring', icon: <SyncOutlined />, label: 'Recurring' },
-  { key: '/imports', icon: <UploadOutlined />, label: 'Imports' },
-  { key: '/settings', icon: <SettingOutlined />, label: 'Settings' },
+  { key: '/dashboard', icon: navIcon(SquaresFour), label: 'Dashboard' },
+  { key: '/accounts', icon: navIcon(Bank), label: 'Accounts' },
+  { key: '/transactions', icon: navIcon(Receipt), label: 'Transactions' },
+  { key: '/transfers', icon: navIcon(ArrowsLeftRight), label: 'Transfers' },
+  { key: '/analytics', icon: navIcon(ChartLineUp), label: 'Analytics' },
+  { key: '/recurring', icon: navIcon(ArrowsClockwise), label: 'Recurring' },
+  { key: '/imports', icon: navIcon(FileArrowUp), label: 'Imports' },
+  { key: '/settings', icon: navIcon(GearSix), label: 'Settings' },
 ];
 
 const Brand = styled(Link)`
@@ -50,6 +43,7 @@ const Brand = styled(Link)`
   }
 `;
 
+/** Pixel mark in a rounded ink tile (used on auth and consent screens). */
 export const LogoMark = styled.span`
   display: inline-grid;
   place-items: center;
@@ -146,8 +140,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           theme="light"
           style={{ position: 'sticky', top: 0, height: '100dvh', borderInlineEnd: `1px solid ${theme.colors.borderSubtle}` }}
         >
-          <Brand href="/dashboard" style={collapsed ? { justifyContent: 'center', padding: 0 } : undefined}>
-            <LogoMark aria-hidden />
+          <Brand href="/dashboard" style={collapsed ? { justifyContent: 'center', padding: 0 } : undefined} aria-label="Arvo home">
+            <span style={{ color: theme.colors.textPrimary, ['--arvo-logo-accent' as string]: theme.colors.brand }}>
+              <PixelLogo size={30} />
+            </span>
             {!collapsed && 'Arvo'}
           </Brand>
           {menu}

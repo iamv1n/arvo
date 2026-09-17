@@ -5,7 +5,7 @@ import { Alert, Avatar, Button, Card, Flex, Result, Spin, Typography } from 'ant
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { LogoMark } from '../../../components/app-shell';
+import { PixelLogo } from '../../../components/logo';
 import { api, errorMessage } from '../../../lib/api';
 import { useAuth } from '../../../lib/auth';
 
@@ -80,7 +80,9 @@ function Consent() {
   return (
     <Card style={{ width: '100%', maxWidth: 460 }} styles={{ body: { padding: 32 } }}>
       <Flex align="center" justify="center" gap={16} style={{ marginBottom: 24 }}>
-        <LogoMark aria-hidden style={{ width: 48, height: 48, fontSize: 24 }} />
+        <span style={{ ['--arvo-logo-accent' as string]: 'var(--ant-color-primary)' }}>
+          <PixelLogo size={48} />
+        </span>
         <Typography.Text type="secondary" style={{ fontSize: 20 }}>
           ⇄
         </Typography.Text>
