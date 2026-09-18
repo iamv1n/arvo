@@ -165,6 +165,9 @@ export function BacktestTab() {
                   <span>Instrument</span>
                   <Select
                     size="small"
+                    showSearch
+                    optionFilterProp="label"
+                    popupMatchSelectWidth={false}
                     value={`${current?.symbol}|${current?.timeframe}`}
                     onChange={(value) => {
                       const [symbol, timeframe] = value.split('|');
@@ -264,6 +267,7 @@ export function BacktestTab() {
                   <span>Sizing</span>
                   <Select
                     size="small"
+                    popupMatchSelectWidth={false}
                     value={current?.sizing.method}
                     onChange={(value) => patch({ sizing: { ...(current as StrategySpec).sizing, method: value } })}
                     options={[
@@ -609,7 +613,7 @@ function ConditionEditor({ value, onChange, onRemove }: { value: Condition; onCh
         <OperandEditor value={value.left} onChange={(left) => onChange({ ...value, left })} />
       </Col>
       <Col span={6}>
-        <Select size="small" style={{ width: '100%' }} value={value.op} onChange={(op) => onChange({ ...value, op })} options={OPERATORS} />
+        <Select size="small" style={{ width: '100%' }} popupMatchSelectWidth={false} value={value.op} onChange={(op) => onChange({ ...value, op })} options={OPERATORS} />
       </Col>
       <Col span={onRemove ? 7 : 9}>
         <OperandEditor value={value.right} onChange={(right) => onChange({ ...value, right })} />
@@ -631,6 +635,7 @@ function OperandEditor({ value, onChange }: { value: Operand; onChange: (value: 
       <Select
         size="small"
         style={{ width: indicator?.usesPeriod || value.type === 'CONSTANT' ? '62%' : '100%' }}
+        popupMatchSelectWidth={false}
         value={kind}
         onChange={(next) => {
           if (next.startsWith('PRICE:')) onChange({ type: 'PRICE', field: next.slice(6) as 'CLOSE' });

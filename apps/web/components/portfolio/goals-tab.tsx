@@ -179,8 +179,11 @@ export function GoalsTab({ asOf }: { asOf?: string }) {
               render: (_, row) => (
                 <Select
                   allowClear
+                  showSearch
+                  optionFilterProp="label"
                   size="small"
                   style={{ width: '100%' }}
+                  popupMatchSelectWidth={false}
                   placeholder="No goal"
                   value={row.goalId ?? undefined}
                   options={goalOptions}

@@ -57,7 +57,7 @@ const HeaderCell = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${({ theme }) => theme.space[1]}px;
-  min-width: 150px;
+  min-width: 170px;
 
   span {
     font-size: ${({ theme }) => theme.typography.fontSize.xs}px;
@@ -192,13 +192,14 @@ export function MappingStep({ batch, onProcessed }: { batch: ImportBatch; onProc
                 value={table.index}
                 onChange={switchTable}
                 style={{ width: '100%' }}
+                popupMatchSelectWidth={false}
                 options={detection.tables.map((t) => ({ value: t.index, label: `${t.name} · ${t.rowCount} rows` }))}
               />
             </label>
           )}
           <label>
             <FieldLabel>Date format</FieldLabel>
-            <Select value={dateFormat} onChange={setDateFormat} style={{ width: '100%' }} options={dateOptions} />
+            <Select value={dateFormat} onChange={setDateFormat} style={{ width: '100%' }} popupMatchSelectWidth={false} options={dateOptions} />
           </label>
           <label>
             <FieldLabel>Amount signs</FieldLabel>
@@ -227,6 +228,8 @@ export function MappingStep({ batch, onProcessed }: { batch: ImportBatch; onProc
                   value={roles[index] ?? 'ignore'}
                   onChange={(role: Role) => setRole(index, role)}
                   options={ROLE_OPTIONS}
+                  /* "Debit / withdrawal" is wider than the column; the list keeps its own width. */
+                  popupMatchSelectWidth={false}
                   aria-label={`Role of column ${header}`}
                 />
               </HeaderCell>

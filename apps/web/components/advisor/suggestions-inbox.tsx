@@ -246,7 +246,14 @@ function EditSuggestionModal({
               </Col>
             </Row>
             <Form.Item name="accountId" label="Linked account">
-              <Select allowClear placeholder="None, track manually" options={(accounts.data ?? []).map((a) => ({ value: a.id, label: a.name }))} />
+              <Select
+                showSearch
+                optionFilterProp="label"
+                allowClear
+                placeholder="None, track manually"
+                popupMatchSelectWidth={false}
+                options={(accounts.data ?? []).map((a) => ({ value: a.id, label: a.name }))}
+              />
             </Form.Item>
             <Form.Item name="savedAmount" label="Saved so far" rules={[moneyRule]}>
               <Input inputMode="decimal" placeholder="0" />
@@ -265,10 +272,18 @@ function EditSuggestionModal({
                   {fields.map((field) => (
                     <Space key={field.key} align="baseline" style={{ display: 'flex', marginTop: 8 }}>
                       <Form.Item name={[field.name, 'field']} noStyle rules={[{ required: true }]}>
-                        <Select style={{ width: 120 }} options={['description', 'merchant', 'amount', 'direction'].map((value) => ({ value, label: value }))} />
+                        <Select
+                          style={{ minWidth: 130 }}
+                          popupMatchSelectWidth={false}
+                          options={['description', 'merchant', 'amount', 'direction'].map((value) => ({ value, label: value }))}
+                        />
                       </Form.Item>
                       <Form.Item name={[field.name, 'operator']} noStyle rules={[{ required: true }]}>
-                        <Select style={{ width: 120 }} options={['contains', 'equals', 'starts_with', 'gte', 'lte'].map((value) => ({ value, label: value.replace('_', ' ') }))} />
+                        <Select
+                          style={{ minWidth: 130 }}
+                          popupMatchSelectWidth={false}
+                          options={['contains', 'equals', 'starts_with', 'gte', 'lte'].map((value) => ({ value, label: value.replace('_', ' ') }))}
+                        />
                       </Form.Item>
                       <Form.Item name={[field.name, 'value']} noStyle rules={[{ required: true }]}>
                         <Input style={{ width: 150 }} />

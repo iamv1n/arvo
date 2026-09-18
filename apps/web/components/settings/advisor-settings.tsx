@@ -40,7 +40,8 @@ export function AdvisorSettings() {
       >
         <Flex gap={8} wrap justify="end">
           <Select<string>
-            style={{ width: 200 }}
+            style={{ minWidth: 200, maxWidth: '100%' }}
+            popupMatchSelectWidth={false}
             disabled={!data?.enabled || updateAdvisor.isPending}
             value={data?.override.provider ?? 'default'}
             onChange={(provider) => void save({ provider: provider === 'default' ? null : provider })}
@@ -50,7 +51,8 @@ export function AdvisorSettings() {
             ]}
           />
           <Select<string>
-            style={{ width: 220 }}
+            style={{ minWidth: 220, maxWidth: '100%' }}
+            popupMatchSelectWidth={false}
             disabled={!data?.enabled || updateAdvisor.isPending}
             value={data?.model ?? undefined}
             placeholder="Model"

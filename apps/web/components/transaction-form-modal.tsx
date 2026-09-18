@@ -118,6 +118,9 @@ export function TransactionFormModal({
         <FormGrid $min={160}>
           <Form.Item name="accountId" label="Account" rules={[{ required: true }]}>
             <Select
+              showSearch
+              optionFilterProp="label"
+              popupMatchSelectWidth={false}
               loading={accounts.isPending}
               options={accounts.data?.filter((a) => a.isActive || a.id === transaction?.accountId).map((a) => ({ value: a.id, label: a.name }))}
             />

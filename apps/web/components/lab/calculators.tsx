@@ -118,6 +118,7 @@ export function FuturesCalculator() {
                 <span>Segment</span>
                 <Select
                   size="small"
+                  popupMatchSelectWidth={false}
                   value={form.segment}
                   onChange={(value) => setForm({ ...form, segment: value, exchange: value === 'COMMODITY_FUTURES' ? 'MCX' : value === 'CURRENCY_FUTURES' ? 'CDS' : 'NFO' })}
                   options={[

@@ -75,7 +75,7 @@ export function CategorySettings() {
           <Input placeholder="New category" />
         </Form.Item>
         <Form.Item name="type">
-          <Select style={{ width: 120 }} options={Object.values(CategoryType).map((t) => ({ value: t, label: titleCase(t) }))} />
+          <Select style={{ minWidth: 130 }} options={Object.values(CategoryType).map((t) => ({ value: t, label: titleCase(t) }))} />
         </Form.Item>
         <Form.Item name="parentId">
           <CategorySelect placeholder="Parent (optional)" />

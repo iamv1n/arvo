@@ -37,6 +37,7 @@ export function MerchantSelect({
       options={options}
       onChange={(id) => onChange?.(id)}
       style={{ minWidth: 180, ...style }}
+      popupMatchSelectWidth={false}
       notFoundContent={results.isFetching ? 'Searching…' : 'No merchants'}
     />
   );

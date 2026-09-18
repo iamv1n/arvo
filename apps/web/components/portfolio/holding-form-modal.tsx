@@ -219,6 +219,9 @@ export function HoldingFormModal({ open, holding, onClose }: { open: boolean; ho
           <Form.Item name="goalId" label="Earmarked for">
             <Select
               allowClear
+              showSearch
+              optionFilterProp="label"
+              popupMatchSelectWidth={false}
               placeholder="No goal"
               loading={goals.isPending}
               options={(goals.data ?? []).map((goal) => ({ value: goal.id, label: goal.name }))}

@@ -140,6 +140,7 @@ export function PayoffBuilder() {
             <Select
               size="small"
               style={{ minWidth: 170 }}
+              popupMatchSelectWidth={false}
               placeholder="Pick a structure"
               loading={templates.isPending}
               onChange={applyTemplate}

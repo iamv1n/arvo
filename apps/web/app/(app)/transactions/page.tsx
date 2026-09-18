@@ -130,6 +130,9 @@ function TransactionsView() {
           <Select
             placeholder="Account"
             allowClear
+            showSearch
+            optionFilterProp="label"
+            popupMatchSelectWidth={false}
             style={{ flex: '1 1 170px', minWidth: 150, maxWidth: 240 }}
             value={filters.accountId}
             onChange={(accountId) => setFilters({ accountId })}

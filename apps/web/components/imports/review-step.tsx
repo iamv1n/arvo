@@ -167,6 +167,7 @@ export function ReviewStep({ summary, onRemap }: { summary: ImportSummary; onRem
                   value={r.type ?? undefined}
                   placeholder="Type"
                   style={{ width: '100%' }}
+                  popupMatchSelectWidth={false}
                   disabled={!r.amount}
                   onChange={(type) => void run(update.mutateAsync({ id: r.id, type }))}
                   options={Object.values(TransactionType).map((t) => ({ value: t, label: titleCase(t) }))}

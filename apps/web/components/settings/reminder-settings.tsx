@@ -44,7 +44,8 @@ export function ReminderSettings() {
             {data?.frequency === 'monthly' && (
               <Select<number | 'any'>
                 value={data.day ?? 'any'}
-                style={{ width: 150 }}
+                style={{ minWidth: 160, maxWidth: '100%' }}
+                popupMatchSelectWidth={false}
                 disabled={update.isPending}
                 onChange={(day) => void save({ day: day === 'any' ? null : day })}
                 options={[

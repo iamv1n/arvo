@@ -51,7 +51,13 @@ export function AppearanceSettings() {
         <Switch checked={preferences.showDecimals} onChange={(showDecimals) => update({ showDecimals })} />
       </SettingRow>
       <SettingRow label="Default dashboard period">
-        <Select value={preferences.defaultPeriod} onChange={(defaultPeriod) => update({ defaultPeriod })} style={{ width: 160 }} options={PERIOD_OPTIONS} />
+        <Select
+          value={preferences.defaultPeriod}
+          onChange={(defaultPeriod) => update({ defaultPeriod })}
+          style={{ minWidth: 176, maxWidth: '100%' }}
+          popupMatchSelectWidth={false}
+          options={PERIOD_OPTIONS}
+        />
       </SettingRow>
     </Card>
   );
@@ -74,7 +80,12 @@ export function TableSettings() {
         />
       </SettingRow>
       <SettingRow label="Rows per page">
-        <Select value={preferences.pageSize} onChange={(pageSize) => update({ pageSize })} style={{ width: 110 }} options={PAGE_SIZE_OPTIONS.map((n) => ({ value: n, label: n }))} />
+        <Select
+          value={preferences.pageSize}
+          onChange={(pageSize) => update({ pageSize })}
+          style={{ minWidth: 110 }}
+          options={PAGE_SIZE_OPTIONS.map((n) => ({ value: n, label: n }))}
+        />
       </SettingRow>
       <SettingRow label="Striped rows">
         <Switch checked={preferences.stripedRows} onChange={(stripedRows) => update({ stripedRows })} />

@@ -94,6 +94,9 @@ export default function TransfersPage() {
   ] as DataColumn<Transfer>[]);
 
   const accountOptions = accounts.data?.filter((a) => a.isActive).map((a) => ({ value: a.id, label: a.name }));
+  /* Account names run long ("HDFC Bank · Salary ••4321"), so the list is searchable and the
+     dropdown sizes to its options rather than to the narrow form column. */
+  const accountSelect = { showSearch: true, optionFilterProp: 'label' as const, popupMatchSelectWidth: false };
 
   return (
     <>
@@ -125,7 +128,7 @@ export default function TransfersPage() {
           <Row gutter={12}>
             <Col span={12}>
               <Form.Item name="fromAccountId" label="From" rules={[{ required: true }]}>
-                <Select options={accountOptions} />
+                <Select {...accountSelect} options={accountOptions} />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -141,7 +144,7 @@ export default function TransfersPage() {
                   }),
                 ]}
               >
-                <Select options={accountOptions} />
+                <Select {...accountSelect} options={accountOptions} />
               </Form.Item>
             </Col>
           </Row>

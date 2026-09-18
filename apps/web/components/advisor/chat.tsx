@@ -348,6 +348,9 @@ export function AdvisorChat({ status, height }: { status: AdvisorStatus | undefi
             <div style={{ display: 'flex', gap: 8, padding: 12, borderBottom: '1px solid var(--ant-color-border-secondary)' }}>
               <Select
                 style={{ flex: 1, minWidth: 0 }}
+                showSearch
+                optionFilterProp="label"
+                popupMatchSelectWidth={false}
                 value={activeId ?? undefined}
                 placeholder="New conversation"
                 onChange={(id) => !live && setActiveId(id)}

@@ -174,7 +174,8 @@ function ExpiryRules({ settings, onSave }: { settings: NotificationSettings; onS
             <span style={{ minWidth: 110, fontFamily: 'var(--font-mono, monospace)', fontSize: 12 }}>{rule.index}</span>
             <Select
               size="small"
-              style={{ width: 130 }}
+              style={{ minWidth: 130 }}
+              popupMatchSelectWidth={false}
               value={rule.weekday}
               aria-label={`${rule.index} expiry weekday`}
               onChange={(weekday: number) => onSave(rules.map((r, i) => (i === index ? { ...r, weekday } : r)))}

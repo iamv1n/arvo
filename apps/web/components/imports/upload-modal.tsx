@@ -54,6 +54,9 @@ export function UploadImportModal({ open, onClose, accountId }: { open: boolean;
       <Form form={form} layout="vertical" requiredMark={false} initialValues={{ accountId }}>
         <Form.Item name="accountId" label="Account" rules={[{ required: true, message: 'Choose the account this statement belongs to' }]}>
           <Select
+            showSearch
+            optionFilterProp="label"
+            popupMatchSelectWidth={false}
             placeholder="Which account is this statement for?"
             loading={accounts.isPending}
             options={accounts.data?.filter((a) => a.isActive).map((a) => ({ value: a.id, label: `${a.name} · ${a.currency}` }))}

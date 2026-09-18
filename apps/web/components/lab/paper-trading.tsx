@@ -269,6 +269,9 @@ function OrderTicket({ accountId, symbols }: { accountId: string; symbols: { sym
           <span>Instrument</span>
           <Select
             size="small"
+            showSearch
+            optionFilterProp="label"
+            popupMatchSelectWidth={false}
             value={`${form.symbol}|${form.timeframe}`}
             onChange={(value) => {
               const [symbol, timeframe] = value.split('|');

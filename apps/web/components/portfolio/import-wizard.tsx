@@ -95,6 +95,9 @@ export function PortfolioImportWizard() {
                 <Eyebrow>Which fund it describes</Eyebrow>
                 <Select
                   style={{ width: '100%', marginTop: 4 }}
+                  showSearch
+                  optionFilterProp="label"
+                  popupMatchSelectWidth={false}
                   placeholder="Pick the fund"
                   value={holdingId}
                   onChange={setHoldingId}
