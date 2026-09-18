@@ -63,7 +63,7 @@ export function refreshSession(): Promise<boolean> {
 type Query = Record<string, string | number | boolean | string[] | undefined | null>;
 
 interface RequestOptions {
-  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
   query?: Query;
   /** Auth endpoints manage cookies and must not trigger a refresh retry. */

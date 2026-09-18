@@ -37,6 +37,17 @@ import type {
   PortfolioReturns,
   PortfolioSummary,
   PortfolioImportBatch,
+  BehaviourReport,
+  JournalEntry,
+  PositionDetail,
+  PositionsResult,
+  RealityCheck,
+  Trade,
+  TradeImportBatch,
+  TradeImportSummary,
+  TradingMetrics,
+  TradingSettings,
+  TradingTaxSummary,
 } from './types';
 
 export const keys = {
@@ -54,6 +65,9 @@ export const keys = {
   portfolio: ['portfolio'] as const,
   holdings: ['holdings'] as const,
   portfolioImports: ['portfolio-imports'] as const,
+  trading: ['trading'] as const,
+  trades: ['trades'] as const,
+  tradeImports: ['trade-imports'] as const,
 };
 
 export interface TransactionFilters {
@@ -315,6 +329,107 @@ export function usePortfolioMutation<TInput, TResult = unknown>(fn: (input: TInp
         queryClient.invalidateQueries({ queryKey: keys.holdings }),
         queryClient.invalidateQueries({ queryKey: keys.portfolioImports }),
         queryClient.invalidateQueries({ queryKey: keys.goals }),
+      ]);
+    },
+  });
+}
+
+// ---- trading journal ----
+
+/**
+ * Every trading query is keyed by the date it was computed for, so a report stays put while
+ * it is being read. A filter is part of the key too: the same page with a different segment
+ * is a different report, not a refetch of the same one.
+ */
+export interface TradeFilters {
+  from?: string;
+  to?: string;
+  segment?: string;
+  underlying?: string;
+  broker?: string;
+}
+
+const filterKey = (filters: TradeFilters) => [filters.from ?? '', filters.to ?? '', filters.segment ?? '', filters.underlying ?? '', filters.broker ?? ''];
+
+export const useTrades = (filters: TradeFilters = {}) =>
+  useQuery({
+    queryKey: [...keys.trades, ...filterKey(filters)],
+    queryFn: () => api<{ items: Trade[]; brokers: string[] }>('/trades', { query: { ...filters } }),
+    placeholderData: keepPreviousData,
+  });
+
+export const usePositions = (asOf: string, filters: TradeFilters = {}) =>
+  useQuery({
+    queryKey: [...keys.trading, 'positions', asOf, ...filterKey(filters)],
+    queryFn: () => api<PositionsResult>('/positions', { query: { asOf, ...filters } }),
+    placeholderData: keepPreviousData,
+  });
+
+export const usePosition = (id: string, asOf: string) =>
+  useQuery({
+    queryKey: [...keys.trading, 'position', id, asOf],
+    queryFn: () => api<PositionDetail>(`/positions/${id}`, { query: { asOf } }),
+    enabled: Boolean(id),
+  });
+
+export const useTradingMetrics = (asOf: string, filters: TradeFilters = {}) =>
+  useQuery({
+    queryKey: [...keys.trading, 'metrics', asOf, ...filterKey(filters)],
+    queryFn: () => api<TradingMetrics>('/trading/metrics', { query: { asOf, ...filters } }),
+    placeholderData: keepPreviousData,
+  });
+
+export const useTradingBehaviour = (asOf: string, filters: TradeFilters = {}) =>
+  useQuery({
+    queryKey: [...keys.trading, 'behaviour', asOf, ...filterKey(filters)],
+    queryFn: () => api<BehaviourReport>('/trading/behaviour', { query: { asOf, ...filters } }),
+    placeholderData: keepPreviousData,
+  });
+
+export const useRealityCheck = (asOf: string) =>
+  useQuery({
+    queryKey: [...keys.trading, 'reality-check', asOf],
+    queryFn: () => api<RealityCheck>('/trading/reality-check', { query: { asOf } }),
+    placeholderData: keepPreviousData,
+  });
+
+export const useTradingTax = (asOf: string, fy?: string) =>
+  useQuery({
+    queryKey: [...keys.trading, 'tax', asOf, fy ?? 'latest'],
+    queryFn: () => api<TradingTaxSummary>('/trading/tax', { query: { asOf, fy } }),
+    placeholderData: keepPreviousData,
+  });
+
+export const useTradingSettings = () =>
+  useQuery({ queryKey: [...keys.trading, 'settings'], queryFn: () => api<TradingSettings>('/trading/settings') });
+
+export const useTradeImports = () =>
+  useQuery({ queryKey: keys.tradeImports, queryFn: () => api<{ items: TradeImportBatch[] }>('/trades/imports').then((r) => r.items) });
+
+export const useTradeImport = (id: string | null) =>
+  useQuery({
+    queryKey: [...keys.tradeImports, id],
+    queryFn: () => api<TradeImportSummary>(`/trades/imports/${id}`),
+    enabled: Boolean(id),
+  });
+
+export const useJournalEntry = (positionId: string | null) =>
+  useQuery({
+    queryKey: [...keys.trading, 'journal', positionId],
+    queryFn: () => api<{ entry: JournalEntry | null; mistakeChecklist: string[] }>(`/trading/journal/${positionId}`),
+    enabled: Boolean(positionId),
+  });
+
+/** Any write to a fill or a journal entry refreshes every derived trading report at once. */
+export function useTradingMutation<TInput, TResult = unknown>(fn: (input: TInput) => Promise<TResult>) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: fn,
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: keys.trading }),
+        queryClient.invalidateQueries({ queryKey: keys.trades }),
+        queryClient.invalidateQueries({ queryKey: keys.tradeImports }),
       ]);
     },
   });

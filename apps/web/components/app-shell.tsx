@@ -1,7 +1,7 @@
 'use client';
 
 import { LogoutOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons';
-import { ArrowsClockwise, ArrowsLeftRight, Bank, ChartLineUp, ChartPieSlice, Compass, FileArrowUp, Gauge, GearSix, Lightbulb, PiggyBank, Receipt, Sparkle, SquaresFour, Target } from '@phosphor-icons/react';
+import { ArrowsClockwise, ArrowsLeftRight, Bank, ChartLineUp, ChartPieSlice, Compass, FileArrowUp, Gauge, GearSix, Lightbulb, PiggyBank, Receipt, Sparkle, SquaresFour, Strategy, Target } from '@phosphor-icons/react';
 import { Avatar, Button, Drawer, Dropdown, Grid, Layout, Menu, Spin } from 'antd';
 import { MenuFoldOutlined, MenuOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import Link from 'next/link';
@@ -25,6 +25,7 @@ const NAV = [
   { key: '/insights', icon: navIcon(Lightbulb), label: 'Insights' },
   { key: '/analytics', icon: navIcon(ChartLineUp), label: 'Analytics' },
   { key: '/portfolio', icon: navIcon(ChartPieSlice), label: 'Portfolio' },
+  { key: '/trading', icon: navIcon(Strategy), label: 'Trading' },
   { key: '/budgets', icon: navIcon(Gauge), label: 'Budgets' },
   { key: '/goals', icon: navIcon(Target), label: 'Goals' },
   { key: '/savings', icon: navIcon(PiggyBank), label: 'Save more' },

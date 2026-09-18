@@ -819,3 +819,326 @@ export interface PortfolioImportSummary {
   applied: number;
   rows: PortfolioImportRow[];
 }
+
+// ---- trading journal ----
+
+export type TradeSegment =
+  | 'EQUITY_DELIVERY'
+  | 'EQUITY_INTRADAY'
+  | 'EQUITY_FUTURES'
+  | 'EQUITY_OPTIONS'
+  | 'INDEX_FUTURES'
+  | 'INDEX_OPTIONS'
+  | 'CURRENCY_FUTURES'
+  | 'CURRENCY_OPTIONS'
+  | 'COMMODITY_FUTURES'
+  | 'COMMODITY_OPTIONS';
+
+export type TradeExchange = 'NSE' | 'BSE' | 'NFO' | 'BFO' | 'CDS' | 'BCD' | 'MCX';
+export type TradeSide = 'BUY' | 'SELL';
+export type TradeStyle = 'INTRADAY' | 'BTST' | 'SWING' | 'POSITIONAL';
+export type TradeKind = 'TRADE' | 'EXPIRY' | 'EXERCISE' | 'ASSIGNMENT';
+export type ChargesSource = 'BROKER' | 'ESTIMATED' | 'MIXED';
+
+export interface ChargeBreakdown {
+  brokerage: string;
+  stt: string;
+  exchangeCharges: string;
+  sebiCharges: string;
+  stampDuty: string;
+  gst: string;
+  dpCharges: string;
+  otherCharges: string;
+  total: string;
+  source: ChargesSource;
+}
+
+export interface Trade {
+  id: string;
+  date: string;
+  time: string | null;
+  broker: string;
+  exchange: TradeExchange;
+  segment: TradeSegment;
+  kind: TradeKind;
+  symbol: string;
+  underlying: string;
+  isin: string | null;
+  expiry: string | null;
+  strike: string | null;
+  right: 'CE' | 'PE' | null;
+  lotSize: number;
+  side: TradeSide;
+  quantity: string;
+  price: string;
+  amount: string;
+  brokerage: string;
+  stt: string;
+  exchangeCharges: string;
+  sebiCharges: string;
+  stampDuty: string;
+  gst: string;
+  dpCharges: string;
+  otherCharges: string;
+  totalCharges: string;
+  chargesSource: ChargesSource;
+  orderId: string | null;
+  tradeRef: string | null;
+  notes: string | null;
+}
+
+export interface PositionLeg {
+  tradeId: string;
+  date: string;
+  time: string | null;
+  side: TradeSide;
+  kind: TradeKind;
+  quantity: string;
+  price: string;
+  amount: string;
+  charges: ChargeBreakdown;
+}
+
+export interface TradePosition {
+  id: string;
+  broker: string;
+  exchange: TradeExchange;
+  segment: TradeSegment;
+  symbol: string;
+  underlying: string;
+  expiry: string | null;
+  strike: string | null;
+  right: 'CE' | 'PE' | null;
+  lotSize: number;
+  label: string;
+  direction: 'LONG' | 'SHORT';
+  status: 'OPEN' | 'CLOSED';
+  openedAt: string;
+  openedTime: string | null;
+  closedAt: string | null;
+  closedTime: string | null;
+  entries: PositionLeg[];
+  exits: PositionLeg[];
+  quantity: string;
+  openQuantity: string;
+  entryValue: string;
+  exitValue: string;
+  averageEntryPrice: string;
+  averageExitPrice: string | null;
+  grossPnl: string;
+  charges: ChargeBreakdown;
+  netPnl: string;
+  chargesPercentOfGross: number | null;
+  style: TradeStyle;
+  sessionsHeld: number;
+  holdingMinutes: number | null;
+  settledAtExpiry: boolean;
+  rolledFrom: string | null;
+  rolledTo: string | null;
+  warnings: string[];
+}
+
+export interface PositionsResult {
+  asOf: string;
+  items: TradePosition[];
+  openCount: number;
+  closedCount: number;
+  warnings: string[];
+  disclaimer: string;
+}
+
+export interface JournalEntry {
+  id: string;
+  positionId: string;
+  notes: string | null;
+  setupTags: string[];
+  emotionTags: string[];
+  mistakes: string[];
+  stopPrice: string | null;
+  targetPrice: string | null;
+  screenshots: { path: string; filename: string; mimeType: string; size: number; uploadedAt: string }[];
+}
+
+export interface PositionDetail {
+  position: TradePosition;
+  journal: JournalEntry | null;
+  mistakeChecklist: string[];
+}
+
+export interface TradingBreakdownRow {
+  key: string;
+  label: string;
+  trades: number;
+  wins: number;
+  winRate: number | null;
+  grossPnl: string;
+  charges: string;
+  netPnl: string;
+  average: string;
+}
+
+export interface TradingMetrics {
+  asOf: string;
+  closedTrades: number;
+  openTrades: number;
+  wins: number;
+  losses: number;
+  scratches: number;
+  winRate: number | null;
+  grossPnl: string;
+  totalCharges: string;
+  netPnl: string;
+  chargesPercentOfGross: number | null;
+  grossProfit: string;
+  grossLoss: string;
+  averageWin: string;
+  averageLoss: string;
+  expectancy: string;
+  profitFactor: number | null;
+  largestWin: string;
+  largestLoss: string;
+  maxDrawdown: string;
+  maxDrawdownPercent: number | null;
+  longestLosingStreak: number;
+  longestWinningStreak: number;
+  equityCurve: { date: string; change: string; equity: string; drawdown: string }[];
+  rMultiples: { positionId: string; label: string; r: number; netPnl: string }[];
+  averageR: number | null;
+  holdingTime: { style: TradeStyle; trades: number; netPnl: string; averageSessions: number }[];
+  byTimeOfDay: TradingBreakdownRow[];
+  byWeekday: TradingBreakdownRow[];
+  bySegment: TradingBreakdownRow[];
+  byInstrument: TradingBreakdownRow[];
+  bySetup: TradingBreakdownRow[];
+  disclaimer: string;
+}
+
+export type BehaviourFlagKind = 'OVER_TRADING' | 'REVENGE_TRADE' | 'SIZE_CREEP' | 'AVERAGING_DOWN' | 'EXPIRY_DAY_CONCENTRATION';
+
+export interface BehaviourFlag {
+  kind: BehaviourFlagKind;
+  title: string;
+  rule: string;
+  explanation: string;
+  subject: string | null;
+  date: string | null;
+  count: number;
+  netPnl: string | null;
+  tradeIds: string[];
+  positionIds: string[];
+}
+
+export interface BehaviourReport {
+  asOf: string;
+  rules: { revengeWindowMinutes: number; overTradingMultiple: string; medianTradesPerDay: number };
+  flags: BehaviourFlag[];
+  summary: { kind: BehaviourFlagKind; title: string; count: number }[];
+  expiryDayRatio: number | null;
+  disclaimer: string;
+}
+
+export interface RealityCheckYear {
+  financialYear: string;
+  from: string;
+  to: string;
+  trades: number;
+  grossPnl: string;
+  charges: string;
+  netPnl: string;
+  capitalProxy: string;
+  returnPercent: number | null;
+  index: { source: 'SERIES' | 'ASSUMED'; label: string; returnPercent: number; value: string };
+  fd: { ratePercent: string; value: string };
+  differenceVsIndex: string;
+  differenceVsFd: string;
+}
+
+export interface RealityCheck {
+  asOf: string;
+  years: RealityCheckYear[];
+  total: { netPnl: string; index: string; fd: string; differenceVsIndex: string; differenceVsFd: string };
+  method: string;
+  disclaimer: string;
+}
+
+export interface TradingTaxSummary {
+  financialYear: string;
+  from: string;
+  to: string;
+  speculative: { label: string; trades: number; grossPnl: string; charges: string; netPnl: string; turnover: string };
+  nonSpeculative: { label: string; trades: number; grossPnl: string; charges: string; netPnl: string; turnover: string };
+  capitalGains: {
+    buckets: {
+      term: 'SHORT' | 'LONG';
+      trades: number;
+      proceeds: string;
+      cost: string;
+      charges: string;
+      gain: string;
+      taxable: string;
+      ratePercent: string;
+      estimatedTax: string;
+    }[];
+    totalGain: string;
+    exemptionUsed: string;
+    estimatedTax: string;
+  };
+  optionSellPremium: string;
+  businessTurnover: string;
+  audit: { threshold: string; thresholdDigital: string; aboveThreshold: boolean; aboveDigitalThreshold: boolean; presumptiveAvailable: boolean; note: string };
+  chargesSummary: ChargeBreakdown & { deductibleAgainstBusiness: string };
+  disclaimer: string;
+  availableYears: string[];
+}
+
+export type TradeImportSource = 'TRADEBOOK_CSV' | 'PNL_CSV' | 'CONTRACT_NOTE_PDF';
+export type TradeImportRowStatus = 'NEW' | 'DUPLICATE' | 'ERROR' | 'COMMITTED' | 'SKIPPED';
+
+export interface TradeImportBatch {
+  id: string;
+  filename: string;
+  source: TradeImportSource;
+  profile: string;
+  broker: string;
+  status: 'PENDING' | 'READY' | 'COMMITTED' | 'FAILED';
+  warnings: string[];
+  error: string | null;
+  createdAt: string;
+}
+
+export interface TradeImportRow {
+  id: string;
+  rowNumber: number;
+  status: TradeImportRowStatus;
+  message: string | null;
+  parsed: {
+    date: string;
+    time: string | null;
+    broker: string;
+    exchange: TradeExchange;
+    segment: TradeSegment;
+    symbol: string;
+    underlying: string;
+    side: TradeSide;
+    quantity: string;
+    price: string;
+    amount: string;
+  };
+}
+
+export interface TradeImportSummary {
+  batch: TradeImportBatch;
+  counts: { total: number; new: number; duplicate: number; error: number; committed: number; skipped: number };
+  rows: TradeImportRow[];
+}
+
+export interface TradingSettings {
+  brokers: { broker: string; plans: Record<string, { percent: string; cap: string | null; flat: string }>; dpChargePerScrip: string; annualMaintenance: string }[];
+  revengeWindowMinutes: number;
+  overTradingMultiple: string;
+  assumedIndexReturnPercent: string;
+  assumedFdRatePercent: string;
+  benchmarkSeries: string | null;
+  setupTags: string[];
+  emotionTags: string[];
+}
