@@ -11,3 +11,4 @@ export * from './xlsx';
 export * from './portfolio';
 export * from './trading';
 export * from './market-data';
+export * from './markets';

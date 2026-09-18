@@ -125,6 +125,21 @@ const strip = <T extends { userId: string }>({ userId: _userId, ...rest }: T): O
 
 const minutesSince = (from: Date, now: Date): number => Math.max(0, Math.round((now.getTime() - from.getTime()) / 60_000));
 
+/**
+ * How old a quote's information is, in minutes.
+ *
+ * Deliberately the *older* of two ages: how long ago the row was written, and how long ago the
+ * session it describes ended. A price typed in this morning off a screenshot from 2020 was
+ * fetched seconds ago and is four years stale, and an alert must treat it as the latter. The
+ * session is taken to end at midnight UTC on `asOf`, which is close enough for a threshold
+ * measured in hours and needs no exchange calendar to compute.
+ */
+const quoteAgeMinutes = (quote: { fetchedAt: Date; asOf: string }, now: Date): number => {
+  const sessionEnd = Date.parse(`${quote.asOf}T23:59:59Z`);
+  const bySession = Number.isNaN(sessionEnd) ? 0 : Math.max(0, Math.round((now.getTime() - sessionEnd) / 60_000));
+  return Math.max(minutesSince(quote.fetchedAt, now), bySession);
+};
+
 const percentOf = (numerator: bigint, denominator: bigint): string =>
   denominator === 0n ? '0' : formatMoney((numerator * 1_000_000n) / denominator);
 
@@ -270,7 +285,7 @@ export class MarketsService {
         dayChangePercent,
         asOf: quote?.asOf ?? null,
         source: quote?.source ?? null,
-        isStale: quote ? minutesSince(quote.fetchedAt, now) > settings.staleQuoteMinutes : true,
+        isStale: quote ? quoteAgeMinutes(quote, now) > settings.staleQuoteMinutes : true,
         fiftyTwoWeekHigh: range.high,
         fiftyTwoWeekLow: range.low,
         sparkline: range.closes,
@@ -704,7 +719,7 @@ export class MarketsService {
     const quoteSnapshots = new Map<string, QuoteSnapshot>(
       quotes.map((quote) => [
         quote.symbol,
-        { symbol: quote.symbol, price: quote.price, previousClose: quote.previousClose, asOf: quote.asOf, ageMinutes: minutesSince(quote.fetchedAt, now) },
+        { symbol: quote.symbol, price: quote.price, previousClose: quote.previousClose, asOf: quote.asOf, ageMinutes: quoteAgeMinutes(quote, now) },
       ]),
     );
 
@@ -931,6 +946,11 @@ export class MarketsService {
     const feed = await this.store.news.findFeed(userId, id);
     if (!feed) throw DomainError.notFound('FEED_NOT_FOUND', 'That feed does not exist');
     return this.store.news.updateFeed(userId, id, patch);
+  }
+
+  /** Records the outcome of a fetch. Separate from updateFeed so a job cannot rename a feed. */
+  async recordFeedFetch(userId: string, id: string, outcome: { at: Date; error: string | null }): Promise<void> {
+    await this.store.news.updateFeed(userId, id, { lastFetchedAt: outcome.at, lastError: outcome.error });
   }
 
   async deleteFeed(userId: string, id: string): Promise<void> {

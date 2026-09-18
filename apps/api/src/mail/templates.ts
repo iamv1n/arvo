@@ -255,4 +255,70 @@ export const templates = {
       },
     });
   },
+
+  /** One alert fired. The message says what is true; it never says what to do about it. */
+  alertTriggered: (
+    to: string,
+    input: { name: string; alertName: string; message: string; rule: string; firedAt: Date; evidence: string[]; alertsUrl: string; settingsUrl: string },
+  ) =>
+    render({
+      to,
+      subject: `Alert: ${input.alertName}`,
+      preheader: input.message,
+      heading: input.alertName,
+      blocks: [
+        { kind: 'p', text: `Hi ${input.name}, an alert you wrote just fired.` },
+        { kind: 'p', text: input.message },
+        { kind: 'note', text: `Your rule: ${input.rule}` },
+        ...(input.evidence.length ? [{ kind: 'list', items: input.evidence } as Block] : []),
+        { kind: 'button', label: 'Open your alerts', url: input.alertsUrl },
+        {
+          kind: 'note',
+          text: `Checked at ${input.firedAt.toUTCString()}. Alerts are yours: Arvo evaluates the rules you wrote and never recommends a trade. Change delivery in Settings (${input.settingsUrl}).`,
+        },
+      ],
+    }),
+
+  /** A self-imposed trading limit was reached. Informational, and explicitly not a block. */
+  guardrailBreached: (
+    to: string,
+    input: { name: string; label: string; limit: string; actual: string; periodStart: string; tradingUrl: string; settingsUrl: string },
+  ) =>
+    render({
+      to,
+      subject: `${input.label} reached`,
+      preheader: `You set ${input.limit} and you are at ${input.actual}.`,
+      heading: input.label,
+      blocks: [
+        { kind: 'p', text: `Hi ${input.name}, a limit you set for yourself has been reached.` },
+        { kind: 'list', items: [`Your limit: ${input.limit}`, `Where you are: ${input.actual}`, `Period starting: ${input.periodStart}`] },
+        { kind: 'p', text: 'Arvo is not stopping you doing anything. This is the note you asked your calmer self to leave you.' },
+        { kind: 'button', label: 'Open your trading journal', url: input.tradingUrl },
+        { kind: 'note', text: `Change or remove this limit in Settings (${input.settingsUrl}).` },
+      ],
+    }),
+
+  /** The news digest: headlines and neutral summaries for holdings and watchlists only. */
+  newsDigest: (
+    to: string,
+    input: { name: string; periodStart: string; periodEnd: string; items: { symbol: string; summary: string; sources: string[] }[]; marketsUrl: string; settingsUrl: string },
+  ) =>
+    render({
+      to,
+      subject: 'Your news digest',
+      preheader: `Headlines for what you hold and watch, ${input.periodStart} to ${input.periodEnd}.`,
+      heading: `News, ${input.periodStart} to ${input.periodEnd}`,
+      blocks: [
+        { kind: 'p', text: `Hi ${input.name}, here is what was published about the instruments you hold and watch.` },
+        ...input.items.flatMap((item): Block[] => [
+          { kind: 'p', text: `${item.symbol}: ${item.summary}` },
+          ...(item.sources.length ? [{ kind: 'list', items: item.sources } as Block] : []),
+        ]),
+        { kind: 'button', label: 'Open Markets', url: input.marketsUrl },
+        {
+          kind: 'note',
+          text: `Summaries are written by your configured AI provider from the headlines linked above, and state no view on direction. Turn this off in Settings (${input.settingsUrl}).`,
+        },
+      ],
+    }),
 };

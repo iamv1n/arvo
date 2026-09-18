@@ -31,6 +31,32 @@ export interface AppConfig {
   ai: AIConfig;
   /** Run the hourly job that emails weekly briefings on Monday mornings. */
   weeklyBriefingEnabled: boolean;
+  /** Markets & Alerts: quote provider, alert scheduler, Telegram and news digests. */
+  markets: MarketsConfig;
+}
+
+/**
+ * Everything Markets & Alerts may reach outside this process — and it reaches nothing unless
+ * one of these is set. The driver stays `manual` by default: prices are what the user typed or
+ * imported. Setting MARKET_DATA_DRIVER=http points Arvo at whatever quote API the user already
+ * has, with a small JSON mapping saying which fields of the response hold the numbers.
+ */
+export interface MarketsConfig {
+  quoteDriver: 'manual' | 'http';
+  quoteBaseUrl: string | null;
+  quoteApiKey: string | null;
+  /**
+   * Where to find each value in the provider's JSON, as dotted paths, e.g.
+   * {"root":"data","price":"last_price","previousClose":"ohlc.close","asOf":"timestamp"}.
+   */
+  quoteFieldMap: Record<string, string>;
+  /** Run the hourly alert evaluation job. Off in tests. */
+  alertsEnabled: boolean;
+  alertIntervalMs: number;
+  /** Bot token for the optional Telegram channel. Nothing is sent without it. */
+  telegramBotToken: string | null;
+  /** Allow the news digest job to fetch the user's RSS feeds. Off in tests. */
+  newsEnabled: boolean;
 }
 
 export type MailDriver = 'smtp' | 'console' | 'memory';
@@ -125,12 +151,51 @@ export function loadAppConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     remindersEnabled: bool('REMINDERS_ENABLED', nodeEnv !== 'test'),
     ai: ai.config,
     weeklyBriefingEnabled: bool('WEEKLY_BRIEFING_ENABLED', nodeEnv !== 'test'),
+    markets: loadMarketsConfig(env, nodeEnv, problems, bool, positiveInt),
     mcpResourceUrl: (env.MCP_RESOURCE_URL?.trim() || env.NEXT_PUBLIC_MCP_URL?.trim() || 'http://localhost:3302/mcp').replace(/\/+$/, ''),
   };
   if (problems.length) {
     throw new Error(`Invalid configuration:\n  - ${problems.join('\n  - ')}`);
   }
   return config;
+}
+
+function loadMarketsConfig(
+  env: NodeJS.ProcessEnv,
+  nodeEnv: string,
+  problems: string[],
+  bool: (name: string, fallback: boolean) => boolean,
+  positiveInt: (name: string, fallback: number) => number,
+): MarketsConfig {
+  const driver = (env.MARKET_DATA_DRIVER?.trim() || 'manual') as MarketsConfig['quoteDriver'];
+  if (!['manual', 'http'].includes(driver)) problems.push('MARKET_DATA_DRIVER must be manual or http');
+  const baseUrl = env.MARKET_DATA_BASE_URL?.trim() || null;
+  // A configured driver with nowhere to point is a mistake worth failing at startup for: the
+  // alternative is a screen that silently never updates.
+  if (driver === 'http' && !baseUrl) problems.push('MARKET_DATA_BASE_URL is required when MARKET_DATA_DRIVER=http');
+
+  let quoteFieldMap: Record<string, string> = { price: 'price', previousClose: 'previousClose', asOf: 'asOf' };
+  const raw = env.MARKET_DATA_FIELD_MAP?.trim();
+  if (raw) {
+    try {
+      const parsed: unknown = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('not an object');
+      quoteFieldMap = { ...quoteFieldMap, ...(parsed as Record<string, string>) };
+    } catch {
+      problems.push('MARKET_DATA_FIELD_MAP must be a JSON object of field paths');
+    }
+  }
+
+  return {
+    quoteDriver: driver,
+    quoteBaseUrl: baseUrl,
+    quoteApiKey: env.MARKET_DATA_API_KEY?.trim() || null,
+    quoteFieldMap,
+    alertsEnabled: bool('ALERTS_ENABLED', nodeEnv !== 'test'),
+    alertIntervalMs: positiveInt('ALERT_INTERVAL_MS', 3_600_000),
+    telegramBotToken: env.TELEGRAM_BOT_TOKEN?.trim() || null,
+    newsEnabled: bool('NEWS_DIGEST_ENABLED', false) && nodeEnv !== 'test',
+  };
 }
 
 /** Accepts a 32-byte key as base64, base64url or 64 hex characters. */

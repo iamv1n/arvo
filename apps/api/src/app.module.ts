@@ -17,6 +17,10 @@ import { RemindersController } from './reminders/reminders.controller';
 import { RemindersService } from './reminders/reminders.service';
 import { HealthController } from './health/health.controller';
 import { LabController } from './lab/lab.controller';
+import { AlertsController, MarketController, NotificationsController, WatchlistsController } from './markets/markets.controller';
+import { AlertsScheduler } from './markets/alerts.scheduler';
+import { MarketsNotifier, TELEGRAM_SENDER, createTelegramSender } from './markets/notifier';
+import { NEWS_FETCHER, NewsService, createFeedFetcher } from './markets/news.service';
 import { ImportsController } from './imports/imports.controller';
 import { BudgetsController, GoalsController } from './planning/planning.controller';
 import { PlanningController, ScenariosController } from './planning/scenarios.controller';
@@ -48,6 +52,13 @@ class ConfigModule {}
     SuggestionsService,
     AdvisorService,
     BriefingsService,
+    // Markets & Alerts. Both outbound channels are built from configuration and refuse to act
+    // when it is absent, so a default install (and every test) has no path to a network call.
+    { provide: TELEGRAM_SENDER, inject: [APP_CONFIG], useFactory: (config: ReturnType<typeof loadAppConfig>) => createTelegramSender(config.markets.telegramBotToken) },
+    { provide: NEWS_FETCHER, inject: [APP_CONFIG], useFactory: (config: ReturnType<typeof loadAppConfig>) => createFeedFetcher(config.markets.newsEnabled) },
+    MarketsNotifier,
+    NewsService,
+    AlertsScheduler,
   ],
   controllers: [
     HealthController,
@@ -76,6 +87,10 @@ class ConfigModule {}
     TradeImportsController,
     PositionsController,
     TradingController,
+    WatchlistsController,
+    MarketController,
+    AlertsController,
+    NotificationsController,
   ],
 })
 export class AppModule implements NestModule {

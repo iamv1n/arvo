@@ -206,4 +206,30 @@ export class TradingSettingsDto {
   @IsString({ each: true })
   @Length(1, 40, { each: true })
   emotionTags?: string[];
+
+  /*
+   * Risk guardrails (Phase 13). They live on trading settings rather than in the markets area
+   * because they are a property of how this person trades, and the cool-off banner they drive
+   * belongs on /trading. Nothing about them blocks an action; a breach shows a banner, sends
+   * one email and is recorded.
+   */
+  @ApiPropertyOptional({ nullable: true, example: '5000', description: 'Realised loss in a day at which the cool-off banner appears' })
+  @IsOptional()
+  @nullable()
+  @Matches(POSITIVE_MONEY)
+  maxLossPerDay?: string | null;
+
+  @ApiPropertyOptional({ nullable: true, example: '15000' })
+  @IsOptional()
+  @nullable()
+  @Matches(POSITIVE_MONEY)
+  maxLossPerWeek?: string | null;
+
+  @ApiPropertyOptional({ nullable: true, example: 10 })
+  @IsOptional()
+  @nullable()
+  @IsInt()
+  @Min(1)
+  @Max(1000)
+  maxTradesPerDay?: number | null;
 }
