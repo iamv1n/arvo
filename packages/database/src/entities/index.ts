@@ -15,6 +15,14 @@ import {
   PortfolioImportRowEntity,
 } from './portfolio.entities';
 import {
+  BarImportBatchEntity,
+  LabBacktestEntity,
+  LabStrategyEntity,
+  MarketBarEntity,
+  PaperAccountEntity,
+  PaperOrderEntity,
+} from './lab.entities';
+import {
   TradeEntity,
   TradeImportBatchEntity,
   TradeImportRowEntity,
@@ -50,6 +58,12 @@ export {
   TradingSettingsEntity,
   TradeImportBatchEntity,
   TradeImportRowEntity,
+  MarketBarEntity,
+  BarImportBatchEntity,
+  LabStrategyEntity,
+  LabBacktestEntity,
+  PaperAccountEntity,
+  PaperOrderEntity,
   ApiTokenEntity,
   OAuthAuthorizationEntity,
   OAuthClientEntity,
@@ -107,4 +121,10 @@ export const ENTITIES = [
   TradingSettingsEntity,
   TradeImportBatchEntity,
   TradeImportRowEntity,
+  MarketBarEntity,
+  BarImportBatchEntity,
+  LabStrategyEntity,
+  LabBacktestEntity,
+  PaperAccountEntity,
+  PaperOrderEntity,
 ];

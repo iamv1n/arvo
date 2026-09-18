@@ -22,6 +22,11 @@ import type {
   TradingSettingsRepository,
   TradeImportRepository,
   TradeFilter,
+  MarketBarRepository,
+  BarImportRepository,
+  StrategyRepository,
+  BacktestRepository,
+  PaperRepository,
 } from '@arvo/finance-core';
 import { DEFAULT_TRADING_SETTINGS } from '@arvo/finance-core';
 import { ImportStatus, type TransactionType } from '@arvo/types';
@@ -52,6 +57,12 @@ import {
   TradeImportRowEntity,
   TradeJournalEntryEntity,
   TradingSettingsEntity,
+  MarketBarEntity,
+  BarImportBatchEntity,
+  LabStrategyEntity,
+  LabBacktestEntity,
+  PaperAccountEntity,
+  PaperOrderEntity,
 } from '../entities';
 import {
   toAccount,
@@ -73,6 +84,12 @@ import {
   toJournalEntry,
   toTradingSettings,
   toTradeImportBatch,
+  toMarketBar,
+  toBarImportBatch,
+  toLabStrategy,
+  toLabBacktest,
+  toPaperAccount,
+  toPaperOrder,
   toTradeImportRow,
   toHolding,
   toHoldingTransaction,
@@ -639,6 +656,10 @@ export function createRepositories(manager: EntityManager): Repositories {
       if (filter.symbol) where.symbol = filter.symbol;
       if (filter.side) where.side = filter.side;
       if (filter.broker) where.broker = filter.broker;
+      // Paper fills stay out unless the caller asks for them, so a forgotten flag can never mix
+      // simulated trades into a report about real money.
+      if (filter.paperAccountId) where.paperAccountId = filter.paperAccountId;
+      else if (filter.includePaper !== true) where.isPaper = false;
       const rows = await manager.find(TradeEntity, { where: where as AnyPatch, order: { date: 'ASC', time: 'ASC', id: 'ASC' } });
       return rows.map(toTrade);
     },
@@ -666,7 +687,7 @@ export function createRepositories(manager: EntityManager): Repositories {
       const rows = (await manager
         .createQueryBuilder(TradeEntity, 't')
         .select('DISTINCT t.broker', 'broker')
-        .where('t.user_id = :userId', { userId })
+        .where('t.user_id = :userId AND t.is_paper = false', { userId })
         .orderBy('broker', 'ASC')
         .getRawMany()) as { broker: string }[];
       return rows.map((r) => r.broker);
@@ -733,6 +754,150 @@ export function createRepositories(manager: EntityManager): Repositories {
     updateRow: async (userId, id, patch) => toTradeImportRow(await updateOwned(TradeImportRowEntity, userId, id, patch)),
   };
 
+  /*
+   * Strategy Lab. Bars are inserted with ON CONFLICT DO NOTHING against the two partial unique
+   * indexes on (user, symbol, timeframe, date[, time]), so re-importing an overlapping file
+   * tops up the series instead of failing or duplicating it.
+   */
+  const marketBars: MarketBarRepository = {
+    listSeries: async (userId) => {
+      const rows = (await manager
+        .createQueryBuilder(MarketBarEntity, 'b')
+        .select('b.symbol', 'symbol')
+        .addSelect('b.timeframe', 'timeframe')
+        .addSelect('COUNT(*)', 'bars')
+        .addSelect('MIN(b.date)', 'from')
+        .addSelect('MAX(b.date)', 'to')
+        .where('b.user_id = :userId', { userId })
+        .groupBy('b.symbol')
+        .addGroupBy('b.timeframe')
+        .orderBy('b.symbol', 'ASC')
+        .addOrderBy('b.timeframe', 'ASC')
+        .getRawMany()) as { symbol: string; timeframe: 'DAY' | 'MINUTE'; bars: string; from: string | Date; to: string | Date }[];
+      return rows.map((row) => ({
+        symbol: row.symbol,
+        timeframe: row.timeframe,
+        bars: Number(row.bars),
+        from: isoDate(row.from),
+        to: isoDate(row.to),
+      }));
+    },
+    find: async (userId, symbol, timeframe, filter = {}) => {
+      const where: ObjectLiteral = { userId, symbol, timeframe };
+      if (filter.from && filter.to) where.date = Between(filter.from, filter.to);
+      else if (filter.from) where.date = MoreThanOrEqual(filter.from);
+      else if (filter.to) where.date = LessThanOrEqual(filter.to);
+      const rows = await manager.find(MarketBarEntity, {
+        where: where as AnyPatch,
+        order: { date: 'ASC', time: 'ASC', id: 'ASC' },
+        take: filter.limit,
+      });
+      return rows.map(toMarketBar);
+    },
+    count: async (userId, symbol, timeframe) => manager.countBy(MarketBarEntity, { userId, symbol, timeframe }),
+    insertMany: async (rows) => {
+      let inserted = 0;
+      for (let i = 0; i < rows.length; i += 500) {
+        const result = await manager
+          .createQueryBuilder()
+          .insert()
+          .into(MarketBarEntity)
+          .values(rows.slice(i, i + 500) as AnyPatch)
+          .orIgnore()
+          .execute();
+        inserted += result.identifiers.filter((identifier) => identifier !== undefined).length;
+      }
+      return inserted;
+    },
+    deleteSeries: async (userId, symbol, timeframe) => void (await manager.delete(MarketBarEntity, { userId, symbol, timeframe })),
+  };
+
+  const labBarImports: BarImportRepository = {
+    list: async (userId) => (await manager.find(BarImportBatchEntity, { where: { userId }, order: { createdAt: 'DESC' } })).map(toBarImportBatch),
+    find: async (userId, id) => {
+      const row = await manager.findOneBy(BarImportBatchEntity, { id, userId });
+      return row ? toBarImportBatch(row) : null;
+    },
+    create: async (input) => toBarImportBatch(await manager.save(manager.create(BarImportBatchEntity, input as AnyPatch))),
+    update: async (userId, id, patch) => toBarImportBatch(await updateOwned(BarImportBatchEntity, userId, id, patch)),
+    delete: async (userId, id) => void (await manager.delete(BarImportBatchEntity, { id, userId })),
+  };
+
+  const labStrategies: StrategyRepository = {
+    findAll: async (userId) => (await manager.find(LabStrategyEntity, { where: { userId }, order: { createdAt: 'ASC' } })).map(toLabStrategy),
+    findById: async (userId, id) => {
+      const row = await manager.findOneBy(LabStrategyEntity, { id, userId });
+      return row ? toLabStrategy(row) : null;
+    },
+    create: async (input) => toLabStrategy(await manager.save(manager.create(LabStrategyEntity, input as AnyPatch))),
+    update: async (userId, id, patch) => toLabStrategy(await updateOwned(LabStrategyEntity, userId, id, patch)),
+    delete: async (userId, id) => void (await manager.delete(LabStrategyEntity, { id, userId })),
+    recordRun: async (userId, id) => {
+      await manager.increment(LabStrategyEntity, { id, userId }, 'runCount', 1);
+      const row = await manager.findOneBy(LabStrategyEntity, { id, userId });
+      return row?.runCount ?? 0;
+    },
+  };
+
+  const labBacktests: BacktestRepository = {
+    // The result blob can be megabytes, so the list view never selects it; the warning is the
+    // one thing from it a list needs, and it is cheap to pull out in SQL.
+    list: async (userId, strategyId) => {
+      const rows = (await manager
+        .createQueryBuilder(LabBacktestEntity, 'b')
+        .select(['b.id', 'b.strategyId', 'b.name', 'b.symbol', 'b.timeframe', 'b.from', 'b.to', 'b.stats', 'b.createdAt'])
+        .addSelect("b.result -> 'overfittingWarning'", 'warning')
+        .where('b.user_id = :userId', { userId })
+        .andWhere(strategyId ? 'b.strategy_id = :strategyId' : '1 = 1', { strategyId })
+        .orderBy('b.created_at', 'DESC')
+        .getRawAndEntities()) as { entities: LabBacktestEntity[]; raw: { warning: string | null }[] };
+      return rows.entities.map((entity, index) => ({
+        id: entity.id,
+        strategyId: entity.strategyId,
+        name: entity.name,
+        symbol: entity.symbol,
+        timeframe: entity.timeframe,
+        from: entity.from,
+        to: entity.to,
+        stats: entity.stats,
+        overfittingWarning: rows.raw[index]?.warning ?? null,
+        createdAt: entity.createdAt,
+      }));
+    },
+    findById: async (userId, id) => {
+      const row = await manager.findOneBy(LabBacktestEntity, { id, userId });
+      return row ? toLabBacktest(row) : null;
+    },
+    create: async (input) => toLabBacktest(await manager.save(manager.create(LabBacktestEntity, input as AnyPatch))),
+    delete: async (userId, id) => void (await manager.delete(LabBacktestEntity, { id, userId })),
+    countForStrategy: async (userId, strategyId) => manager.countBy(LabBacktestEntity, { userId, strategyId }),
+  };
+
+  const labPaper: PaperRepository = {
+    listAccounts: async (userId) => (await manager.find(PaperAccountEntity, { where: { userId }, order: { createdAt: 'ASC' } })).map(toPaperAccount),
+    findAccount: async (userId, id) => {
+      const row = await manager.findOneBy(PaperAccountEntity, { id, userId });
+      return row ? toPaperAccount(row) : null;
+    },
+    createAccount: async (input) => toPaperAccount(await manager.save(manager.create(PaperAccountEntity, input as AnyPatch))),
+    updateAccount: async (userId, id, patch) => toPaperAccount(await updateOwned(PaperAccountEntity, userId, id, patch)),
+    deleteAccount: async (userId, id) => {
+      // The journal fills the account produced go with it; they are simulated and only ever
+      // meant anything in the context of this account.
+      await manager.delete(TradeEntity, { userId, paperAccountId: id });
+      await manager.delete(PaperAccountEntity, { id, userId });
+    },
+    listOrders: async (userId, accountId) =>
+      (await manager.find(PaperOrderEntity, { where: { userId, accountId }, order: { createdAt: 'ASC' } })).map(toPaperOrder),
+    findOrder: async (userId, id) => {
+      const row = await manager.findOneBy(PaperOrderEntity, { id, userId });
+      return row ? toPaperOrder(row) : null;
+    },
+    createOrder: async (input) => toPaperOrder(await manager.save(manager.create(PaperOrderEntity, input as AnyPatch))),
+    updateOrder: async (userId, id, patch) => toPaperOrder(await updateOwned(PaperOrderEntity, userId, id, patch)),
+    deleteOrder: async (userId, id) => void (await manager.delete(PaperOrderEntity, { id, userId })),
+  };
+
   return {
     accounts,
     categories,
@@ -753,8 +918,14 @@ export function createRepositories(manager: EntityManager): Repositories {
     tradingJournal,
     tradingSettings,
     tradeImports,
+    marketBars,
+    labBarImports,
+    labStrategies,
+    labBacktests,
+    labPaper,
   };
 }
+
 
 export function createFinanceStore(dataSource: DataSource): FinanceStore {
   return {

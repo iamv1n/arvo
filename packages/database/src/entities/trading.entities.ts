@@ -35,6 +35,7 @@ import { UserEntity } from './user.entity';
 @Entity('trades')
 @Index('idx_trades_user_date', ['userId', 'date'])
 @Index('idx_trades_user_underlying', ['userId', 'underlying'])
+@Index('idx_trades_user_paper', ['userId', 'isPaper'])
 @Unique('uq_trades_user_external_ref', ['userId', 'externalRef'])
 export class TradeEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -144,6 +145,17 @@ export class TradeEntity {
   /** Duplicate key from the file this fill came from; null for manual entries. */
   @Column({ name: 'external_ref', type: 'varchar', length: 400, nullable: true })
   externalRef!: string | null;
+
+  /**
+   * True for a fill the Strategy Lab's paper trading produced. Every journal query leaves these
+   * out unless it asks for them, so simulated trades can never flatter the metrics that describe
+   * real money.
+   */
+  @Column({ name: 'is_paper', type: 'boolean', default: false })
+  isPaper!: boolean;
+
+  @Column({ name: 'paper_account_id', type: 'uuid', nullable: true })
+  paperAccountId!: string | null;
 
   @CreatedAt()
   createdAt!: Date;

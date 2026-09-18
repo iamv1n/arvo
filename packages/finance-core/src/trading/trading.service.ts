@@ -151,6 +151,8 @@ export class TradingService {
       tradeRef: null,
       notes: optionalText('notes', input.notes, 500),
       externalRef: null,
+      isPaper: false,
+      paperAccountId: null,
     };
   }
 

@@ -14,6 +14,8 @@ import type {
   PortfolioImportRowRecord,
 } from '../portfolio/types';
 import type { FinanceStore, Repositories } from '../ports';
+import type { BarImportBatchRecord, BarRecord } from '../lab/bars';
+import type { BacktestRecord, PaperAccountRecord, PaperOrderRecord, StrategyRecord } from '../lab/lab-records';
 import { DEFAULT_TRADING_SETTINGS } from '../trading/types';
 import type {
   JournalEntryRecord,
@@ -57,6 +59,12 @@ interface State {
   tradingSettings: Map<string, TradingSettingsRecord>;
   tradeBatches: Map<string, TradeImportBatchRecord>;
   tradeRows: Map<string, TradeImportRowRecord>;
+  bars: Map<string, BarRecord>;
+  barImports: Map<string, BarImportBatchRecord>;
+  labStrategies: Map<string, StrategyRecord>;
+  labBacktests: Map<string, BacktestRecord>;
+  paperAccounts: Map<string, PaperAccountRecord>;
+  paperOrders: Map<string, PaperOrderRecord>;
 }
 
 const now = () => new Date('2026-01-01T00:00:00Z');
@@ -78,6 +86,12 @@ export class InMemoryStore implements FinanceStore {
     mappings: new Map(),
     rules: new Map(),
     recurring: new Map(),
+    bars: new Map(),
+    barImports: new Map(),
+    labStrategies: new Map(),
+    labBacktests: new Map(),
+    paperAccounts: new Map(),
+    paperOrders: new Map(),
     budgets: new Map(),
     goals: new Map(),
     scenarios: new Map(),
@@ -491,7 +505,8 @@ export class InMemoryStore implements FinanceStore {
             (!filter.underlying || t.underlying === filter.underlying) &&
             (!filter.symbol || t.symbol === filter.symbol) &&
             (!filter.side || t.side === filter.side) &&
-            (!filter.broker || t.broker === filter.broker),
+            (!filter.broker || t.broker === filter.broker) &&
+            (filter.paperAccountId ? t.paperAccountId === filter.paperAccountId : filter.includePaper === true || !t.isPaper),
         )
         .sort(byFillOrder),
     findById: async (userId, id) => owned(this.state.trades.get(id), userId),
@@ -572,6 +587,120 @@ export class InMemoryStore implements FinanceStore {
     updateRow: async (userId, id, patch) => patchOwned(this.state.tradeRows, userId, id, patch),
   };
 
+  // ---- Strategy Lab ----
+
+  marketBars: Repositories['marketBars'] = {
+    listSeries: async (userId) => {
+      const groups = new Map<string, BarRecord[]>();
+      for (const bar of this.state.bars.values()) {
+        if (bar.userId !== userId) continue;
+        const key = `${bar.symbol}|${bar.timeframe}`;
+        const list = groups.get(key);
+        if (list) list.push(bar);
+        else groups.set(key, [bar]);
+      }
+      return [...groups.values()]
+        .map((rows) => {
+          const sorted = rows.sort(byBarOrder);
+          return { symbol: sorted[0].symbol, timeframe: sorted[0].timeframe, bars: sorted.length, from: sorted[0].date, to: sorted[sorted.length - 1].date };
+        })
+        .sort((a, b) => a.symbol.localeCompare(b.symbol) || a.timeframe.localeCompare(b.timeframe));
+    },
+    find: async (userId, symbol, timeframe, filter = {}) =>
+      [...this.state.bars.values()]
+        .filter(
+          (bar) =>
+            bar.userId === userId &&
+            bar.symbol === symbol &&
+            bar.timeframe === timeframe &&
+            (!filter.from || bar.date >= filter.from) &&
+            (!filter.to || bar.date <= filter.to),
+        )
+        .sort(byBarOrder)
+        .slice(0, filter.limit ?? Number.MAX_SAFE_INTEGER),
+    count: async (userId, symbol, timeframe) =>
+      [...this.state.bars.values()].filter((bar) => bar.userId === userId && bar.symbol === symbol && bar.timeframe === timeframe).length,
+    insertMany: async (rows) => {
+      let inserted = 0;
+      const seen = new Set(
+        [...this.state.bars.values()].map((bar) => `${bar.userId}|${bar.symbol}|${bar.timeframe}|${bar.date}|${bar.time ?? ''}`),
+      );
+      for (const row of rows) {
+        const key = `${row.userId}|${row.symbol}|${row.timeframe}|${row.date}|${row.time ?? ''}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        insert(this.state.bars, { ...row, id: randomUUID(), createdAt: now() });
+        inserted += 1;
+      }
+      return inserted;
+    },
+    deleteSeries: async (userId, symbol, timeframe) => {
+      for (const [id, bar] of this.state.bars) {
+        if (bar.userId === userId && bar.symbol === symbol && bar.timeframe === timeframe) this.state.bars.delete(id);
+      }
+    },
+  };
+
+  labBarImports: Repositories['labBarImports'] = {
+    list: async (userId) =>
+      [...this.state.barImports.values()].filter((b) => b.userId === userId).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
+    find: async (userId, id) => owned(this.state.barImports.get(id), userId),
+    create: async (input) => insert(this.state.barImports, { ...input, id: randomUUID(), createdAt: now(), updatedAt: now() }),
+    update: async (userId, id, patch) => patchOwned(this.state.barImports, userId, id, patch),
+    delete: async (userId, id) => void deleteOwned(this.state.barImports, userId, id),
+  };
+
+  labStrategies: Repositories['labStrategies'] = {
+    findAll: async (userId) =>
+      [...this.state.labStrategies.values()].filter((s) => s.userId === userId).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime()),
+    findById: async (userId, id) => owned(this.state.labStrategies.get(id), userId),
+    create: async (input) => insert(this.state.labStrategies, { ...input, id: randomUUID(), createdAt: now(), updatedAt: now() }),
+    update: async (userId, id, patch) => patchOwned(this.state.labStrategies, userId, id, patch),
+    delete: async (userId, id) => void deleteOwned(this.state.labStrategies, userId, id),
+    recordRun: async (userId, id) => {
+      const found = owned(this.state.labStrategies.get(id), userId);
+      if (!found) return 0;
+      const updated = { ...found, runCount: found.runCount + 1, updatedAt: now() };
+      this.state.labStrategies.set(id, updated);
+      return updated.runCount;
+    },
+  };
+
+  labBacktests: Repositories['labBacktests'] = {
+    list: async (userId, strategyId) =>
+      [...this.state.labBacktests.values()]
+        .filter((b) => b.userId === userId && (!strategyId || b.strategyId === strategyId))
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+        .map(({ result, userId: _u, ...rest }) => ({ ...rest, overfittingWarning: result.overfittingWarning })),
+    findById: async (userId, id) => owned(this.state.labBacktests.get(id), userId),
+    create: async (input) => insert(this.state.labBacktests, { ...input, id: randomUUID(), createdAt: now() }),
+    delete: async (userId, id) => void deleteOwned(this.state.labBacktests, userId, id),
+    countForStrategy: async (userId, strategyId) =>
+      [...this.state.labBacktests.values()].filter((b) => b.userId === userId && b.strategyId === strategyId).length,
+  };
+
+  labPaper: Repositories['labPaper'] = {
+    listAccounts: async (userId) =>
+      [...this.state.paperAccounts.values()].filter((a) => a.userId === userId).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime()),
+    findAccount: async (userId, id) => owned(this.state.paperAccounts.get(id), userId),
+    createAccount: async (input) => insert(this.state.paperAccounts, { ...input, id: randomUUID(), createdAt: now(), updatedAt: now() }),
+    updateAccount: async (userId, id, patch) => patchOwned(this.state.paperAccounts, userId, id, patch),
+    deleteAccount: async (userId, id) => {
+      for (const [orderId, order] of this.state.paperOrders) {
+        if (order.userId === userId && order.accountId === id) this.state.paperOrders.delete(orderId);
+      }
+      deleteOwned(this.state.paperAccounts, userId, id);
+    },
+    listOrders: async (userId, accountId) =>
+      [...this.state.paperOrders.values()]
+        .filter((o) => o.userId === userId && o.accountId === accountId)
+        .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime()),
+    findOrder: async (userId, id) => owned(this.state.paperOrders.get(id), userId),
+    createOrder: async (input) => insert(this.state.paperOrders, { ...input, id: randomUUID(), createdAt: now(), updatedAt: now() }),
+    updateOrder: async (userId, id, patch) => patchOwned(this.state.paperOrders, userId, id, patch),
+    deleteOrder: async (userId, id) => void deleteOwned(this.state.paperOrders, userId, id),
+  };
+
   private inPeriod(userId: string, filter: { from: string; to: string; currency: string; accountId?: string }): TransactionRecord[] {
     return [...this.state.transactions.values()].filter(
       (t) =>
@@ -648,3 +777,6 @@ function patchOwned<T extends { userId: string | null }>(
 function deleteOwned<T extends { userId: string | null }>(map: Map<string, T>, userId: string, id: string): void {
   if (owned(map.get(id), userId)) map.delete(id);
 }
+
+const byBarOrder = (a: BarRecord, b: BarRecord): number =>
+  a.date === b.date ? (a.time ?? '').localeCompare(b.time ?? '') || a.id.localeCompare(b.id) : a.date.localeCompare(b.date);

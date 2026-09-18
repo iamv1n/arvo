@@ -52,6 +52,8 @@ function trade(overrides: Partial<TradeRecord> = {}): TradeRecord {
     tradeRef: null,
     notes: null,
     externalRef: null,
+    isPaper: false,
+    paperAccountId: null,
     createdAt: new Date(0),
     updatedAt: new Date(0),
   };

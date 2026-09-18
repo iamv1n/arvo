@@ -10,3 +10,4 @@ export * from './pdf';
 export * from './xlsx';
 export * from './portfolio';
 export * from './trading';
+export * from './market-data';

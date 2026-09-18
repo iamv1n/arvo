@@ -116,6 +116,14 @@ export interface TradeRecord {
   notes: string | null;
   /** Duplicate key from the file this row came from; null for manual entries. */
   externalRef: string | null;
+  /**
+   * True for a fill produced by the Strategy Lab's paper trading rather than by a broker.
+   * Every journal query excludes these unless it is asked for them, so a simulated trade can
+   * never quietly improve the metrics that describe real money.
+   */
+  isPaper: boolean;
+  /** The paper account the fill belongs to, when it is a simulated one. */
+  paperAccountId: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -132,6 +140,13 @@ export interface TradeFilter {
   symbol?: string;
   side?: TradeSide;
   broker?: string;
+  /**
+   * Paper fills are left out unless this is set. The default is the safe one on purpose: a
+   * caller that forgets the flag gets real trades, never a mix.
+   */
+  includePaper?: boolean;
+  /** Only this paper account's fills. Implies includePaper. */
+  paperAccountId?: string;
 }
 
 /** Per-trade breakdown of the eight charge components. */

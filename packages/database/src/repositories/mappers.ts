@@ -23,6 +23,12 @@ import type {
   TradeImportRowRecord,
   TradeRecord,
   TradingSettingsRecord,
+  BacktestRecord,
+  BarImportBatchRecord,
+  BarRecord,
+  PaperAccountRecord,
+  PaperOrderRecord,
+  StrategyRecord,
 } from '@arvo/finance-core';
 import { formatMoney, formatUnits, parseMoney, parseUnits } from '@arvo/finance-core';
 import type {
@@ -47,6 +53,12 @@ import type {
   TradeImportBatchEntity,
   TradeImportRowEntity,
   TradeJournalEntryEntity,
+  MarketBarEntity,
+  BarImportBatchEntity,
+  LabStrategyEntity,
+  LabBacktestEntity,
+  PaperAccountEntity,
+  PaperOrderEntity,
   TradingSettingsEntity,
   PortfolioImportBatchEntity,
   PortfolioImportRowEntity,
@@ -375,6 +387,8 @@ export const toTrade = (e: TradeEntity): TradeRecord => ({
   tradeRef: e.tradeRef,
   notes: e.notes,
   externalRef: e.externalRef,
+  isPaper: e.isPaper ?? false,
+  paperAccountId: e.paperAccountId ?? null,
   createdAt: e.createdAt,
   updatedAt: e.updatedAt,
 });
@@ -430,4 +444,95 @@ export const toTradeImportRow = (e: TradeImportRowEntity): TradeImportRowRecord 
   message: e.message,
   parsed: e.parsed,
   createdAt: e.createdAt,
+});
+
+// ---- Strategy Lab ----
+
+export const toMarketBar = (e: MarketBarEntity): BarRecord => ({
+  id: e.id,
+  userId: e.userId,
+  symbol: e.symbol,
+  timeframe: e.timeframe,
+  date: e.date,
+  time: e.time,
+  open: canonicalMoney(e.open),
+  high: canonicalMoney(e.high),
+  low: canonicalMoney(e.low),
+  close: canonicalMoney(e.close),
+  volume: String(e.volume ?? '0'),
+  createdAt: e.createdAt,
+});
+
+export const toBarImportBatch = (e: BarImportBatchEntity): BarImportBatchRecord => ({
+  id: e.id,
+  userId: e.userId,
+  filename: e.filename,
+  symbol: e.symbol,
+  timeframe: e.timeframe,
+  status: e.status,
+  rowCount: e.rowCount,
+  warnings: e.warnings ?? [],
+  error: e.error,
+  from: e.from,
+  to: e.to,
+  parsed: e.parsed ?? [],
+  createdAt: e.createdAt,
+  updatedAt: e.updatedAt,
+});
+
+export const toLabStrategy = (e: LabStrategyEntity): StrategyRecord => ({
+  id: e.id,
+  userId: e.userId,
+  name: e.name,
+  description: e.description,
+  spec: e.spec,
+  runCount: e.runCount ?? 0,
+  createdAt: e.createdAt,
+  updatedAt: e.updatedAt,
+});
+
+export const toLabBacktest = (e: LabBacktestEntity): BacktestRecord => ({
+  id: e.id,
+  userId: e.userId,
+  strategyId: e.strategyId,
+  name: e.name,
+  symbol: e.symbol,
+  timeframe: e.timeframe,
+  from: e.from,
+  to: e.to,
+  stats: e.stats,
+  result: e.result,
+  createdAt: e.createdAt,
+});
+
+export const toPaperAccount = (e: PaperAccountEntity): PaperAccountRecord => ({
+  id: e.id,
+  userId: e.userId,
+  name: e.name,
+  startingCapital: canonicalMoney(e.startingCapital),
+  cash: canonicalMoney(e.cash),
+  createdAt: e.createdAt,
+  updatedAt: e.updatedAt,
+});
+
+export const toPaperOrder = (e: PaperOrderEntity): PaperOrderRecord => ({
+  id: e.id,
+  userId: e.userId,
+  accountId: e.accountId,
+  symbol: e.symbol,
+  timeframe: e.timeframe,
+  side: e.side,
+  quantity: canonicalQuantity(e.quantity),
+  orderType: e.orderType,
+  limitPrice: e.limitPrice === null ? null : canonicalMoney(e.limitPrice),
+  status: e.status,
+  placedDate: e.placedDate,
+  placedTime: e.placedTime,
+  filledDate: e.filledDate,
+  filledTime: e.filledTime,
+  fillPrice: e.fillPrice === null ? null : canonicalMoney(e.fillPrice),
+  tradeId: e.tradeId,
+  message: e.message,
+  createdAt: e.createdAt,
+  updatedAt: e.updatedAt,
 });

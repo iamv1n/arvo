@@ -251,6 +251,8 @@ function toTrade(userId: string, parsed: ParsedTradeRow): NewTrade {
     tradeRef: parsed.tradeRef,
     notes: null,
     externalRef: parsed.externalRef,
+    isPaper: false,
+    paperAccountId: null,
   };
 }
 

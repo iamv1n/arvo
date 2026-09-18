@@ -13,6 +13,7 @@ import { PortfolioImportService, type PortfolioImportDependencies } from './port
 import { RuleService } from './rules/rule.service';
 import { TradingService, type TradingDependencies } from './trading/trading.service';
 import { TradeImportService, type TradeImportDependencies } from './trading/import.service';
+import { LabService, type LabDependencies } from './lab/lab.service';
 import { AnalyticsService } from './services/analytics.service';
 import { AccountService } from './services/account.service';
 import { CategoryService } from './services/category.service';
@@ -42,6 +43,8 @@ export class FinanceCore {
   readonly holdings: HoldingService;
   readonly portfolio: PortfolioService;
   readonly trading: TradingService;
+  /** Strategy Lab: payoffs, backtests and paper trading. Education and simulation only. */
+  readonly lab: LabService;
   private readonly tradeImportService?: TradeImportService;
   private readonly portfolioImportService?: PortfolioImportService;
   private readonly importService?: ImportService;
@@ -53,6 +56,7 @@ export class FinanceCore {
       portfolioImports?: PortfolioImportDependencies;
       tradeImports?: TradeImportDependencies;
       trading?: TradingDependencies;
+      lab?: LabDependencies;
     },
   ) {
     this.accounts = new AccountService(store);
@@ -72,6 +76,7 @@ export class FinanceCore {
     this.holdings = new HoldingService(store);
     this.portfolio = new PortfolioService(store);
     this.trading = new TradingService(store, deps?.trading);
+    this.lab = new LabService(store, deps?.lab);
     if (deps?.tradeImports) this.tradeImportService = new TradeImportService(store, deps.tradeImports);
     if (deps?.imports) this.importService = new ImportService(store, deps.imports);
     if (deps?.portfolioImports) this.portfolioImportService = new PortfolioImportService(store, deps.portfolioImports);
