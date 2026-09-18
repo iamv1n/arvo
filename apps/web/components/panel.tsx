@@ -12,8 +12,9 @@ export function Panel({
   height,
   children,
   flush = false,
+  scroll = true,
   ...props
-}: Omit<CardProps, 'styles'> & { height: number; children: ReactNode; flush?: boolean }) {
+}: Omit<CardProps, 'styles'> & { height: number; children: ReactNode; flush?: boolean; scroll?: boolean }) {
   return (
     <Card
       {...props}
@@ -21,7 +22,7 @@ export function Panel({
       styles={{
         body: {
           height,
-          overflowY: 'auto',
+          overflowY: scroll ? 'auto' : 'hidden',
           padding: flush ? 0 : undefined,
         },
       }}

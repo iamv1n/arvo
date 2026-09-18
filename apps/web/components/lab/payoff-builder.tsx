@@ -342,8 +342,8 @@ export function PayoffBuilder() {
           ]}
         />
 
-        <Panel height={300} style={{ marginTop: 12 }} title="Payoff" extra={<Eyebrow>Solid: at expiry &nbsp;·&nbsp; dashed: today</Eyebrow>}>
-          <PayoffChart series={report?.series ?? []} spot={assumptions.spot} breakevens={report?.breakevens ?? []} height={272} currency={currency} />
+        <Panel height={220} scroll={false} style={{ marginTop: 12 }} title="Payoff" extra={<Eyebrow>Solid: at expiry &nbsp;·&nbsp; dashed: today</Eyebrow>}>
+          <PayoffChart series={report?.series ?? []} spot={assumptions.spot} breakevens={report?.breakevens ?? []} height={196} currency={currency} />
         </Panel>
 
         <Row gutter={[12, 12]} style={{ marginTop: 12 }}>
