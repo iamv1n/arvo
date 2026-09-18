@@ -108,6 +108,17 @@ const GlobalStyle = createGlobalStyle`
     background: ${({ theme }) => theme.colors.brand};
   }
 
+  /* A modal body scrolls inside itself rather than pushing its buttons off a short screen.
+     Modals that size their own body (the enlarged charts) set a max-height of their own. */
+  .ant-modal .ant-modal-body {
+    max-height: calc(100vh - 220px);
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .ant-modal-centered .ant-modal-body {
+    max-height: calc(100vh - 180px);
+  }
+
   /* Thin, theme-aware scrollbars. */
   * {
     scrollbar-width: thin;

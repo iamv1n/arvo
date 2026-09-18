@@ -399,7 +399,7 @@ function HistoryDrawer({ id, onClose }: { id: string | null; onClose: () => void
   const theme = useTheme();
   const { data } = useAlert(id);
   return (
-    <Modal open={!!id} title={data?.name ?? 'Trigger history'} onCancel={onClose} footer={null} width={640} destroyOnHidden>
+    <Modal open={!!id} title={data?.name ?? 'Trigger history'} onCancel={onClose} footer={null} width={820} destroyOnHidden>
       {data && <Typography.Paragraph type="secondary">{data.rule}</Typography.Paragraph>}
       {!data?.triggers.length ? (
         <Empty description="This alert has not fired yet." image={Empty.PRESENTED_IMAGE_SIMPLE} />

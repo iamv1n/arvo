@@ -443,6 +443,7 @@ function EditRowModal({
   return (
     <Modal
       open={!!row}
+      width={560}
       title={row ? `Edit row ${row.rowNumber}` : ''}
       okText="Save"
       onCancel={onClose}
