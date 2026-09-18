@@ -181,10 +181,12 @@ export default function DashboardPage() {
               <Empty description="No spending in this period" image={Empty.PRESENTED_IMAGE_SIMPLE} />
             ) : (
               <Flex gap={16} align="center" style={{ height: '100%' }}>
-                <div style={{ width: 150, flexShrink: 0 }}>
+                {/* The donut fills the panel's height rather than sitting in a 150px box with a
+                    band of empty space above and below it. */}
+                <div style={{ width: 190, flexShrink: 0 }}>
                   <ExpandableChart
                     title="Spending by category"
-                    height={150}
+                    height={190}
                     label="spending by category"
                     caption={<CategoryLegend>{categoryRows}</CategoryLegend>}
                     render={(h) => <CategoryDonut data={topSpend} currency={currency} size={h} />}

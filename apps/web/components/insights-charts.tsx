@@ -211,9 +211,12 @@ export function WeekdayRhythm({ weekdays, currency, height = 220 }: { weekdays: 
 // ---------------------------------------------------------------------------------------------
 // Purchase size bands: count bar and money bar side by side.
 
+/* The bands spread down the panel body instead of bunching at the top under a blank band. */
 const Bands = styled.div`
   display: grid;
+  align-content: space-between;
   gap: ${({ theme }) => theme.space[2]}px;
+  height: 100%;
 `;
 
 const BandRow = styled.div`
