@@ -337,6 +337,7 @@ export function BacktestTab() {
             </Space>
           </Card>
         )}
+        {result && <BacktestSidebar result={result} />}
       </Col>
 
       <Col xs={24} lg={14} xxl={15}>
@@ -376,6 +377,38 @@ export function BacktestTab() {
         )}
       </Col>
     </Row>
+  );
+}
+
+/** The detail figures and the assumptions, shown beside the form rather than under the charts. */
+export function BacktestSidebar({ result }: { result: BacktestResult }) {
+  const money = useMoney();
+  const stats = result.stats;
+  return (
+    <>
+      <Card size="small" style={{ marginTop: 12 }} title="The numbers">
+        <Row gutter={[8, 6]}>
+          <Stat label="Sharpe" value={stats.sharpe ?? 'Not enough history'} />
+          <Stat label="Expectancy" value={money(stats.expectancy, CURRENCY)} />
+          <Stat label="Profit factor" value={stats.profitFactor ?? '—'} />
+          <Stat label="Average win" value={money(stats.averageWin, CURRENCY)} />
+          <Stat label="Average loss" value={money(stats.averageLoss, CURRENCY)} />
+          <Stat label="Exposure" value={`${stats.exposurePercent}% of bars`} />
+          <Stat label="Average hold" value={`${stats.averageBarsHeld} bars`} />
+          <Stat label="Period" value={`${stats.from ?? '—'} to ${stats.to ?? '—'}`} />
+        </Row>
+      </Card>
+      <Card size="small" style={{ marginTop: 12, position: 'relative' }} title="What this run assumed">
+        <ul style={{ margin: 0, paddingLeft: 18 }}>
+          {result.assumptions.map((line) => (
+            <li key={line}>
+              <Muted>{line}</Muted>
+            </li>
+          ))}
+        </ul>
+        <LabNote type="warning" title="About this run" text={result.disclaimer} />
+      </Card>
+    </>
   );
 }
 
@@ -422,33 +455,6 @@ function BacktestResultView({ result }: { result: BacktestResult }) {
       </Panel>
 
       <Row gutter={[12, 12]} style={{ marginTop: 12 }}>
-        <Col xs={24} lg={10}>
-          <Card size="small" title="The numbers">
-            <Row gutter={[8, 6]}>
-              <Stat label="Sharpe" value={stats.sharpe ?? 'Not enough history'} />
-              <Stat label="Expectancy" value={money(stats.expectancy, CURRENCY)} />
-              <Stat label="Profit factor" value={stats.profitFactor ?? '—'} />
-              <Stat label="Average win" value={money(stats.averageWin, CURRENCY)} />
-              <Stat label="Average loss" value={money(stats.averageLoss, CURRENCY)} />
-              <Stat label="Exposure" value={`${stats.exposurePercent}% of bars`} />
-              <Stat label="Average hold" value={`${stats.averageBarsHeld} bars`} />
-              <Stat label="Period" value={`${stats.from ?? '—'} to ${stats.to ?? '—'}`} />
-            </Row>
-          </Card>
-        </Col>
-        <Col xs={24} lg={14}>
-          <Card size="small" title="What this run assumed">
-            <ul style={{ margin: 0, paddingLeft: 18 }}>
-              {result.assumptions.map((line) => (
-                <li key={line}>
-                  <Muted>{line}</Muted>
-                </li>
-              ))}
-            </ul>
-            <LabNote type="warning" text={result.disclaimer} />
-          </Card>
-        </Col>
-
         {result.walkForward && (
           <Col span={24}>
             <Card size="small" style={{ position: 'relative' }} title={`Walk-forward split at ${result.walkForward.splitDate}`}>
