@@ -1,6 +1,6 @@
 import { createFinanceStore, databaseOptions } from '@arvo/database';
 import { FinanceCore } from '@arvo/finance-core';
-import { ArvoPortfolioParser, ArvoStatementParser, LocalAttachmentStore, LocalFileStore, TradeFileParser } from '@arvo/imports';
+import { ArvoPortfolioParser, ArvoStatementParser, LocalAttachmentStore, LocalFileStore, TradeFileParser, parseOhlcvFile } from '@arvo/imports';
 import { resolve } from 'node:path';
 import { Global, Inject, Module, type OnApplicationShutdown } from '@nestjs/common';
 import { DataSource } from 'typeorm';
@@ -29,6 +29,9 @@ import { APP_CONFIG, type AppConfig } from '../config/app-config';
           tradeImports: { parser: new TradeFileParser() },
           // Journal screenshots sit beside the statements, under the same local root.
           trading: { attachments: new LocalAttachmentStore(resolve(__dirname, '../../../..', config.storagePath, 'trading')) },
+          // The Strategy Lab reads price files the user uploads and nothing else; there is no
+          // market data driver here, and no code path from the lab to a network call.
+          lab: { marketData: { parse: parseOhlcvFile } },
         }),
     },
   ],

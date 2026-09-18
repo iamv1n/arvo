@@ -16,6 +16,7 @@ import { MailModule } from './mail/mail.module';
 import { RemindersController } from './reminders/reminders.controller';
 import { RemindersService } from './reminders/reminders.service';
 import { HealthController } from './health/health.controller';
+import { LabController } from './lab/lab.controller';
 import { ImportsController } from './imports/imports.controller';
 import { BudgetsController, GoalsController } from './planning/planning.controller';
 import { PlanningController, ScenariosController } from './planning/scenarios.controller';
@@ -50,6 +51,7 @@ class ConfigModule {}
   ],
   controllers: [
     HealthController,
+    LabController,
     UsersController,
     RemindersController,
     TokensController,
