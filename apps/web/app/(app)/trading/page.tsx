@@ -4,6 +4,7 @@ import { PlusOutlined } from '@ant-design/icons';
 import { Button, DatePicker, Select, Space, Tabs } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { useState } from 'react';
+import { CoolOffBanner } from '../../../components/cool-off-banner';
 import { PageHeader } from '../../../components/page-header';
 import { BehaviourView } from '../../../components/trading/behaviour';
 import { CostsView } from '../../../components/trading/costs';
@@ -53,6 +54,8 @@ export default function TradingPage() {
           </Space>
         }
       />
+
+      <CoolOffBanner showLink={false} />
 
       <Tabs
         destroyOnHidden

@@ -1,7 +1,7 @@
 'use client';
 
 import { LogoutOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons';
-import { ArrowsClockwise, ArrowsLeftRight, Bank, ChartLineUp, ChartPieSlice, Compass, FileArrowUp, Flask, Gauge, GearSix, Lightbulb, PiggyBank, Receipt, Sparkle, SquaresFour, Strategy, Target } from '@phosphor-icons/react';
+import { ArrowsClockwise, ArrowsLeftRight, Bank, Broadcast, ChartLineUp, ChartPieSlice, Compass, FileArrowUp, Flask, Gauge, GearSix, Lightbulb, PiggyBank, Receipt, Sparkle, SquaresFour, Strategy, Target } from '@phosphor-icons/react';
 import { Avatar, Button, Drawer, Dropdown, Grid, Layout, Menu, Spin } from 'antd';
 import { MenuFoldOutlined, MenuOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import Link from 'next/link';
@@ -10,6 +10,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import styled, { useTheme } from 'styled-components';
 import { useAuth } from '../lib/auth';
 import { usePreferences } from '../lib/preferences';
+import { NotificationBell } from './notification-bell';
 import { PixelLogo } from './logo';
 import { ThemeToggle } from './theme-toggle';
 import { VerifyEmailBanner } from './verify-email-banner';
@@ -27,6 +28,7 @@ const NAV = [
   { key: '/portfolio', icon: navIcon(ChartPieSlice), label: 'Portfolio' },
   { key: '/trading', icon: navIcon(Strategy), label: 'Trading' },
   { key: '/lab', icon: navIcon(Flask), label: 'Strategy lab' },
+  { key: '/markets', icon: navIcon(Broadcast), label: 'Markets' },
   { key: '/budgets', icon: navIcon(Gauge), label: 'Budgets' },
   { key: '/goals', icon: navIcon(Target), label: 'Goals' },
   { key: '/savings', icon: navIcon(PiggyBank), label: 'Save more' },
@@ -183,6 +185,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             />
           )}
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <NotificationBell />
             <ThemeToggle />
             <Dropdown
               menu={{

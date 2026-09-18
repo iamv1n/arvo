@@ -12,6 +12,7 @@ import { CategoryDonut, categoryColors, IncomeExpenseChart } from '../../../comp
 import { PageHeader } from '../../../components/page-header';
 import { Panel } from '../../../components/panel';
 import { RowList } from '../../../components/row-list';
+import { CoolOffBanner } from '../../../components/cool-off-banner';
 import { UploadReminderBanner } from '../../../components/upload-reminder-banner';
 import { useAuth } from '../../../lib/auth';
 import { formatDate } from '../../../lib/format';
@@ -103,6 +104,7 @@ export default function DashboardPage() {
         extra={<Segmented options={PERIOD_OPTIONS} value={period} onChange={setPeriod} />}
       />
 
+      <CoolOffBanner />
       <UploadReminderBanner />
 
       {accounts.data?.length === 0 && (
