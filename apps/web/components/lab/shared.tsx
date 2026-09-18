@@ -1,9 +1,10 @@
 'use client';
 
-import { Flask, Info, Warning } from '@phosphor-icons/react';
+import { Flask } from '@phosphor-icons/react';
 import { Tooltip } from 'antd';
 import { useEffect, useState, type ReactNode } from 'react';
 import styled from 'styled-components';
+import { NoteMarker } from './notes-drawer';
 
 /*
  * Pieces every lab tab uses.
@@ -85,12 +86,17 @@ export function LabBanner() {
         {state === 'open' && (
           <>
             {' '}
-            Every figure here comes from a model applied to inputs you chose, or from replaying price data you imported. Nothing is a
-            forecast, nothing is a recommendation, and Arvo has no connection to any broker.
+            Every figure here comes from a model applied to inputs you chose, or from replaying
+            price data you imported. Nothing is a forecast, nothing is a recommendation, and Arvo
+            has no connection to any broker.
           </>
         )}
       </span>
-      <button type="button" onClick={() => set(state === 'open' ? 'collapsed' : 'open')} aria-expanded={state === 'open'}>
+      <button
+        type="button"
+        onClick={() => set(state === 'open' ? 'collapsed' : 'open')}
+        aria-expanded={state === 'open'}
+      >
         {state === 'open' ? 'less' : 'more'}
       </button>
       <button type="button" onClick={() => set('hidden')} aria-label="Hide this notice">
@@ -101,85 +107,20 @@ export function LabBanner() {
 }
 
 /**
- * A quieter in-panel caveat. Once read, it folds into a small "i" bubble that sits in the corner
- * of the same box, so the warning stays one click away without eating the panel.
+ * A caveat. It no longer prints itself into the panel: it registers with the drawer on the right
+ * and leaves a small marker, so the numbers keep their space and the conditions stay one click
+ * away. `type` is kept for the callers that flag a warning rather than an explanation.
  */
-const NoteRow = styled.div<{ $tone: 'info' | 'warning' }>`
-  position: relative;
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin-top: 12px;
-  padding: 8px 10px;
-  border-radius: ${({ theme }) => theme.radii.sm}px;
-  border-left: 3px solid ${({ theme, $tone }) => ($tone === 'warning' ? theme.colors.warning : theme.colors.brand)};
-  background: ${({ theme, $tone }) => ($tone === 'warning' ? theme.colors.warningSubtle : theme.colors.brandSubtle)};
-  font-size: 12px;
-  line-height: 1.5;
-  color: ${({ theme }) => theme.colors.textSecondary};
-
-  .anticon,
-  svg {
-    flex-shrink: 0;
-    color: ${({ theme, $tone }) => ($tone === 'warning' ? theme.colors.warning : theme.colors.brandText)};
-  }
-  button {
-    all: unset;
-    cursor: pointer;
-    padding: 0 2px;
-    color: ${({ theme }) => theme.colors.textMuted};
-    font-size: 12px;
-  }
-  button:hover,
-  button:focus-visible {
-    color: ${({ theme }) => theme.colors.textPrimary};
-  }
-`;
-
-const Bubble = styled.button<{ $tone: 'info' | 'warning' }>`
-  all: unset;
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
-  z-index: 2;
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 999px;
-  cursor: pointer;
-  background: ${({ theme, $tone }) => ($tone === 'warning' ? theme.colors.warningSubtle : theme.colors.brandSubtle)};
-  color: ${({ theme, $tone }) => ($tone === 'warning' ? theme.colors.warning : theme.colors.brandText)};
-  border: 1px solid ${({ theme, $tone }) => ($tone === 'warning' ? theme.colors.warning : theme.colors.brand)};
-  font-size: 11px;
-  font-weight: 700;
-
-  &:hover,
-  &:focus-visible {
-    filter: brightness(1.08);
-  }
-`;
-
-export function LabNote({ text, type = 'info' }: { text: ReactNode; type?: 'info' | 'warning' }) {
-  const [open, setOpen] = useState(true);
-  if (!open) {
-    return (
-      <Tooltip title={text}>
-        <Bubble type="button" $tone={type} onClick={() => setOpen(true)} aria-label="Show the caveat">
-          i
-        </Bubble>
-      </Tooltip>
-    );
-  }
-  return (
-    <NoteRow $tone={type}>
-      {type === 'warning' ? <Warning size={15} weight="duotone" /> : <Info size={15} weight="duotone" />}
-      <span style={{ flex: 1, minWidth: 0 }}>{text}</span>
-      <button type="button" onClick={() => setOpen(false)} aria-label="Hide this caveat">
-        ×
-      </button>
-    </NoteRow>
-  );
+export function LabNote({
+  text,
+  type = 'info',
+  title,
+}: {
+  text: ReactNode;
+  type?: 'info' | 'warning';
+  title?: ReactNode;
+}) {
+  return <NoteMarker tone={type} title={title} body={text} />;
 }
 
 /** A signed figure, coloured by direction. Never a signal, only arithmetic. */
@@ -204,7 +145,15 @@ export const ChartFrame = styled.div<{ $height: number }>`
 export const num = (value: string | number | null | undefined) => Number(value ?? 0);
 
 /** Renders an extreme that may be unbounded, rather than printing a made-up number. */
-export function Extreme({ amount, unlimited, format }: { amount: string | null; unlimited: boolean; format: (value: string) => string }) {
+export function Extreme({
+  amount,
+  unlimited,
+  format,
+}: {
+  amount: string | null;
+  unlimited: boolean;
+  format: (value: string) => string;
+}) {
   if (unlimited) {
     return (
       <Tooltip title="The payoff keeps growing as the underlying moves, so there is no number to show. Size the position as if the worst case were real, because it is.">

@@ -9,6 +9,7 @@ import { MarketDataWizard } from '../../../components/lab/market-data';
 import { PaperTrading } from '../../../components/lab/paper-trading';
 import { PayoffBuilder } from '../../../components/lab/payoff-builder';
 import { LabBanner } from '../../../components/lab/shared';
+import { LabNotesProvider } from '../../../components/lab/notes-drawer';
 
 /**
  * The Strategy Lab: payoffs, backtests and paper trading.
@@ -28,18 +29,20 @@ export default function LabPage() {
         subtitle="Work out what a structure would pay, what a rule would have done, and how big a position your own risk budget allows. Nothing here is traded, and nothing here is advice."
       />
 
-      <Tabs
-        destroyOnHidden
-        items={[
-          { key: 'payoff', label: 'Payoff builder', children: <PayoffBuilder /> },
-          { key: 'futures', label: 'Futures', children: <FuturesCalculator /> },
-          { key: 'sizing', label: 'Position sizing', children: <SizingCalculator /> },
-          { key: 'backtest', label: 'Backtest', children: <BacktestTab /> },
-          { key: 'paper', label: 'Paper trading', children: <PaperTrading /> },
-          { key: 'data', label: 'Market data', children: <MarketDataWizard /> },
-          { key: 'library', label: 'Library', children: <StrategyLibrary /> },
-        ]}
-      />
+      <LabNotesProvider>
+        <Tabs
+          destroyOnHidden
+          items={[
+            { key: 'payoff', label: 'Payoff builder', children: <PayoffBuilder /> },
+            { key: 'futures', label: 'Futures', children: <FuturesCalculator /> },
+            { key: 'sizing', label: 'Position sizing', children: <SizingCalculator /> },
+            { key: 'backtest', label: 'Backtest', children: <BacktestTab /> },
+            { key: 'paper', label: 'Paper trading', children: <PaperTrading /> },
+            { key: 'data', label: 'Market data', children: <MarketDataWizard /> },
+            { key: 'library', label: 'Library', children: <StrategyLibrary /> },
+          ]}
+        />
+      </LabNotesProvider>
     </>
   );
 }
