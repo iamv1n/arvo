@@ -1,11 +1,11 @@
 'use client';
 
 import { EyeInvisibleOutlined, EyeOutlined, RiseOutlined } from '@ant-design/icons';
-import { App, Button, Card, Col, Empty, Flex, Progress, Row, Segmented, Tag, Tooltip, Typography } from 'antd';
+import { App, Button, Card, Empty, Flex, Progress, Segmented, Tag, Tooltip, Typography } from 'antd';
 import { DataTable, useTableColumns, type DataColumn } from '../../../components/data-table';
 import { useState } from 'react';
 import { PageHeader } from '../../../components/page-header';
-import { StatCard } from '../../../components/stat-card';
+import { ResultStrip } from '../../../components/result-strip';
 import { api, errorMessage } from '../../../lib/api';
 import { formatDate, formatMoney, titleCase } from '../../../lib/format';
 import { useAccounts, useCategories, useLedgerMutation, useRecurring } from '../../../lib/queries';
@@ -38,10 +38,13 @@ export default function RecurringPage() {
               key: 'name',
               alwaysVisible: true,
               title: 'Name',
+              width: 260,
               render: (_, s) => (
-                <div>
-                  <Typography.Text strong>{s.label}</Typography.Text>
-                  <Typography.Text type="secondary" style={{ display: 'block', fontSize: 12 }}>
+                <div style={{ minWidth: 0 }}>
+                  <Typography.Text strong ellipsis style={{ display: 'block' }}>
+                    {s.label}
+                  </Typography.Text>
+                  <Typography.Text type="secondary" ellipsis style={{ display: 'block', fontSize: 12 }}>
                     {[s.categoryId && categoryName.get(s.categoryId), accountName.get(s.accountId)].filter(Boolean).join(' · ')}
                   </Typography.Text>
                 </div>
@@ -113,27 +116,32 @@ export default function RecurringPage() {
   return (
     <>
       <PageHeader title="Recurring" subtitle="Subscriptions, EMIs and bills detected from your transactions." />
-      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={24} md={8}>
-          <StatCard label="Per month" loading={recurring.isPending} value={data && formatMoney(data.monthlyTotal, currency)} hint="Active, not dismissed" />
-        </Col>
-        <Col xs={24} md={8}>
-          <StatCard label="Per year" loading={recurring.isPending} value={data && formatMoney(data.annualTotal, currency)} />
-        </Col>
-        <Col xs={24} md={8}>
-          <StatCard
-            icon={<RiseOutlined />}
-            label="Price increases"
-            loading={recurring.isPending}
-            value={data && String(data.priceIncreases)}
-            tone={increases.length ? 'negative' : undefined}
-            hint={increases.length ? increases.map((s) => s.label).join(', ') : 'None detected'}
-          />
-        </Col>
-      </Row>
+      {/* Money totals and a list of names: long, not round, and the increases hint used to run
+          past the edge of a stat card. A ruled ribbon lets each figure be as long as it is. */}
+      <div style={{ marginBottom: 16 }}>
+        <ResultStrip
+          items={[
+          {
+            label: 'Per month',
+            value: data ? formatMoney(data.monthlyTotal, currency) : '—',
+            caveat: 'Active, not dismissed',
+          },
+          { label: 'Per year', value: data ? formatMoney(data.annualTotal, currency) : '—' },
+          {
+            label: 'Price increases',
+            value: data ? String(data.priceIncreases) : '—',
+            tone: increases.length ? 'negative' : 'neutral',
+            caveat: increases.length ? increases.map((s) => s.label).join(', ') : 'None detected',
+          },
+          ]}
+        />
+      </div>
+
 
       <Card
         title={
+          /* The view switch scrolls sideways on a phone instead of stretching the card header. */
+          <div style={{ maxWidth: '100%', overflowX: 'auto' }}>
           <Segmented<View>
             value={view}
             onChange={setView}
@@ -143,6 +151,7 @@ export default function RecurringPage() {
               { value: 'dismissed', label: 'Dismissed' },
             ]}
           />
+          </div>
         }
         extra={settings}
         styles={{ body: { padding: 0 } }}
@@ -152,7 +161,7 @@ export default function RecurringPage() {
           loading={recurring.isFetching}
           dataSource={visible}
           pagination={false}
-          scroll={{ x: 960 }}
+          scroll={{ x: 'max-content' }}
           locale={{ emptyText: <Empty description="Nothing here. Recurring charges appear after 3 regular payments." image={Empty.PRESENTED_IMAGE_SIMPLE} /> }}
           columns={columns}
         />

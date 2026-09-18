@@ -32,16 +32,18 @@ export default function ImportsPage() {
               key: 'file',
               alwaysVisible: true,
               title: 'File',
+              width: 300,
+              ellipsis: true,
               render: (_, b) => (
-                <Link href={`/imports/${b.id}`} style={{ display: 'inline-flex', gap: 8 }}>
+                <Link href={`/imports/${b.id}`} style={{ display: 'inline-flex', gap: 8, maxWidth: '100%', minWidth: 0 }}>
                   {ICONS[b.fileType]}
-                  <Typography.Text ellipsis style={{ maxWidth: 260 }}>
+                  <Typography.Text ellipsis style={{ minWidth: 0 }}>
                     {b.filename}
                   </Typography.Text>
                 </Link>
               ),
             },
-            { key: 'account', title: 'Account', render: (_, b) => accountName.get(b.accountId), width: 200 },
+            { key: 'account', title: 'Account', ellipsis: true, render: (_, b) => accountName.get(b.accountId), width: 180 },
             { key: 'status', title: 'Status', render: (_, b) => <BatchStatusTag status={b.status} />, width: 150 },
             {
               key: 'rows',
@@ -95,7 +97,7 @@ export default function ImportsPage() {
           rowKey="id"
           loading={imports.isFetching}
           dataSource={imports.data?.items}
-          scroll={{ x: 820 }}
+          scroll={{ x: 'max-content' }}
           locale={{
             emptyText: (
               <Empty description="No imports yet" style={{ padding: 32 }}>

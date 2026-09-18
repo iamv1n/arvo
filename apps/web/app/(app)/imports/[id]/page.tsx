@@ -54,7 +54,7 @@ export default function ImportDetailPage() {
           </Button>
         }
       />
-      <Card style={{ marginBottom: 16 }}>
+      <Card style={{ marginBottom: 16 }} styles={{ body: { overflowX: 'auto' } }}>
         <Steps
           current={STEP[batch.status]}
           status={batch.status === 'FAILED' ? 'error' : batch.status === 'CANCELLED' ? 'error' : undefined}

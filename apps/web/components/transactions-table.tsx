@@ -68,10 +68,13 @@ export function TransactionsTable({
       alwaysVisible: true,
       title: 'Description',
       dataIndex: 'description',
+      /* Free text: the only column allowed to take the slack, and it ellipsizes rather than
+         pushing the amount off the right edge. */
+      width: 280,
       ellipsis: true,
       render: (description: string, t) => (
-        <Space size={6}>
-          <span>{description}</span>
+        <Space size={6} style={{ maxWidth: '100%' }}>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{description}</span>
           {t.type !== TransactionType.EXPENSE && (
             <Tag color={TYPE_COLORS[t.type]} variant="filled">
               {titleCase(t.type)}
@@ -103,7 +106,7 @@ export function TransactionsTable({
       title: 'Amount',
       dataIndex: 'amount',
       align: 'right',
-      width: 150,
+      width: 160,
       render: (amount: string, t) => <Amount value={amount} currency={t.currency} type={t.type} />,
     },
     ...(hideAccount
@@ -156,7 +159,9 @@ export function TransactionsTable({
         columns={columns}
         dataSource={data}
         loading={loading}
-        scroll={{ x: 960 }}
+        /* Every column has a width, so max-content sizes the table to its columns and scrolls
+           inside the card instead of stretching the page. */
+        scroll={{ x: 'max-content' }}
         {...tableProps}
       />
     </>

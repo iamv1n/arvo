@@ -1,7 +1,7 @@
 'use client';
 
 import { TransactionType } from '@arvo/types';
-import { App, AutoComplete, Col, DatePicker, Form, Input, Modal, Row, Select } from 'antd';
+import { App, AutoComplete, DatePicker, Form, Input, Modal, Select } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { useEffect, useMemo } from 'react';
 import { api, errorMessage } from '../lib/api';
@@ -9,6 +9,7 @@ import { titleCase } from '../lib/format';
 import { useAccounts, useLedgerMutation, useMerchants } from '../lib/queries';
 import type { Transaction } from '../lib/types';
 import { CategorySelect } from './category-select';
+import { FormGrid, FullWidthField } from './mono-label';
 
 interface Values {
   accountId: string;
@@ -114,74 +115,60 @@ export function TransactionFormModal({
       destroyOnHidden
     >
       <Form form={form} layout="vertical" requiredMark={false}>
-        <Row gutter={12}>
-          <Col xs={24} sm={14}>
-            <Form.Item name="accountId" label="Account" rules={[{ required: true }]}>
-              <Select
-                loading={accounts.isPending}
-                options={accounts.data?.filter((a) => a.isActive || a.id === transaction?.accountId).map((a) => ({ value: a.id, label: a.name }))}
-              />
+        <FormGrid $min={160}>
+          <Form.Item name="accountId" label="Account" rules={[{ required: true }]}>
+            <Select
+              loading={accounts.isPending}
+              options={accounts.data?.filter((a) => a.isActive || a.id === transaction?.accountId).map((a) => ({ value: a.id, label: a.name }))}
+            />
+          </Form.Item>
+          <Form.Item name="date" label="Date" rules={[{ required: true }]}>
+            <DatePicker style={{ width: '100%' }} format="D MMM YYYY" />
+          </Form.Item>
+          <FullWidthField>
+            <Form.Item name="description" label="Description" rules={[{ required: true, max: 500 }]}>
+              <Input placeholder="Swiggy order" />
             </Form.Item>
-          </Col>
-          <Col xs={24} sm={10}>
-            <Form.Item name="date" label="Date" rules={[{ required: true }]}>
-              <DatePicker style={{ width: '100%' }} format="D MMM YYYY" />
-            </Form.Item>
-          </Col>
-        </Row>
-        <Form.Item name="description" label="Description" rules={[{ required: true, max: 500 }]}>
-          <Input placeholder="Swiggy order" />
-        </Form.Item>
-        <Row gutter={12}>
-          <Col xs={24} sm={10}>
-            <Form.Item name="type" label="Type" rules={[{ required: true }]}>
-              <Select options={Object.values(TransactionType).map((t) => ({ value: t, label: titleCase(t) }))} />
-            </Form.Item>
-          </Col>
-          <Col xs={10} sm={6}>
-            <Form.Item name="direction" label="Direction">
-              <Select
-                disabled={fixedSign}
-                options={[
-                  { value: 'OUT', label: 'Out' },
-                  { value: 'IN', label: 'In' },
-                ]}
-              />
-            </Form.Item>
-          </Col>
-          <Col xs={14} sm={8}>
-            <Form.Item
-              name="amount"
-              label="Amount"
-              rules={[
-                { required: true },
-                { pattern: /^\d{1,15}(\.\d{1,4})?$/, message: 'A positive number' },
+          </FullWidthField>
+          <Form.Item name="type" label="Type" rules={[{ required: true }]}>
+            <Select options={Object.values(TransactionType).map((t) => ({ value: t, label: titleCase(t) }))} />
+          </Form.Item>
+          <Form.Item name="direction" label="Direction">
+            <Select
+              disabled={fixedSign}
+              options={[
+                { value: 'OUT', label: 'Out' },
+                { value: 'IN', label: 'In' },
               ]}
-            >
-              <Input inputMode="decimal" placeholder="0.00" />
+            />
+          </Form.Item>
+          <Form.Item
+            name="amount"
+            label="Amount"
+            rules={[
+              { required: true },
+              { pattern: /^\d{1,15}(\.\d{1,4})?$/, message: 'A positive number' },
+            ]}
+          >
+            <Input inputMode="decimal" placeholder="0.00" />
+          </Form.Item>
+          <Form.Item name="categoryId" label="Category">
+            <CategorySelect style={{ width: '100%', minWidth: 0 }} />
+          </Form.Item>
+          <Form.Item name="merchantName" label="Merchant">
+            <AutoComplete
+              allowClear
+              placeholder="Swiggy"
+              options={merchants.data?.map((m) => ({ value: m.name }))}
+              showSearch={{ filterOption: (input, option) => (option?.value ?? '').toLowerCase().includes(input.toLowerCase()) }}
+            />
+          </Form.Item>
+          <FullWidthField>
+            <Form.Item name="notes" label="Notes">
+              <Input.TextArea autoSize={{ minRows: 1, maxRows: 4 }} />
             </Form.Item>
-          </Col>
-        </Row>
-        <Row gutter={12}>
-          <Col xs={24} sm={12}>
-            <Form.Item name="categoryId" label="Category">
-              <CategorySelect style={{ width: '100%' }} />
-            </Form.Item>
-          </Col>
-          <Col xs={24} sm={12}>
-            <Form.Item name="merchantName" label="Merchant">
-              <AutoComplete
-                allowClear
-                placeholder="Swiggy"
-                options={merchants.data?.map((m) => ({ value: m.name }))}
-                showSearch={{ filterOption: (input, option) => (option?.value ?? '').toLowerCase().includes(input.toLowerCase()) }}
-              />
-            </Form.Item>
-          </Col>
-        </Row>
-        <Form.Item name="notes" label="Notes">
-          <Input.TextArea autoSize={{ minRows: 1, maxRows: 4 }} />
-        </Form.Item>
+          </FullWidthField>
+        </FormGrid>
       </Form>
     </Modal>
   );

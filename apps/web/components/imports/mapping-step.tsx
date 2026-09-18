@@ -7,6 +7,7 @@ import styled from 'styled-components';
 import { api, errorMessage } from '../../lib/api';
 import { useImportMutation } from '../../lib/queries';
 import type { ColumnMapping, ImportBatch, ImportSummary } from '../../lib/types';
+import { FieldGrid } from '../mono-label';
 
 type Role = 'ignore' | 'date' | 'description' | 'amount' | 'debit' | 'credit' | 'direction' | 'balance' | 'reference' | 'currency';
 
@@ -40,6 +41,17 @@ function rolesFromMapping(mapping: ColumnMapping | null, columnCount: number): R
   for (const index of mapping.description) if (index < columnCount) roles[index] = 'description';
   return roles;
 }
+
+/* Label above each control, matching the lab's form grid: mono, small, uppercase. */
+const FieldLabel = styled.span`
+  display: block;
+  margin-bottom: 4px;
+  font-family: ${({ theme }) => theme.typography.fontFamilyMono};
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.colors.textMuted};
+`;
 
 const HeaderCell = styled.div`
   display: flex;
@@ -170,31 +182,32 @@ export function MappingStep({ batch, onProcessed }: { batch: ImportBatch; onProc
       )}
 
       <Card>
-        <Flex wrap gap={24} align="flex-end">
+        {/* Sheet, date format and the sign switch as auto-fit tracks: each keeps a readable
+            minimum width and drops to one column on a phone. */}
+        <FieldGrid $min={190}>
           {detection.tables.length > 1 && (
-            <div>
-              <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 4 }}>
-                Sheet
-              </Typography.Text>
+            <label>
+              <FieldLabel>Sheet</FieldLabel>
               <Select
                 value={table.index}
                 onChange={switchTable}
-                style={{ minWidth: 200 }}
+                style={{ width: '100%' }}
                 options={detection.tables.map((t) => ({ value: t.index, label: `${t.name} · ${t.rowCount} rows` }))}
               />
-            </div>
+            </label>
           )}
-          <div>
-            <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 4 }}>
-              Date format
-            </Typography.Text>
-            <Select value={dateFormat} onChange={setDateFormat} style={{ width: 200 }} options={dateOptions} />
-          </div>
-          <Flex gap={8} align="center">
-            <Switch checked={invert} onChange={setInvert} />
-            <Typography.Text>Spending is shown as positive (flip signs)</Typography.Text>
-          </Flex>
-        </Flex>
+          <label>
+            <FieldLabel>Date format</FieldLabel>
+            <Select value={dateFormat} onChange={setDateFormat} style={{ width: '100%' }} options={dateOptions} />
+          </label>
+          <label>
+            <FieldLabel>Amount signs</FieldLabel>
+            <Flex gap={8} align="center" style={{ minHeight: 32 }}>
+              <Switch checked={invert} onChange={setInvert} />
+              <Typography.Text style={{ fontSize: 13 }}>Spending is shown as positive (flip signs)</Typography.Text>
+            </Flex>
+          </label>
+        </FieldGrid>
       </Card>
 
       <Card title="Match columns" extra={<Typography.Text type="secondary">Preview of the first rows</Typography.Text>} styles={{ body: { padding: 0 } }}>
@@ -222,7 +235,7 @@ export function MappingStep({ batch, onProcessed }: { batch: ImportBatch; onProc
               <Typography.Text
                 type={roles[index] === 'ignore' ? 'secondary' : undefined}
                 ellipsis
-                style={{ maxWidth: 260 }}
+                style={{ display: 'block', maxWidth: 240 }}
               >
                 {row[index]}
               </Typography.Text>

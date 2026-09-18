@@ -118,9 +118,11 @@ function TransactionsView() {
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             onSearch={(value) => setFilters({ search: value })}
-            style={{ width: 260 }}
+            /* Grows into spare space on a desktop, shrinks to the card width on a phone. */
+            style={{ flex: '1 1 240px', minWidth: 200, maxWidth: 320 }}
           />
           <DatePicker.RangePicker
+            style={{ flex: '1 1 240px', minWidth: 0, maxWidth: 300 }}
             value={filters.from && filters.to ? [dayjs(filters.from), dayjs(filters.to)] : null}
             onChange={(range) => setFilters({ from: range?.[0]?.format('YYYY-MM-DD'), to: range?.[1]?.format('YYYY-MM-DD') })}
             format="D MMM YY"
@@ -128,12 +130,13 @@ function TransactionsView() {
           <Select
             placeholder="Account"
             allowClear
-            style={{ minWidth: 170 }}
+            style={{ flex: '1 1 170px', minWidth: 150, maxWidth: 240 }}
             value={filters.accountId}
             onChange={(accountId) => setFilters({ accountId })}
             options={accounts.data?.map((a) => ({ value: a.id, label: a.name }))}
           />
           <CategorySelect
+            style={{ flex: '1 1 180px', minWidth: 150, maxWidth: 240 }}
             value={filters.categoryId}
             onChange={(categoryId) => setFilters({ categoryId, uncategorized: undefined })}
           />
@@ -142,7 +145,7 @@ function TransactionsView() {
             placeholder="Type"
             allowClear
             maxTagCount="responsive"
-            style={{ minWidth: 170 }}
+            style={{ flex: '1 1 170px', minWidth: 150, maxWidth: 240 }}
             value={filters.type ?? []}
             onChange={(type) => setFilters({ type })}
             options={Object.values(TransactionType).map((t) => ({ value: t, label: titleCase(t) }))}
@@ -170,9 +173,9 @@ function TransactionsView() {
                 { value: 'IN', label: 'Money in' },
               ]}
             />
-            <Space.Compact>
+            <Space.Compact style={{ flex: '0 1 240px' }}>
               <Input
-                style={{ width: 120 }}
+                style={{ minWidth: 0 }}
                 placeholder="Min ₹"
                 inputMode="decimal"
                 value={amounts.min}
@@ -182,7 +185,7 @@ function TransactionsView() {
                 aria-label="Minimum amount"
               />
               <Input
-                style={{ width: 120 }}
+                style={{ minWidth: 0 }}
                 placeholder="Max ₹"
                 inputMode="decimal"
                 value={amounts.max}
@@ -192,7 +195,11 @@ function TransactionsView() {
                 aria-label="Maximum amount"
               />
             </Space.Compact>
-            <MerchantSelect value={filters.merchantId} onChange={(merchantId) => setFilters({ merchantId, withoutMerchant: undefined })} />
+            <MerchantSelect
+              style={{ flex: '1 1 180px', minWidth: 150, maxWidth: 240 }}
+              value={filters.merchantId}
+              onChange={(merchantId) => setFilters({ merchantId, withoutMerchant: undefined })}
+            />
             <Select
               mode="multiple"
               placeholder="Source"
@@ -224,8 +231,13 @@ function TransactionsView() {
         <Card style={{ marginBottom: 16 }} styles={{ body: { padding: '12px 16px' } }}>
           <Flex align="center" gap={12} wrap>
             <Typography.Text strong>{selected.length} selected</Typography.Text>
-            <Space.Compact>
-              <CategorySelect value={bulkCategory} onChange={setBulkCategory} placeholder="Set category (empty clears)" />
+            <Space.Compact style={{ flex: '1 1 280px', maxWidth: 360 }}>
+              <CategorySelect
+                style={{ flex: 1, minWidth: 0 }}
+                value={bulkCategory}
+                onChange={setBulkCategory}
+                placeholder="Set category (empty clears)"
+              />
               <Button
                 icon={<TagsOutlined />}
                 loading={bulk.isPending}
@@ -234,9 +246,9 @@ function TransactionsView() {
                 Apply
               </Button>
             </Space.Compact>
-            <Space.Compact>
+            <Space.Compact style={{ flex: '1 1 260px', maxWidth: 340 }}>
               <AutoComplete
-                style={{ width: 220 }}
+                style={{ flex: 1, minWidth: 0 }}
                 placeholder="Set merchant"
                 value={bulkMerchant}
                 onChange={setBulkMerchant}

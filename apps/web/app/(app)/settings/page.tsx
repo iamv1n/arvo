@@ -62,15 +62,18 @@ function SettingsView() {
         activeKey={active}
         onChange={(tab) => router.replace(`/settings?tab=${tab}`)}
         tabPlacement={screens.lg ? 'start' : 'top'}
+        /* On a phone the strip stays one line and scrolls (antd's own nav scrolling) instead of
+           wrapping to two rows and shoving the panel down the page. */
+        tabBarGutter={screens.lg ? undefined : 16}
         items={TABS.map((t) => ({
           key: t.key,
           label: (
-            <Flex gap={8} align="center" style={{ minWidth: screens.lg ? 150 : undefined }}>
+            <Flex gap={8} align="center" style={{ minWidth: screens.lg ? 150 : undefined, whiteSpace: 'nowrap' }}>
               {t.icon}
               {t.label}
             </Flex>
           ),
-          children: <div style={{ maxWidth: 880 }}>{t.content}</div>,
+          children: <div style={{ maxWidth: 880, minWidth: 0 }}>{t.content}</div>,
         }))}
       />
     </>

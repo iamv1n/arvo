@@ -7,14 +7,12 @@ import {
   App,
   Button,
   Card,
-  Col,
   DatePicker,
   Dropdown,
   Flex,
   Form,
   Input,
   Modal,
-  Row,
   Segmented,
   Select,
   Tooltip,
@@ -29,6 +27,7 @@ import { useImportMutation, useImportRows } from '../../lib/queries';
 import type { ImportRow, ImportRowStatus, ImportSummary } from '../../lib/types';
 import { Amount } from '../amount';
 import { CategorySelect } from '../category-select';
+import { FormGrid, FullWidthField } from '../mono-label';
 import { RowStatusTag } from './status-tags';
 import { DataTable, usePagedTable, useTableColumns, type DataColumn } from '../data-table';
 import { usePreferences } from '../../lib/preferences';
@@ -63,6 +62,12 @@ const Stat = styled.button<{ $active: boolean; $tone: string }>`
     font-size: ${({ theme }) => theme.typography.fontSize.sm}px;
     color: ${({ theme }) => theme.colors.textSecondary};
   }
+`;
+
+const StatGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: ${({ theme }) => theme.space[3]}px;
 `;
 
 const SkippedRows = styled.div`
@@ -122,18 +127,21 @@ export function ReviewStep({ summary, onRemap }: { summary: ImportSummary; onRem
               key: 'description',
               alwaysVisible: true,
               title: 'Description',
+              /* The widest column, and the only free-text one: it ellipsizes so the decision
+                 buttons stay on screen instead of being pushed past the right edge. */
+              width: 300,
               render: (_, r) => (
-                <div style={{ minWidth: 200 }}>
-                  <Typography.Text ellipsis style={{ display: 'block', maxWidth: 320 }}>
+                <div style={{ minWidth: 0 }}>
+                  <Typography.Text ellipsis style={{ display: 'block' }}>
                     {r.description ?? '—'}
                   </Typography.Text>
                   {r.issues.length > 0 && (
-                    <Typography.Text type="danger" style={{ fontSize: 12 }}>
+                    <Typography.Text type="danger" style={{ display: 'block', fontSize: 12, lineHeight: 1.35 }}>
                       {r.issues.map((i) => i.message).join(' · ')}
                     </Typography.Text>
                   )}
                   {r.status === 'POSSIBLE_DUPLICATE' && (
-                    <Typography.Text type="warning" style={{ fontSize: 12 }}>
+                    <Typography.Text type="warning" style={{ display: 'block', fontSize: 12, lineHeight: 1.35 }}>
                       {r.duplicateOfTransactionId ? 'Matches a transaction already in your ledger' : 'Same as an earlier line in this file'}
                     </Typography.Text>
                   )}
@@ -158,7 +166,7 @@ export function ReviewStep({ summary, onRemap }: { summary: ImportSummary; onRem
                   variant="borderless"
                   value={r.type ?? undefined}
                   placeholder="Type"
-                  style={{ width: 130 }}
+                  style={{ width: '100%' }}
                   disabled={!r.amount}
                   onChange={(type) => void run(update.mutateAsync({ id: r.id, type }))}
                   options={Object.values(TransactionType).map((t) => ({ value: t, label: titleCase(t) }))}
@@ -168,16 +176,16 @@ export function ReviewStep({ summary, onRemap }: { summary: ImportSummary; onRem
             {
               key: 'category',
               title: 'Category',
-              width: 220,
+              width: 230,
               render: (_, r) => (
-                <Flex vertical>
+                <Flex vertical style={{ minWidth: 0 }}>
                   <CategorySelect
                     value={r.categoryId}
-                    style={{ width: 200, minWidth: 0 }}
+                    style={{ width: '100%', minWidth: 0 }}
                     onChange={(categoryId) => void run(update.mutateAsync({ id: r.id, categoryId }))}
                   />
                   {r.categorizationSource && (
-                    <Typography.Text type="secondary" style={{ fontSize: 11, paddingLeft: 4 }}>
+                    <Typography.Text type="secondary" ellipsis style={{ fontSize: 11, paddingLeft: 4 }}>
                       by {SOURCE_LABEL[r.categorizationSource]}
                       {r.merchantName ? ` · ${r.merchantName}` : ''}
                     </Typography.Text>
@@ -191,7 +199,7 @@ export function ReviewStep({ summary, onRemap }: { summary: ImportSummary; onRem
               title: 'Decision',
               width: 190,
               render: (_, r) => (
-                <Flex gap={4} align="center">
+                <Flex gap={4} align="center" wrap>
                   <Tooltip title={r.status === 'INVALID' ? 'Fix the row first' : 'Import this row'}>
                     <Button
                       size="small"
@@ -253,9 +261,11 @@ export function ReviewStep({ summary, onRemap }: { summary: ImportSummary; onRem
         <Alert key={w.message} type="warning" showIcon title={w.message} />
       ))}
 
-      <Row gutter={[12, 12]}>
+      {/* Five counts as an auto-fit grid: equal cells at any width, one column on a phone,
+          and no band of empty space when a Row's columns stretch. */}
+      <StatGrid>
         {stats.map((s) => (
-          <Col key={s.key} xs={12} md={8} xl={{ flex: '1 1 0' }}>
+          <div key={s.key}>
             <Stat
               $active={filter === s.key}
               $tone={s.tone}
@@ -267,9 +277,9 @@ export function ReviewStep({ summary, onRemap }: { summary: ImportSummary; onRem
               <strong>{s.value.toLocaleString('en-IN')}</strong>
               <span>{s.label}</span>
             </Stat>
-          </Col>
+          </div>
         ))}
-      </Row>
+      </StatGrid>
 
       {pending > 0 && (
         <Alert
@@ -295,6 +305,7 @@ export function ReviewStep({ summary, onRemap }: { summary: ImportSummary; onRem
       <Card
         styles={{ body: { padding: 0 } }}
         title={
+          <div style={{ maxWidth: '100%', overflowX: 'auto' }}>
           <Segmented<Filter>
             value={filter}
             onChange={(value) => {
@@ -309,6 +320,7 @@ export function ReviewStep({ summary, onRemap }: { summary: ImportSummary; onRem
               { value: 'INVALID', label: 'Invalid' },
             ]}
           />
+          </div>
         }
         extra={
           <Flex gap={4} align="center">
@@ -343,7 +355,7 @@ export function ReviewStep({ summary, onRemap }: { summary: ImportSummary; onRem
           size="middle"
           loading={rows.isFetching}
           dataSource={rows.data?.items}
-          scroll={{ x: 1100 }}
+          scroll={{ x: 'max-content' }}
           pagination={pagination}
           rowClassName={(r) => (r.decision === 'REJECT' ? 'arvo-row-skipped' : '')}
           columns={columns}
@@ -463,36 +475,30 @@ function EditRowModal({
         </Typography.Paragraph>
       )}
       <Form form={form} layout="vertical" requiredMark={false}>
-        <Row gutter={12}>
-          <Col span={10}>
-            <Form.Item name="date" label="Date" rules={[{ required: true }]}>
-              <DatePicker style={{ width: '100%' }} format="D MMM YYYY" />
+        <FormGrid $min={150}>
+          <Form.Item name="date" label="Date" rules={[{ required: true }]}>
+            <DatePicker style={{ width: '100%' }} format="D MMM YYYY" />
+          </Form.Item>
+          <Form.Item name="type" label="Type" rules={[{ required: true }]}>
+            <Select options={Object.values(TransactionType).map((t) => ({ value: t, label: titleCase(t) }))} />
+          </Form.Item>
+          <FullWidthField>
+            <Form.Item name="description" label="Description" rules={[{ required: true, max: 500 }]}>
+              <Input />
             </Form.Item>
-          </Col>
-          <Col span={14}>
-            <Form.Item name="type" label="Type" rules={[{ required: true }]}>
-              <Select options={Object.values(TransactionType).map((t) => ({ value: t, label: titleCase(t) }))} />
+          </FullWidthField>
+          <Form.Item name="direction" label="Direction">
+            <Select options={[{ value: 'OUT', label: 'Out' }, { value: 'IN', label: 'In' }]} />
+          </Form.Item>
+          <Form.Item name="amount" label="Amount" rules={[{ required: true }, { pattern: /^\d{1,15}(\.\d{1,4})?$/, message: 'A positive number' }]}>
+            <Input inputMode="decimal" />
+          </Form.Item>
+          <FullWidthField>
+            <Form.Item name="merchantName" label="Merchant">
+              <Input placeholder="Optional" />
             </Form.Item>
-          </Col>
-        </Row>
-        <Form.Item name="description" label="Description" rules={[{ required: true, max: 500 }]}>
-          <Input />
-        </Form.Item>
-        <Row gutter={12}>
-          <Col span={8}>
-            <Form.Item name="direction" label="Direction">
-              <Select options={[{ value: 'OUT', label: 'Out' }, { value: 'IN', label: 'In' }]} />
-            </Form.Item>
-          </Col>
-          <Col span={16}>
-            <Form.Item name="amount" label="Amount" rules={[{ required: true }, { pattern: /^\d{1,15}(\.\d{1,4})?$/, message: 'A positive number' }]}>
-              <Input inputMode="decimal" />
-            </Form.Item>
-          </Col>
-        </Row>
-        <Form.Item name="merchantName" label="Merchant">
-          <Input placeholder="Optional" />
-        </Form.Item>
+          </FullWidthField>
+        </FormGrid>
       </Form>
     </Modal>
   );

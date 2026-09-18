@@ -1,7 +1,7 @@
 'use client';
 
 import { ArrowLeftOutlined, DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
-import { App, Button, Card, Col, Popconfirm, Result, Row, Skeleton, Space } from 'antd';
+import { App, Button, Card, Popconfirm, Result, Skeleton, Space } from 'antd';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
@@ -9,7 +9,7 @@ import { usePagedTable } from '../../../../components/data-table';
 import { usePreferences } from '../../../../lib/preferences';
 import { AccountFormModal } from '../../../../components/account-form-modal';
 import { PageHeader } from '../../../../components/page-header';
-import { StatCard } from '../../../../components/stat-card';
+import { ResultStrip } from '../../../../components/result-strip';
 import { TransactionFormModal } from '../../../../components/transaction-form-modal';
 import { TransactionsTable } from '../../../../components/transactions-table';
 import { api, errorMessage } from '../../../../lib/api';
@@ -76,17 +76,29 @@ export default function AccountDetailPage() {
           </Space>
         }
       />
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={24} md={8}>
-          <StatCard label="Balance" value={formatMoney(account.balance, account.currency)} hint={`Opening ${formatMoney(account.openingBalance, account.currency)}`} />
-        </Col>
-        <Col xs={12} md={8}>
-          <StatCard label="Money in this month" loading={summary.isPending} value={summary.data && formatMoney(summary.data.income, account.currency)} tone="positive" />
-        </Col>
-        <Col xs={12} md={8}>
-          <StatCard label="Spent this month" loading={summary.isPending} value={summary.data && formatMoney(summary.data.expenses, account.currency)} />
-        </Col>
-      </Row>
+      {/* Balances read long (₹12,34,567.89) and clipped inside stat cards at xs={12}; the ribbon
+          gives each figure a full cell and wraps to one column on a phone. */}
+      <div style={{ marginBottom: 24 }}>
+        <ResultStrip
+          items={[
+            {
+              label: 'Balance',
+              value: formatMoney(account.balance, account.currency),
+              caveat: `Opening ${formatMoney(account.openingBalance, account.currency)}`,
+            },
+            {
+              label: 'Money in this month',
+              value: summary.data ? formatMoney(summary.data.income, account.currency) : '—',
+              tone: 'positive',
+            },
+            {
+              label: 'Spent this month',
+              value: summary.data ? formatMoney(summary.data.expenses, account.currency) : '—',
+              tone: 'negative',
+            },
+          ]}
+        />
+      </div>
       <Card styles={{ body: { padding: 0 } }}>
         <TransactionsTable
           tableId="account-transactions"

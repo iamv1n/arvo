@@ -9,6 +9,7 @@ import { api, errorMessage } from '../../lib/api';
 import { titleCase } from '../../lib/format';
 import { useCategories } from '../../lib/queries';
 import { CategorySelect } from '../category-select';
+import { FieldGrid } from '../mono-label';
 import { SectionIntro } from './setting-row';
 
 type Field = 'description' | 'merchant' | 'amount' | 'direction';
@@ -74,10 +75,10 @@ export function RuleSettings() {
       ) : (
         <Flex vertical gap={8}>
           {rules.data?.map((rule, i) => (
-            <Flex key={rule.id} align="center" gap={12} wrap style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid var(--ant-color-border-secondary)', opacity: rule.isActive ? 1 : 0.55 }}>
+            <Flex key={rule.id} align="center" gap={12} wrap style={{ padding: '12px 14px', borderRadius: 6, border: '1px solid var(--ant-color-border-secondary)', opacity: rule.isActive ? 1 : 0.55 }}>
               <Tag variant="filled">{i + 1}</Tag>
               <ThunderboltOutlined />
-              <div style={{ flex: 1, minWidth: 220 }}>
+              <div style={{ flex: '1 1 200px', minWidth: 0 }}>
                 <Typography.Text strong>{rule.name}</Typography.Text>
                 <Typography.Text type="secondary" style={{ display: 'block', fontSize: 13 }}>
                   If {describe(rule)} →{' '}
@@ -133,10 +134,12 @@ export function RuleSettings() {
             {(fields, { add, remove: removeField }) => (
               <Flex vertical gap={8} style={{ margin: '8px 0 16px' }}>
                 {fields.map((field) => (
-                  <Flex key={field.key} gap={8} align="start">
+                  <Flex key={field.key} gap={8} align="start" wrap>
+                    {/* Field, operator and value each keep a readable minimum and wrap to the
+                        next line rather than collapsing to a 60px box in a narrow modal. */}
                     <Form.Item name={[field.name, 'field']} noStyle>
                       <Select
-                        style={{ width: 140 }}
+                        style={{ flex: '1 1 130px', minWidth: 120 }}
                         options={Object.entries(FIELD_LABEL).map(([value, label]) => ({ value, label }))}
                         onChange={(f: Field) => form.setFieldValue(['conditions', field.name, 'operator'], OPERATORS[f][0].value)}
                       />
@@ -147,9 +150,9 @@ export function RuleSettings() {
                         return (
                           <>
                             <Form.Item name={[field.name, 'operator']} noStyle>
-                              <Select style={{ width: 120 }} options={OPERATORS[f]} />
+                              <Select style={{ flex: '1 1 120px', minWidth: 110 }} options={OPERATORS[f]} />
                             </Form.Item>
-                            <Form.Item name={[field.name, 'value']} rules={[{ required: true, message: 'Value' }]} style={{ flex: 1, marginBottom: 0 }}>
+                            <Form.Item name={[field.name, 'value']} rules={[{ required: true, message: 'Value' }]} style={{ flex: '2 1 160px', minWidth: 140, marginBottom: 0 }}>
                               {f === 'direction' ? (
                                 <Select options={[{ value: 'OUT', label: 'Money out' }, { value: 'IN', label: 'Money in' }]} />
                               ) : (
@@ -172,17 +175,17 @@ export function RuleSettings() {
             )}
           </Form.List>
           <Typography.Text strong>Then set</Typography.Text>
-          <Flex gap={8} wrap style={{ marginTop: 8 }}>
+          <FieldGrid $min={150} style={{ marginTop: 8 }}>
             <Form.Item name="categoryId" style={{ marginBottom: 0 }}>
-              <CategorySelect placeholder="Category" />
+              <CategorySelect placeholder="Category" style={{ width: '100%', minWidth: 0 }} />
             </Form.Item>
             <Form.Item name="merchantName" style={{ marginBottom: 0 }}>
-              <Input placeholder="Merchant name" style={{ width: 180 }} />
+              <Input placeholder="Merchant name" />
             </Form.Item>
             <Form.Item name="type" style={{ marginBottom: 0 }}>
-              <Select allowClear placeholder="Type" style={{ width: 140 }} options={Object.values(TransactionType).map((t) => ({ value: t, label: titleCase(t) }))} />
+              <Select allowClear placeholder="Type" style={{ width: '100%' }} options={Object.values(TransactionType).map((t) => ({ value: t, label: titleCase(t) }))} />
             </Form.Item>
-          </Flex>
+          </FieldGrid>
         </Form>
       </Modal>
     </Card>

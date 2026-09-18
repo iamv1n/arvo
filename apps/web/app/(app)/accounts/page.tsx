@@ -9,6 +9,7 @@ import styled from 'styled-components';
 import { AccountFormModal } from '../../../components/account-form-modal';
 import { Amount } from '../../../components/amount';
 import { PageHeader } from '../../../components/page-header';
+import { ResultStrip } from '../../../components/result-strip';
 import { useAuth } from '../../../lib/auth';
 import { formatMoney, titleCase } from '../../../lib/format';
 import { useAccounts, useNetWorth } from '../../../lib/queries';
@@ -29,19 +30,6 @@ const IconBadge = styled.span`
   background: ${({ theme }) => theme.colors.brandSubtle};
   color: ${({ theme }) => theme.colors.brand};
   font-size: 18px;
-`;
-
-const Summary = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: ${({ theme }) => theme.space[8]}px;
-  margin-bottom: ${({ theme }) => theme.space[6]}px;
-
-  strong {
-    display: block;
-    font-size: ${({ theme }) => theme.typography.fontSize.xl}px;
-    font-variant-numeric: tabular-nums;
-  }
 `;
 
 export default function AccountsPage() {
@@ -74,20 +62,17 @@ export default function AccountsPage() {
         }
       />
       {netWorth.data && (
-        <Summary>
-          <div>
-            <Typography.Text type="secondary">Net worth</Typography.Text>
-            <strong>{formatMoney(netWorth.data.netWorth, currency)}</strong>
-          </div>
-          <div>
-            <Typography.Text type="secondary">Assets</Typography.Text>
-            <strong>{formatMoney(netWorth.data.assets, currency)}</strong>
-          </div>
-          <div>
-            <Typography.Text type="secondary">Owed</Typography.Text>
-            <strong>{formatMoney(netWorth.data.liabilities, currency)}</strong>
-          </div>
-        </Summary>
+        /* Three long money figures: a ruled ribbon keeps each in its own cell instead of letting
+           a wrapping flex row put two totals on one line and push the third off. */
+        <div style={{ marginBottom: 24 }}>
+          <ResultStrip
+            items={[
+              { label: 'Net worth', value: formatMoney(netWorth.data.netWorth, currency) },
+              { label: 'Assets', value: formatMoney(netWorth.data.assets, currency), tone: 'positive' },
+              { label: 'Owed', value: formatMoney(netWorth.data.liabilities, currency), tone: 'negative' },
+            ]}
+          />
+        </div>
       )}
 
       {accounts.isPending ? (
@@ -126,8 +111,8 @@ export default function AccountsPage() {
                         </div>
                         <Button type="text" icon={<EditOutlined />} onClick={() => openForm(account)} aria-label="Edit" />
                       </Flex>
-                      <Flex justify="space-between" align="flex-end" style={{ marginTop: 20 }}>
-                        <Flex gap={4}>
+                      <Flex justify="space-between" align="flex-end" gap={8} wrap style={{ marginTop: 20 }}>
+                        <Flex gap={4} wrap>
                           <Tag variant="filled">{titleCase(account.type)}</Tag>
                           {!account.isActive && <Tag>Inactive</Tag>}
                         </Flex>
