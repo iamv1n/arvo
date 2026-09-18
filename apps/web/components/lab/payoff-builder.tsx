@@ -342,15 +342,12 @@ export function PayoffBuilder() {
           ]}
         />
 
-        {/* On a wide screen the chart and the Greeks sit side by side, so the numbers are not
-            pushed a screen below the picture they describe. */}
+        <Panel height={300} style={{ marginTop: 12 }} title="Payoff" extra={<Eyebrow>Solid: at expiry &nbsp;·&nbsp; dashed: today</Eyebrow>}>
+          <PayoffChart series={report?.series ?? []} spot={assumptions.spot} breakevens={report?.breakevens ?? []} height={272} currency={currency} />
+        </Panel>
+
         <Row gutter={[12, 12]} style={{ marginTop: 12 }}>
           <Col xs={24} xxl={14}>
-            <Panel height={190} title="Payoff" extra={<Eyebrow>Solid: at expiry &nbsp;·&nbsp; dashed: today</Eyebrow>}>
-              <PayoffChart series={report?.series ?? []} spot={assumptions.spot} breakevens={report?.breakevens ?? []} height={170} currency={currency} />
-            </Panel>
-          </Col>
-          <Col xs={24} xxl={10}>
             <Card title="Greeks" size="small">
               <div style={{ overflowX: 'auto' }}>
                 <GreeksTable legs={report?.legs ?? []} net={report?.netGreeks} />
