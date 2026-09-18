@@ -1,7 +1,7 @@
 'use client';
 
 import { Flask, Info, Warning } from '@phosphor-icons/react';
-import { Alert, Button, Tooltip } from 'antd';
+import { Alert, Tooltip } from 'antd';
 import { useEffect, useState, type ReactNode } from 'react';
 import styled from 'styled-components';
 
@@ -15,54 +15,88 @@ import styled from 'styled-components';
 
 const STORAGE_KEY = 'arvo.lab.banner';
 
-/**
- * The standing disclaimer. It must be impossible to miss the first time, so it opens expanded;
- * after that the reader can fold it to a single line and the choice sticks in this browser.
- */
+/* A hairline strip, not a card: the disclaimer has to be seen, but it should cost the page a
+   line of text, not a block. Expand reads the full wording; the cross hides it for good in this
+   browser. */
+const Strip = styled.div<{ $open: boolean }>`
+  display: flex;
+  align-items: ${({ $open }) => ($open ? 'flex-start' : 'center')};
+  gap: 8px;
+  margin-bottom: ${({ theme }) => theme.space[4]}px;
+  padding: ${({ $open }) => ($open ? '8px 10px' : '0 10px')};
+  min-height: ${({ $open }) => ($open ? 'auto' : '22px')};
+  border-left: 3px solid ${({ theme }) => theme.colors.brand};
+  background: ${({ theme }) => theme.colors.brandSubtle};
+  border-radius: 0 3px 3px 0;
+  font-family: ${({ theme }) => theme.typography.fontFamilyMono};
+  font-size: 11px;
+  line-height: 1.5;
+  color: ${({ theme }) => theme.colors.textSecondary};
+
+  .text {
+    flex: 1;
+    min-width: 0;
+  }
+  b {
+    color: ${({ theme }) => theme.colors.textPrimary};
+    font-weight: 600;
+  }
+  button {
+    all: unset;
+    cursor: pointer;
+    padding: 0 4px;
+    color: ${({ theme }) => theme.colors.textMuted};
+    font-size: 11px;
+  }
+  button:hover,
+  button:focus-visible {
+    color: ${({ theme }) => theme.colors.textPrimary};
+  }
+`;
+
+/** The standing disclaimer as a one-line strip at the very top of the lab. */
 export function LabBanner() {
-  const [open, setOpen] = useState(true);
+  const [state, setState] = useState<'open' | 'collapsed' | 'hidden'>('collapsed');
 
   useEffect(() => {
     try {
-      setOpen(localStorage.getItem(STORAGE_KEY) !== 'collapsed');
+      const stored = localStorage.getItem(STORAGE_KEY);
+      setState(stored === 'hidden' ? 'hidden' : stored === 'collapsed' ? 'collapsed' : 'open');
     } catch {
-      // Storage unavailable; keep it expanded.
+      setState('open');
     }
   }, []);
 
-  const toggle = () => {
-    setOpen((current) => {
-      const next = !current;
-      try {
-        localStorage.setItem(STORAGE_KEY, next ? 'open' : 'collapsed');
-      } catch {
-        // Storage unavailable; the choice lasts for this view only.
-      }
-      return next;
-    });
+  const set = (next: 'open' | 'collapsed' | 'hidden') => {
+    setState(next);
+    try {
+      localStorage.setItem(STORAGE_KEY, next);
+    } catch {
+      // Storage unavailable; the choice lasts for this view only.
+    }
   };
 
+  if (state === 'hidden') return null;
   return (
-    <Alert
-      type="info"
-      showIcon
-      icon={<Flask size={18} weight="duotone" />}
-      message="Educational simulation — not investment advice. No live orders."
-      description={
-        open ? (
-          <span>
+    <Strip $open={state === 'open'} role="note">
+      <Flask size={13} weight="duotone" aria-hidden />
+      <span className="text">
+        <b>Educational simulation — not investment advice. No live orders.</b>
+        {state === 'open' && (
+          <>
+            {' '}
             Every figure here comes from a model applied to inputs you chose, or from replaying price data you imported. Nothing is a
             forecast, nothing is a recommendation, and Arvo has no connection to any broker.
-          </span>
-        ) : undefined
-      }
-      action={
-        <Button type="text" size="small" onClick={toggle} aria-expanded={open}>
-          {open ? 'Hide' : 'Details'}
-        </Button>
-      }
-      style={{ marginBottom: 16 }}
-    />
+          </>
+        )}
+      </span>
+      <button type="button" onClick={() => set(state === 'open' ? 'collapsed' : 'open')} aria-expanded={state === 'open'}>
+        {state === 'open' ? 'less' : 'more'}
+      </button>
+      <button type="button" onClick={() => set('hidden')} aria-label="Hide this notice">
+        ×
+      </button>
+    </Strip>
   );
 }
 

@@ -21,12 +21,12 @@ import { LabBanner } from '../../../components/lab/shared';
 export default function LabPage() {
   return (
     <>
+      <LabBanner />
+
       <PageHeader
         title="Strategy lab"
         subtitle="Work out what a structure would pay, what a rule would have done, and how big a position your own risk budget allows. Nothing here is traded, and nothing here is advice."
       />
-
-      <LabBanner />
 
       <Tabs
         destroyOnHidden
