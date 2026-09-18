@@ -1,13 +1,13 @@
 'use client';
 
-import { ArrowsClockwise, Coins, Scales, ShieldWarning } from '@phosphor-icons/react';
+import { Coins } from '@phosphor-icons/react';
 import { Alert, Button, Card, Col, DatePicker, Divider, Input, InputNumber, Row, Select, Space, Switch, Table, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { useCompute, type FuturesCalculation, type RiskOfRuinResult, type SizingResult } from '../../lib/lab';
 import { useMoney } from '../../lib/use-money';
 import { Eyebrow, Figure } from '../planning';
-import { StatCard } from '../stat-card';
+import { ResultStrip } from './result-strip';
 import { LabNote, Muted, Signed, num } from './shared';
 
 /*
@@ -152,27 +152,25 @@ export function FuturesCalculator() {
         {result && (
           <>
             <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-              <Col xs={12} xl={6}>
-                <StatCard variant="hero" label="Notional" icon={<Coins size={16} weight="duotone" />} value={money(result.notional, CURRENCY)} hint={`${result.quantity} units`} />
-              </Col>
-              <Col xs={12} xl={6}>
-                <StatCard label="Margin estimate" icon={<ShieldWarning size={17} weight="duotone" />} iconTone="warning" value={money(result.margin.total, CURRENCY)} hint="Rough — check with your broker" />
-              </Col>
-              <Col xs={12} xl={6}>
-                <StatCard
-                  label="Per point"
-                  icon={<Scales size={17} weight="duotone" />}
-                  iconTone="info"
-                  value={money(result.mtmPerPoint, CURRENCY)}
-                  hint={result.mtm === null ? 'No mark price given' : `MTM ${money(result.mtm, CURRENCY)}`}
-                />
-              </Col>
-              <Col xs={12} xl={6}>
-                <StatCard
-                  label="Basis"
-                  icon={<ArrowsClockwise size={17} weight="duotone" />}
-                  value={result.basis}
-                  hint={result.annualisedBasisPercent === null ? `${result.basisPercent}% of spot` : `${result.annualisedBasisPercent}% a year over ${result.daysToExpiry ?? 0} days`}
+              <Col span={24}>
+                <ResultStrip
+                  items={[
+                    { label: 'Notional', value: money(result.notional, CURRENCY), caveat: `${result.quantity} units` },
+                    { label: 'Margin estimate', value: money(result.margin.total, CURRENCY), caveat: 'Rough — check with your broker' },
+                    {
+                      label: 'Per point',
+                      value: money(result.mtmPerPoint, CURRENCY),
+                      caveat: result.mtm === null ? 'No mark price given' : `MTM ${money(result.mtm, CURRENCY)}`,
+                    },
+                    {
+                      label: 'Basis',
+                      value: result.basis,
+                      caveat:
+                        result.annualisedBasisPercent === null
+                          ? `${result.basisPercent}% of spot`
+                          : `${result.annualisedBasisPercent}% a year over ${result.daysToExpiry ?? 0} days`,
+                    },
+                  ]}
                 />
               </Col>
             </Row>

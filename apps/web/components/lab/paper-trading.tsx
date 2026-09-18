@@ -1,7 +1,6 @@
 'use client';
 
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
-import { Coins, Wallet } from '@phosphor-icons/react';
 import { Alert, App, Button, Card, Col, DatePicker, Empty, Input, InputNumber, Modal, Row, Select, Skeleton, Space, Table, Tag } from 'antd';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
@@ -9,7 +8,7 @@ import { api, errorMessage } from '../../lib/api';
 import { useBarSeries, useLabMutation, usePaperAccount, usePaperAccounts, type PaperOrder } from '../../lib/lab';
 import { useMoney } from '../../lib/use-money';
 import { Eyebrow } from '../planning';
-import { StatCard } from '../stat-card';
+import { ResultStrip } from './result-strip';
 import { LabNote, Muted, Signed, num } from './shared';
 
 /*
@@ -115,29 +114,20 @@ export function PaperTrading() {
 
         {data && (
           <>
-            <Col xs={12} xl={6}>
-              <StatCard
-                variant="hero"
-                label="Equity"
-                icon={<Wallet size={16} weight="duotone" />}
-                value={money(data.equity, CURRENCY)}
-                hint={`from ${money(data.account.startingCapital, CURRENCY)}`}
+            <Col span={24}>
+              <ResultStrip
+                items={[
+                  { label: 'Equity', value: money(data.equity, CURRENCY), caveat: `from ${money(data.account.startingCapital, CURRENCY)}` },
+                  {
+                    label: 'Total P&L',
+                    tone: num(data.totalPnl) < 0 ? 'negative' : 'positive',
+                    value: money(data.totalPnl, CURRENCY),
+                    caveat: `${money(data.realisedPnl, CURRENCY)} realised`,
+                  },
+                  { label: 'Cash', value: money(data.account.cash, CURRENCY), caveat: 'Not in a position' },
+                  { label: 'Charges paid', tone: 'negative', value: money(data.charges, CURRENCY), caveat: 'Statutory rates, same as a real fill' },
+                ]}
               />
-            </Col>
-            <Col xs={12} xl={6}>
-              <StatCard
-                label="Total P&L"
-                icon={<Coins size={17} weight="duotone" />}
-                tone={num(data.totalPnl) < 0 ? 'negative' : 'positive'}
-                value={money(data.totalPnl, CURRENCY)}
-                hint={`${money(data.realisedPnl, CURRENCY)} realised`}
-              />
-            </Col>
-            <Col xs={12} xl={6}>
-              <StatCard label="Cash" iconTone="info" icon={<Wallet size={17} weight="duotone" />} value={money(data.account.cash, CURRENCY)} hint="Not in a position" />
-            </Col>
-            <Col xs={12} xl={6}>
-              <StatCard label="Charges paid" icon={<Coins size={17} weight="duotone" />} iconTone="warning" value={money(data.charges, CURRENCY)} hint="Statutory rates, same as a real fill" />
             </Col>
 
             <Col xs={24} lg={9}>

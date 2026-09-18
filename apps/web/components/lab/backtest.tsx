@@ -21,8 +21,8 @@ import {
 import { useMoney } from '../../lib/use-money';
 import { Eyebrow } from '../planning';
 import { Panel } from '../panel';
-import { StatCard } from '../stat-card';
 import { EquityAndDrawdown } from './payoff-chart';
+import { ResultStrip } from './result-strip';
 import { EXIT_REASON_LABELS, LabNote, Muted, Signed, num } from './shared';
 
 /*
@@ -387,38 +387,30 @@ function BacktestResultView({ result }: { result: BacktestResult }) {
     <>
       {result.overfittingWarning && <Alert type="warning" showIcon message="Read this before the equity curve" description={result.overfittingWarning} style={{ marginBottom: 16 }} />}
 
-      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={12} xl={6}>
-          <StatCard
-            variant="hero"
-            label="Net P&L after charges"
-            icon={<Coins size={16} weight="duotone" />}
-            value={money(stats.netPnl, CURRENCY)}
-            hint={`${stats.returnPercent}% on ${money(stats.startingCapital, CURRENCY)}${stats.cagrPercent ? ` · ${stats.cagrPercent}% a year` : ''}`}
-          />
-        </Col>
-        <Col xs={12} xl={6}>
-          <StatCard label="Max drawdown" icon={<ChartLineDown size={17} weight="duotone" />} iconTone="warning" value={`${stats.maxDrawdownPercent}%`} hint={money(stats.maxDrawdownAmount, CURRENCY)} />
-        </Col>
-        <Col xs={12} xl={6}>
-          <StatCard label="Win rate" icon={<Percent size={17} weight="duotone" />} iconTone="info" value={`${stats.winRatePercent}%`} hint={`${stats.wins} won · ${stats.losses} lost of ${stats.trades}`} />
-        </Col>
-        <Col xs={12} xl={6}>
-          <StatCard
-            label="Charges"
-            icon={<Coins size={17} weight="duotone" />}
-            tone={num(stats.totalCharges) > 0 ? 'negative' : undefined}
-            value={money(stats.totalCharges, CURRENCY)}
-            hint={stats.chargesPercentOfGross === null ? 'No gross profit to compare with' : `${stats.chargesPercentOfGross}% of gross profit`}
-          />
-        </Col>
-      </Row>
+      <ResultStrip
+        items={[
+          {
+            label: 'Net P&L after charges',
+            tone: num(stats.netPnl) < 0 ? 'negative' : 'positive',
+            value: money(stats.netPnl, CURRENCY),
+            caveat: `${stats.returnPercent}% on ${money(stats.startingCapital, CURRENCY)}${stats.cagrPercent ? ` · ${stats.cagrPercent}% a year` : ''}`,
+          },
+          { label: 'Max drawdown', tone: 'negative', value: `${stats.maxDrawdownPercent}%`, caveat: money(stats.maxDrawdownAmount, CURRENCY) },
+          { label: 'Win rate', value: `${stats.winRatePercent}%`, caveat: `${stats.wins} won · ${stats.losses} lost of ${stats.trades}` },
+          {
+            label: 'Charges',
+            tone: num(stats.totalCharges) > 0 ? 'negative' : 'neutral',
+            value: money(stats.totalCharges, CURRENCY),
+            caveat: stats.chargesPercentOfGross === null ? 'No gross profit to compare with' : `${stats.chargesPercentOfGross}% of gross profit`,
+          },
+        ]}
+      />
 
-      <Panel height={260} title="Equity and drawdown" extra={<Eyebrow>{`${stats.bars} bars · ${result.elapsedMs} ms`}</Eyebrow>}>
+      <Panel height={230} style={{ marginTop: 12 }} title="Equity and drawdown" extra={<Eyebrow>{`${stats.bars} bars · ${result.elapsedMs} ms`}</Eyebrow>}>
         <EquityAndDrawdown data={result.equityCurve} height={280} />
       </Panel>
 
-      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+      <Row gutter={[12, 12]} style={{ marginTop: 12 }}>
         <Col xs={24} lg={10}>
           <Card size="small" title="The numbers">
             <Row gutter={[8, 6]}>
