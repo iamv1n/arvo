@@ -1,4 +1,14 @@
-import { BACKTEST_DISCLAIMER, DomainError, LAB_DISCLAIMER, TRADING_DISCLAIMER, type FinanceCore, type StrategyLeg, type TransactionRecord } from '@arvo/finance-core';
+import {
+  BACKTEST_DISCLAIMER,
+  DomainError,
+  LAB_DISCLAIMER,
+  MARKETS_DISCLAIMER,
+  TRADING_DISCLAIMER,
+  describeAlert,
+  type FinanceCore,
+  type StrategyLeg,
+  type TransactionRecord,
+} from '@arvo/finance-core';
 import { TransactionType } from '@arvo/types';
 import { z } from 'zod';
 
@@ -787,6 +797,137 @@ export const getBacktestSummary = defineTool({
   },
 });
 
+// ---- markets & alerts (read-only) ----
+
+const getWatchlist = defineTool({
+  name: 'finance_get_watchlist',
+  title: 'Get watchlists',
+  description:
+    'The user\'s watchlists and what is on them: symbol, exchange, the last known price with the date it is from and where it came from, the day change when two closes are known, the 52-week range from any price bars they imported, and their own quantity, average cost and unrealised P&L when they hold the instrument. With no id it lists the watchlists; with one it returns that list\'s rows. Use for "what am I watching?" or "where is INFY trading?". Read-only, and prices are whatever the user entered, imported or fetched from a provider they configured - a row marked stale is a row Arvo has no fresh price for, and saying so is the honest answer.',
+  inputSchema: z.object({
+    watchlist_id: uuid.optional().describe('One list; omit to list them all'),
+  }),
+  async run(ctx, input) {
+    if (!input.watchlist_id) {
+      const lists = await ctx.core.markets.listWatchlists(ctx.userId);
+      return {
+        watchlists: lists.map((list) => ({ id: list.id, name: list.name, notes: list.notes, position: list.position })),
+        count: lists.length,
+        disclaimer: MARKETS_DISCLAIMER,
+      };
+    }
+    const view = await ctx.core.markets.watchlistView(ctx.userId, input.watchlist_id, { asOf: ctx.today, currency: ctx.currency });
+    return {
+      watchlist: { id: view.watchlist.id, name: view.watchlist.name },
+      as_of: ctx.today,
+      quote_driver: view.driver,
+      stale_after_minutes: view.staleMinutes,
+      rows: view.rows.map((row) => ({
+        symbol: row.item.symbol,
+        exchange: row.item.exchange,
+        name: row.item.name,
+        price: row.price,
+        price_as_of: row.asOf,
+        price_source: row.source,
+        is_stale: row.isStale,
+        day_change: row.dayChange,
+        day_change_percent: row.dayChangePercent,
+        fifty_two_week_high: row.fiftyTwoWeekHigh,
+        fifty_two_week_low: row.fiftyTwoWeekLow,
+        holding: row.holding,
+      })),
+      disclaimer: MARKETS_DISCLAIMER,
+      provenance: { method: 'Prices from the user\'s own entries, imported bars and any provider they configured. Positions from their ledger.' },
+    };
+  },
+});
+
+const getAlerts = defineTool({
+  name: 'finance_get_alerts',
+  title: 'Get alerts',
+  description:
+    'The alerts the user has written, as plain-language rules, with whether each is on, its cooldown, its delivery channels, when it last fired and what the last evaluation concluded - including "skipped, stale data" where a price alert refused to answer from an old price. Optionally includes the trigger history with the evidence snapshot behind each firing. Use for "what alerts do I have?" or "why did my NIFTY alert fire?". Read-only: it evaluates nothing, fires nothing and creates nothing. Alerts are rules the user wrote; Arvo never generates a trading signal.',
+  inputSchema: z.object({
+    alert_id: uuid.optional().describe('One alert, with its trigger history'),
+    include_history: z.boolean().optional().describe('Include recent triggers for every alert'),
+  }),
+  async run(ctx, input) {
+    const alerts = input.alert_id
+      ? [await ctx.core.markets.requireAlert(ctx.userId, input.alert_id)]
+      : await ctx.core.markets.listAlerts(ctx.userId);
+    const wantsHistory = input.include_history || !!input.alert_id;
+    const rows = [];
+    for (const alert of alerts) {
+      rows.push({
+        id: alert.id,
+        name: alert.name,
+        kind: alert.kind,
+        rule: describeAlert(alert.name, alert.params, alert.repeats),
+        enabled: alert.isEnabled,
+        repeats: alert.repeats,
+        cooldown_minutes: alert.cooldownMinutes,
+        channels: alert.channels,
+        last_triggered_at: alert.lastTriggeredAt,
+        last_evaluated_at: alert.lastEvaluatedAt,
+        last_status: alert.lastStatus,
+        last_message: alert.lastMessage,
+        trigger_count: alert.triggerCount,
+        triggers: wantsHistory
+          ? (await ctx.core.markets.listTriggers(ctx.userId, alert.id, 20)).map((trigger) => ({
+              fired_at: trigger.firedAt,
+              message: trigger.message,
+              evidence: trigger.evidence,
+            }))
+          : undefined,
+      });
+    }
+    return {
+      alerts: rows,
+      count: rows.length,
+      disclaimer: MARKETS_DISCLAIMER,
+      provenance: { method: 'Rules the user wrote, evaluated server-side against their own ledger and prices.' },
+    };
+  },
+});
+
+const getUpcomingEvents = defineTool({
+  name: 'finance_get_upcoming_events',
+  title: 'Get upcoming market events',
+  description:
+    'Dated market events in one list: F&O expiries computed from the exchange rules and the trading-holiday calendar the user imported, corporate actions (dividends, splits, bonuses, buybacks, rights) they entered or imported, and IPOs they are tracking. Each row says whether it concerns something they hold or watch. Use for "when is the next expiry?", "any dividends coming up?" or "what is on this month?". Read-only, and nothing here is fetched from a market - expiries are computed, everything else is the user\'s own data.',
+  inputSchema: z.object({
+    from: date.optional().describe('Defaults to today'),
+    to: date.optional().describe('Defaults to 60 days out'),
+    kinds: z.array(z.enum(['EXPIRY', 'CORPORATE_ACTION', 'IPO'])).optional().describe('Limit to some kinds'),
+    relevant_only: z.boolean().optional().describe('Only events for instruments the user holds or watches'),
+  }),
+  async run(ctx, input) {
+    const from = input.from ?? ctx.today;
+    const to = input.to ?? new Date(Date.parse(`${from}T00:00:00Z`) + 60 * 86_400_000).toISOString().slice(0, 10);
+    let events = await ctx.core.markets.upcomingEvents(ctx.userId, { from, to });
+    if (input.kinds?.length) events = events.filter((event) => input.kinds!.includes(event.kind));
+    if (input.relevant_only) events = events.filter((event) => event.isRelevant);
+    return {
+      from,
+      to,
+      events: events.map((event) => ({
+        kind: event.kind,
+        date: event.date,
+        title: event.title,
+        detail: event.detail,
+        symbol: event.symbol,
+        concerns_you: event.isRelevant,
+        ...event.meta,
+      })),
+      count: events.length,
+      disclaimer: MARKETS_DISCLAIMER,
+      provenance: {
+        method: 'Expiries are computed from the configured per-index weekday rules and the imported holiday list; corporate actions and IPOs are the user\'s own records.',
+      },
+    };
+  },
+});
+
 export const FINANCE_TOOLS: FinanceTool[] = [
   getAccounts,
   getAccountBalance,
@@ -815,6 +956,9 @@ export const FINANCE_TOOLS: FinanceTool[] = [
   getTradingTaxSummary,
   evaluateOptionStrategy,
   getBacktestSummary,
+  getWatchlist,
+  getAlerts,
+  getUpcomingEvents,
 ] as unknown as FinanceTool[];
 
 

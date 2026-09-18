@@ -71,7 +71,7 @@ describe('finance tools', () => {
     const bad = await runTool(findTool('finance_run_what_if')!, { core: (await fixture()).core, userId: USER_A, currency: 'INR', today: '2026-08-20' }, { adjustments: [{ type: 'income', mode: 'x', value: '1' }] });
     expect(bad.ok).toBe(false);
     expect(await call('finance_run_what_if', { adjustments: [] }, USER_B)).toMatchObject({ yearlyImpact: '0.00', baseline: { liquid: '0.00' } });
-    expect(FINANCE_TOOLS).toHaveLength(27);
+    expect(FINANCE_TOOLS).toHaveLength(30);
   });
 
   it('report the portfolio, its allocation, its returns and its capital gains for the caller only', async () => {

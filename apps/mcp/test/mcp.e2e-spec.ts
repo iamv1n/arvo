@@ -110,6 +110,9 @@ describe('MCP server over Streamable HTTP (e2e)', () => {
         'finance_get_trading_tax_summary',
         'finance_evaluate_option_strategy',
         'finance_get_backtest_summary',
+        'finance_get_watchlist',
+        'finance_get_alerts',
+        'finance_get_upcoming_events',
       ]),
     );
     expect(tools.every((t) => t.annotations?.readOnlyHint === true)).toBe(true);
