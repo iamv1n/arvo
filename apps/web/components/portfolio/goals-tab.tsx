@@ -10,7 +10,9 @@ import { formatDate, formatMoney } from '../../lib/format';
 import { useGoals, usePortfolioMutation, usePortfolioSummary } from '../../lib/queries';
 import type { GoalProjectionResult } from '../../lib/types';
 import { useMoney } from '../../lib/use-money';
+import { Panel } from '../panel';
 import { Eyebrow, SectionTitle } from '../planning';
+import { ResultStrip } from '../result-strip';
 import { NotAdvice } from './shared';
 
 /**
@@ -82,7 +84,7 @@ export function GoalsTab({ asOf }: { asOf?: string }) {
           const target = Number(goal.targetAmount);
           return (
             <Col key={goal.goalId} xs={24} lg={12}>
-              <Card
+              <Panel
                 title={
                   <span>
                     <Target size={16} weight="duotone" style={{ verticalAlign: -2, marginRight: 8 }} />
@@ -90,47 +92,45 @@ export function GoalsTab({ asOf }: { asOf?: string }) {
                   </span>
                 }
                 extra={<Eyebrow>by {formatDate(goal.targetDate)}</Eyebrow>}
-                styles={{ body: { height: 360, overflowY: 'auto' } }}
+                height={392}
+                scroll={false}
               >
-                <Row gutter={12} style={{ marginBottom: 12 }}>
-                  <Col span={8}>
-                    <Eyebrow>Mapped today</Eyebrow>
-                    <div style={{ fontSize: 20, fontFamily: 'var(--font-serif), Georgia, serif' }}>{money(goal.currentValue, currency)}</div>
-                  </Col>
-                  <Col span={8}>
-                    <Eyebrow>Target</Eyebrow>
-                    <div style={{ fontSize: 20, fontFamily: 'var(--font-serif), Georgia, serif' }}>{money(goal.targetAmount, currency)}</div>
-                  </Col>
-                  <Col span={8}>
-                    <Eyebrow>Chance of reaching it</Eyebrow>
-                    <div style={{ fontSize: 20, fontFamily: 'var(--font-serif), Georgia, serif' }}>{goal.probability}%</div>
-                  </Col>
-                </Row>
-                <ResponsiveContainer width="100%" height={160}>
-                  <BarChart data={rows} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                    <CartesianGrid vertical={false} stroke={theme.colors.borderSubtle} />
-                    <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fill: theme.colors.textMuted, fontSize: 11 }} />
-                    <YAxis
-                      tickLine={false}
-                      axisLine={false}
-                      width={64}
-                      tick={{ fill: theme.colors.textMuted, fontSize: 11 }}
-                      tickFormatter={(v: number) => formatMoney(v, currency, { compact: true })}
-                    />
-                    <Tooltip
-                      cursor={{ fill: theme.colors.bgMuted }}
-                      formatter={(v) => formatMoney(Number(v), currency)}
-                      contentStyle={{ background: theme.colors.bgSurfaceRaised, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.md }}
-                      itemStyle={{ color: theme.colors.textPrimary }}
-                    />
-                    <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={48}>
-                      {rows.map((row) => (
-                        <Cell key={row.name} fill={row.value >= target ? theme.colors.income : theme.colors.warning} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
+                {/* Three serif money figures in span-8 thirds of a half-width card clipped at
+                    almost every width; the ruled mono ribbon lets them be as long as they are. */}
+                <ResultStrip
+                  items={[
+                    { label: 'Mapped today', value: money(goal.currentValue, currency) },
+                    { label: 'Target', value: money(goal.targetAmount, currency) },
+                    { label: 'Chance of reaching it', value: `${goal.probability}%`, tone: goal.probability >= 50 ? 'positive' : 'negative' },
+                  ]}
+                />
+                <div style={{ marginTop: 12 }}>
+                  <ResponsiveContainer width="100%" height={168}>
+                    <BarChart data={rows} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                      <CartesianGrid vertical={false} stroke={theme.colors.borderSubtle} />
+                      <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fill: theme.colors.textMuted, fontSize: 11 }} />
+                      <YAxis
+                        tickLine={false}
+                        axisLine={false}
+                        width={64}
+                        tick={{ fill: theme.colors.textMuted, fontSize: 11 }}
+                        tickFormatter={(v: number) => formatMoney(v, currency, { compact: true })}
+                      />
+                      <Tooltip
+                        cursor={{ fill: theme.colors.bgMuted }}
+                        formatter={(v) => formatMoney(Number(v), currency)}
+                        contentStyle={{ background: theme.colors.bgSurfaceRaised, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.md }}
+                        itemStyle={{ color: theme.colors.textPrimary }}
+                      />
+                      <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={48}>
+                        {rows.map((row) => (
+                          <Cell key={row.name} fill={row.value >= target ? theme.colors.income : theme.colors.warning} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 12 }}>
                   <Eyebrow>Adding per month</Eyebrow>
                   <Input
                     size="small"
@@ -140,12 +140,12 @@ export function GoalsTab({ asOf }: { asOf?: string }) {
                     onBlur={(e) => setContributions({ ...contributions, [goal.goalId]: e.target.value || '0' })}
                   />
                 </div>
-                <Typography.Paragraph type="secondary" style={{ marginTop: 12, marginBottom: 0, fontSize: 12 }}>
-                  {goal.assumptions.paths.toLocaleString('en-IN')} simulated futures, seeded so this repeats exactly. Blend:{' '}
-                  {goal.blend.map((b) => `${b.percent}% ${b.assetClass.toLowerCase()}`).join(', ')} — {goal.assumptions.blendReturnPercent}% a year with{' '}
-                  {goal.assumptions.blendVolatilityPercent}% volatility. {goal.disclaimer}
-                </Typography.Paragraph>
-              </Card>
+              </Panel>
+              <Typography.Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0, fontSize: 12 }}>
+                {goal.assumptions.paths.toLocaleString('en-IN')} simulated futures, seeded so this repeats exactly. Blend:{' '}
+                {goal.blend.map((b) => `${b.percent}% ${b.assetClass.toLowerCase()}`).join(', ')} — {goal.assumptions.blendReturnPercent}% a year with{' '}
+                {goal.assumptions.blendVolatilityPercent}% volatility. {goal.disclaimer}
+              </Typography.Paragraph>
             </Col>
           );
         })}
@@ -159,7 +159,7 @@ export function GoalsTab({ asOf }: { asOf?: string }) {
           rowKey="id"
           size="small"
           pagination={false}
-          scroll={{ x: 560 }}
+          scroll={{ x: 'max-content' }}
           dataSource={holdings}
           columns={[
             { key: 'name', title: 'Holding', dataIndex: 'name' },
@@ -167,7 +167,7 @@ export function GoalsTab({ asOf }: { asOf?: string }) {
             {
               key: 'goal',
               title: 'Earmarked for',
-              width: 240,
+              width: 220,
               render: (_, row) => (
                 <Select
                   allowClear

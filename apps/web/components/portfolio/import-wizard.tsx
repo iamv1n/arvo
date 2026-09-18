@@ -77,7 +77,7 @@ export function PortfolioImportWizard() {
   return (
     <Row gutter={[16, 16]}>
       <Col xs={24} lg={9}>
-        <Card title="Upload a file" styles={{ body: { minHeight: 420 } }}>
+        <Card title="Upload a file" styles={{ body: { minHeight: 300 } }}>
           <Space direction="vertical" size={12} style={{ width: '100%' }}>
             <div>
               <Eyebrow>File type</Eyebrow>
@@ -218,7 +218,7 @@ export function PortfolioImportWizard() {
                 <Table<PortfolioImportRow>
                   rowKey="id"
                   size="small"
-                  scroll={{ x: 760 }}
+                  scroll={{ x: 'max-content' }}
                   pagination={{ pageSize: 25, size: 'small' }}
                   dataSource={summary.rows}
                   columns={[
@@ -226,7 +226,7 @@ export function PortfolioImportWizard() {
                       key: 'instrument',
                       title: 'Instrument',
                       render: (_, row) => (
-                        <div>
+                        <div style={{ maxWidth: 260 }}>
                           <div>{row.parsed.instrumentName}</div>
                           <Eyebrow>{[row.parsed.isin, row.parsed.folio, row.parsed.symbol].filter(Boolean).join(' · ') || '—'}</Eyebrow>
                         </div>
@@ -247,7 +247,11 @@ export function PortfolioImportWizard() {
                       render: (_, row) => (
                         <div>
                           <Stamp $tone={ROW_TONES[row.status]}>{row.status}</Stamp>
-                          {row.message && <div><Eyebrow>{row.message}</Eyebrow></div>}
+                          {row.message && (
+                            <div style={{ maxWidth: 220, whiteSpace: 'normal' }}>
+                              <Eyebrow>{row.message}</Eyebrow>
+                            </div>
+                          )}
                         </div>
                       ),
                     },

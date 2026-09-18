@@ -29,7 +29,7 @@ export default function PortfolioPage() {
         title="Portfolio"
         subtitle="What you own, what it has returned, and what it would cost to change it. Analysis and simulation only — never a recommendation to trade."
         extra={
-          <Space>
+          <Space wrap>
             <DatePicker value={asOf} onChange={(value) => setAsOf(value ?? dayjs())} allowClear={false} maxDate={dayjs()} />
             <Button type="primary" icon={<PlusOutlined />} onClick={() => setAdding(true)}>
               Add holding
@@ -38,8 +38,10 @@ export default function PortfolioPage() {
         }
       />
 
+      {/* Seven labels stay on one line: antd scrolls the strip rather than wrapping it. */}
       <Tabs
         destroyOnHidden
+        tabBarStyle={{ marginBottom: 16 }}
         items={[
           { key: 'overview', label: 'Overview', children: <PortfolioOverview asOf={day} /> },
           { key: 'holdings', label: 'Holdings', children: <HoldingsTable asOf={day} onAdd={() => setAdding(true)} /> },

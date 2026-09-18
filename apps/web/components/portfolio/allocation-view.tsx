@@ -2,29 +2,21 @@
 
 import { Warning } from '@phosphor-icons/react';
 import { Alert, Card, Col, Empty, Row, Skeleton, Table, Typography } from 'antd';
+import { Panel } from '../panel';
 import { Eyebrow, SectionTitle } from '../planning';
 import { StatCard } from '../stat-card';
 import { usePortfolioAllocation, useFundOverlap } from '../../lib/queries';
 import type { AllocationSlice } from '../../lib/types';
 import { useMoney } from '../../lib/use-money';
-import { AllocationDonut, AllocationLegend, NotAdvice } from './shared';
+import { AllocationSplit, NotAdvice } from './shared';
 
+/* The donut is sized to the body rather than the other way round, so four of these tile into a
+   grid with no inner scrollbars and no band of empty space under the shorter ones. */
 function SliceCard({ title, data, currency, empty }: { title: string; data: AllocationSlice[]; currency: string; empty: string }) {
   return (
-    <Card title={title} styles={{ body: { height: 300, overflowY: 'auto' } }}>
-      {data.length === 0 ? (
-        <Empty style={{ padding: '32px 0' }} image={Empty.PRESENTED_IMAGE_SIMPLE} description={empty} />
-      ) : (
-        <Row gutter={12} align="middle">
-          <Col span={11}>
-            <AllocationDonut data={data} currency={currency} height={220} />
-          </Col>
-          <Col span={13}>
-            <AllocationLegend data={data} currency={currency} />
-          </Col>
-        </Row>
-      )}
-    </Card>
+    <Panel title={title} height={236} scroll={false}>
+      <AllocationSplit data={data} currency={currency} height={200} empty={empty} />
+    </Panel>
   );
 }
 
@@ -77,10 +69,10 @@ export function AllocationView({ asOf }: { asOf?: string }) {
         What it costs you <small>Expense ratios you entered</small>
       </SectionTitle>
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={24} md={8}>
+        <Col xs={24} sm={12} lg={8}>
           <StatCard label="Annual expense cost" value={money(drag.annualCost, currency)} hint={`${drag.rows.length} holding${drag.rows.length === 1 ? '' : 's'} priced`} />
         </Col>
-        <Col xs={24} md={8}>
+        <Col xs={24} sm={12} lg={8}>
           <StatCard
             label="Regular plans cost you"
             value={`${money(drag.regularPlanExtraCost, currency)}/yr`}
@@ -88,7 +80,7 @@ export function AllocationView({ asOf }: { asOf?: string }) {
             hint="Versus the direct plan of the same scheme"
           />
         </Col>
-        <Col xs={24} md={8}>
+        <Col xs={24} sm={12} lg={8}>
           <StatCard label="Missing an expense ratio" value={String(drag.missingExpenseRatio)} hint="Those funds are not in the total" />
         </Col>
       </Row>
@@ -97,7 +89,7 @@ export function AllocationView({ asOf }: { asOf?: string }) {
           rowKey="holdingId"
           size="small"
           pagination={false}
-          scroll={{ x: 640 }}
+          scroll={{ x: 'max-content' }}
           dataSource={drag.rows}
           columns={[
             { key: 'name', title: 'Holding', dataIndex: 'holdingName' },
@@ -135,7 +127,7 @@ export function AllocationView({ asOf }: { asOf?: string }) {
             rowKey={(row) => `${row.aHoldingId}-${row.bHoldingId}`}
             size="small"
             pagination={false}
-            scroll={{ x: 640 }}
+            scroll={{ x: 'max-content' }}
             dataSource={overlap.data?.pairs}
             expandable={{
               expandedRowRender: (row) => (

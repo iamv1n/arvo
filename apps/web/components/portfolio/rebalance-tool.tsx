@@ -79,12 +79,12 @@ export function RebalanceTool({ asOf }: { asOf?: string }) {
   return (
     <Row gutter={[16, 16]}>
       <Col xs={24} lg={10}>
-        <Card title="Target allocation" styles={{ body: { minHeight: 380 } }}>
+        <Card title="Target allocation">
           {present.map((assetClass) => {
             const current = allocation.data!.assetClass.find((slice) => slice.key === assetClass)?.percent ?? 0;
             return (
               <div key={assetClass} style={{ marginBottom: 16 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
                   <Typography.Text strong>{ASSET_CLASS_LABELS[assetClass]}</Typography.Text>
                   <Space>
                     <Eyebrow>now {current}%</Eyebrow>
@@ -103,7 +103,7 @@ export function RebalanceTool({ asOf }: { asOf?: string }) {
               </div>
             );
           })}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
             <Stamp $tone={total === 100 ? 'positive' : 'warning'}>{total}% allocated</Stamp>
             <Button type="primary" disabled={total !== 100} loading={pending} onClick={() => void run()}>
               Work out the trades
@@ -118,7 +118,7 @@ export function RebalanceTool({ asOf }: { asOf?: string }) {
       </Col>
 
       <Col xs={24} lg={14}>
-        <Card title="Trades to get there" styles={{ body: { minHeight: 380 } }}>
+        <Card title="Trades to get there" styles={{ body: { minHeight: 240 } }}>
           {error && <Alert type="error" showIcon message={error} style={{ marginBottom: 12 }} />}
           {!result ? (
             <Empty
@@ -132,6 +132,7 @@ export function RebalanceTool({ asOf }: { asOf?: string }) {
                 rowKey="assetClass"
                 size="small"
                 pagination={false}
+                scroll={{ x: 'max-content' }}
                 style={{ marginBottom: 16 }}
                 dataSource={result.classes}
                 columns={[
@@ -154,7 +155,7 @@ export function RebalanceTool({ asOf }: { asOf?: string }) {
                   rowKey={(row) => `${row.holdingId}-${row.action}`}
                   size="small"
                   pagination={false}
-                  scroll={{ x: 560 }}
+                  scroll={{ x: 'max-content' }}
                   dataSource={result.trades}
                   expandable={{
                     rowExpandable: (row) => row.warnings.length > 0,

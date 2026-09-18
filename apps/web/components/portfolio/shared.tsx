@@ -1,9 +1,11 @@
 'use client';
 
 import { Info } from '@phosphor-icons/react';
-import { Alert, Empty } from 'antd';
+import { Empty } from 'antd';
+import type { ReactNode } from 'react';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import styled, { useTheme } from 'styled-components';
+import { NoticeStrip } from '../notice-strip';
 import { formatMoney } from '../../lib/format';
 import type { AllocationSlice, AssetClass, HoldingTransactionType, InstrumentKind } from '../../lib/types';
 
@@ -69,15 +71,36 @@ export function ReturnPercent({ value, suffix = '%' }: { value: number | null; s
 }
 
 /**
- * The advice-level banner. Everything in /portfolio is level 0–2: analysis, education and
- * simulation. It is shown wherever a number could be mistaken for a suggestion to trade.
+ * The advice level, as a hairline rule rather than a paragraph block.
+ *
+ * Everything in /portfolio is level 0–2: analysis, education and simulation. Printed as a full
+ * Alert under every tab it cost the page about a hundred pixels each time and pushed the figures
+ * off the first screen, so the wording now lives in a NoticeStrip: headline always visible, the
+ * rest behind "more", dismissible for good.
  */
-export function NotAdvice({ text, style }: { text: string; style?: React.CSSProperties }) {
-  return <Alert type="info" showIcon icon={<Info size={18} weight="duotone" />} message="Information, not advice" description={text} style={style} />;
+export function NotAdvice({
+  text,
+  storageKey = 'arvo.portfolio.notice',
+  style,
+}: {
+  text: ReactNode;
+  storageKey?: string;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <div style={style}>
+      <NoticeStrip
+        storageKey={storageKey}
+        icon={<Info size={13} weight="duotone" style={{ flex: 'none', marginTop: 3 }} />}
+        headline="Information, not advice."
+        detail={text}
+      />
+    </div>
+  );
 }
 
 /** Donut of allocation slices, fixed height so the grid never jumps. */
-export function AllocationDonut({ data, currency, height = 220 }: { data: AllocationSlice[]; currency: string; height?: number }) {
+export function AllocationDonut({ data, currency, height = 200 }: { data: AllocationSlice[]; currency: string; height?: number }) {
   const theme = useTheme();
   if (data.length === 0) return <Empty description="Nothing to show yet" image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ padding: '32px 0' }} />;
   const palette = theme.colors.chart;
@@ -107,10 +130,13 @@ export const Legend = styled.ul`
   margin: 0;
   padding: 0;
   list-style: none;
+  min-width: 0;
+  max-height: 100%;
+  overflow-y: auto;
 
   li {
     display: grid;
-    grid-template-columns: 10px 1fr auto;
+    grid-template-columns: 10px minmax(0, 1fr) auto;
     align-items: baseline;
     gap: ${({ theme }) => theme.space[3]}px;
     padding: ${({ theme }) => theme.space[2]}px 0;
@@ -122,6 +148,13 @@ export const Legend = styled.ul`
     border-bottom: none;
   }
 
+  li > span:nth-child(2) {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .swatch {
     width: 10px;
     height: 10px;
@@ -129,6 +162,8 @@ export const Legend = styled.ul`
   }
 
   .figure {
+    font-family: ${({ theme }) => theme.typography.fontFamilyMono};
+    font-size: 11px;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
@@ -149,5 +184,49 @@ export function AllocationLegend({ data, currency }: { data: AllocationSlice[]; 
         </li>
       ))}
     </Legend>
+  );
+}
+
+/*
+ * Donut beside its legend.
+ *
+ * This used to be an antd Row of span 11 / span 13, which on a phone left the chart in a 40%
+ * column about 130px wide and the legend figures wrapping under their labels. As a grid the
+ * chart keeps a fixed track, the legend takes what is left, and below 640px the two stack.
+ */
+const Split = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 210px) minmax(0, 1fr);
+  align-items: center;
+  gap: ${({ theme }) => theme.space[4]}px;
+  height: 100%;
+  min-width: 0;
+
+  @media (max-width: 640px) {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+  }
+`;
+
+/** A donut and its legend sized to fit a panel body exactly, so nothing scrolls inside it. */
+export function AllocationSplit({
+  data,
+  currency,
+  height = 200,
+  empty = 'Nothing to show yet',
+}: {
+  data: AllocationSlice[];
+  currency: string;
+  height?: number;
+  empty?: string;
+}) {
+  if (data.length === 0) return <Empty description={empty} image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ padding: '32px 0' }} />;
+  return (
+    <Split>
+      <div style={{ minWidth: 0 }}>
+        <AllocationDonut data={data} currency={currency} height={height} />
+      </div>
+      <AllocationLegend data={data} currency={currency} />
+    </Split>
   );
 }

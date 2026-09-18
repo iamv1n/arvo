@@ -9,6 +9,7 @@ import { PageHeader } from '../../../../components/page-header';
 import { Eyebrow, Stamp } from '../../../../components/planning';
 import { HoldingFormModal, HoldingTransactionModal } from '../../../../components/portfolio/holding-form-modal';
 import { ASSET_CLASS_LABELS, KIND_LABELS, NotAdvice, ReturnPercent, TRANSACTION_LABELS } from '../../../../components/portfolio/shared';
+import { ResultStrip } from '../../../../components/result-strip';
 import { StatCard } from '../../../../components/stat-card';
 import { api, errorMessage } from '../../../../lib/api';
 import { formatDate } from '../../../../lib/format';
@@ -83,7 +84,7 @@ export default function HoldingPage() {
       />
 
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={24} md={6}>
+        <Col xs={24} lg={8}>
           <StatCard
             variant="hero"
             label="Value"
@@ -97,19 +98,25 @@ export default function HoldingPage() {
             }
           />
         </Col>
-        <Col xs={12} md={6}>
-          <StatCard label="Invested" value={money(position.invested, currency)} hint={`${money(position.withdrawn, currency)} taken out`} />
-        </Col>
-        <Col xs={12} md={6}>
-          <StatCard
-            label="Unrealised gain"
-            value={money(position.unrealisedGain, currency)}
-            tone={Number(position.unrealisedGain) < 0 ? 'negative' : 'positive'}
-            hint={`Cost basis ${money(position.costBasis, currency)}`}
+        <Col xs={24} lg={16}>
+          {/* Three money figures in quarter-width stat cards clipped on anything narrower than a
+              desktop, so the supporting figures read as a ruled strip beside the headline. */}
+          <ResultStrip
+            items={[
+              { label: 'Invested', value: money(position.invested, currency), caveat: `${money(position.withdrawn, currency)} taken out` },
+              {
+                label: 'Unrealised gain',
+                value: money(position.unrealisedGain, currency),
+                tone: Number(position.unrealisedGain) < 0 ? 'negative' : 'positive',
+                caveat: `Cost basis ${money(position.costBasis, currency)}`,
+              },
+              {
+                label: 'XIRR',
+                value: <ReturnPercent value={position.xirrPercent} />,
+                caveat: `${money(position.income, currency)} of dividends and interest`,
+              },
+            ]}
           />
-        </Col>
-        <Col xs={24} md={6}>
-          <StatCard label="XIRR" value={<ReturnPercent value={position.xirrPercent} />} hint={`${money(position.income, currency)} of dividends and interest`} />
         </Col>
       </Row>
 
@@ -127,7 +134,7 @@ export default function HoldingPage() {
                     rowKey="id"
                     size="small"
                     pagination={false}
-                    scroll={{ x: 720 }}
+                    scroll={{ x: 'max-content' }}
                     dataSource={[...transactions].reverse()}
                     columns={[
                       { key: 'date', title: 'Date', render: (_, row) => formatDate(row.date) },
@@ -177,6 +184,7 @@ export default function HoldingPage() {
                     rowKey={(row) => `${row.date}-${row.units}`}
                     size="small"
                     pagination={false}
+                    scroll={{ x: 'max-content' }}
                     dataSource={position.lots}
                     columns={[
                       { key: 'date', title: 'Bought', render: (_, row) => formatDate(row.date) },
@@ -203,7 +211,7 @@ export default function HoldingPage() {
                     rowKey={(row) => `${row.buyDate}-${row.sellDate}-${row.units}`}
                     size="small"
                     pagination={false}
-                    scroll={{ x: 640 }}
+                    scroll={{ x: 'max-content' }}
                     dataSource={position.realised}
                     columns={[
                       { key: 'buy', title: 'Bought', render: (_, row) => formatDate(row.buyDate) },
@@ -247,7 +255,7 @@ export default function HoldingPage() {
         ]}
       />
 
-      {position.warnings.length > 0 && <NotAdvice text={position.warnings.join(' ')} style={{ marginTop: 16 }} />}
+      {position.warnings.length > 0 && <NotAdvice text={position.warnings.join(' ')} storageKey="arvo.portfolio.holding.notice" style={{ marginTop: 16 }} />}
 
       <HoldingFormModal open={editing} holding={holding} onClose={() => setEditing(false)} />
       <HoldingTransactionModal open={recording} holdingId={holding.id} kind={holding.kind} onClose={() => setRecording(false)} />

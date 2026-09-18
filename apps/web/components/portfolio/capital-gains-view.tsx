@@ -53,7 +53,7 @@ export function CapitalGainsView({ asOf }: { asOf?: string }) {
   return (
     <>
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={24} md={6}>
+        <Col xs={24} md={12} xl={6}>
           <StatCard
             variant="hero"
             label={`Realised, FY ${data.financialYear}`}
@@ -62,10 +62,10 @@ export function CapitalGainsView({ asOf }: { asOf?: string }) {
             hint={`${money(data.realised.longTerm, currency)} long term · ${money(data.realised.shortTerm, currency)} short term`}
           />
         </Col>
-        <Col xs={12} md={6}>
+        <Col xs={24} sm={12} xl={6}>
           <StatCard label="Estimated tax" value={money(data.realised.estimatedTax, currency)} hint={`${data.config.ltcgRatePercent}% LTCG, ${data.config.stcgRatePercent}% STCG`} />
         </Col>
-        <Col xs={12} md={6}>
+        <Col xs={24} sm={12} xl={6}>
           <StatCard
             label="Unrealised"
             value={money(Number(data.unrealised.shortTerm) + Number(data.unrealised.longTerm), currency)}
@@ -73,15 +73,27 @@ export function CapitalGainsView({ asOf }: { asOf?: string }) {
             hint={`${money(data.unrealised.longTerm, currency)} long term`}
           />
         </Col>
-        <Col xs={24} md={6}>
-          <Card style={{ height: '100%' }}>
+        <Col xs={24} md={12} xl={6}>
+          {/* A dial and a long money figure in a quarter column pushed the headroom off the card,
+              so the figure wraps under the dial instead of beside it when there is no room. */}
+          <Card style={{ height: '100%' }} styles={{ body: { display: 'flex', flexDirection: 'column', height: '100%' } }}>
             <Typography.Text type="secondary" style={{ fontWeight: 500 }}>
               Exemption headroom
             </Typography.Text>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 8 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 16, marginTop: 8 }}>
               <Progress type="circle" size={64} percent={usedPercent} format={(p) => `${p}%`} />
-              <div>
-                <div style={{ fontSize: 20, fontFamily: 'var(--font-serif), Georgia, serif' }}>{money(data.harvestHeadroom, currency)}</div>
+              <div style={{ minWidth: 0 }}>
+                <div
+                  style={{
+                    fontFamily: 'var(--font-serif), Georgia, serif',
+                    fontSize: 'clamp(18px, 1.8vw, 24px)',
+                    lineHeight: 1.15,
+                    overflowWrap: 'anywhere',
+                    fontVariantNumeric: 'lining-nums tabular-nums',
+                  }}
+                >
+                  {money(data.harvestHeadroom, currency)}
+                </div>
                 <Eyebrow>left of {money(data.config.ltcgExemption, currency)}</Eyebrow>
               </div>
             </div>
@@ -99,7 +111,7 @@ export function CapitalGainsView({ asOf }: { asOf?: string }) {
                 {data.realised.rows.length === 0 ? (
                   <Empty style={{ padding: '48px 0' }} image={Empty.PRESENTED_IMAGE_SIMPLE} description="Nothing sold in this financial year." />
                 ) : (
-                  <Table rowKey={(row) => `${row.holdingId}-${row.buyDate}-${row.sellDate}`} size="small" pagination={false} scroll={{ x: 800 }} dataSource={data.realised.rows} columns={gainColumns(true)} />
+                  <Table rowKey={(row) => `${row.holdingId}-${row.buyDate}-${row.sellDate}`} size="small" pagination={false} scroll={{ x: 'max-content' }} dataSource={data.realised.rows} columns={gainColumns(true)} />
                 )}
               </Card>
             ),
@@ -112,7 +124,7 @@ export function CapitalGainsView({ asOf }: { asOf?: string }) {
                 {data.unrealised.rows.length === 0 ? (
                   <Empty style={{ padding: '48px 0' }} image={Empty.PRESENTED_IMAGE_SIMPLE} description="No open lots yet." />
                 ) : (
-                  <Table rowKey={(row) => `${row.holdingId}-${row.buyDate}`} size="small" pagination={false} scroll={{ x: 760 }} dataSource={data.unrealised.rows} columns={gainColumns(false)} />
+                  <Table rowKey={(row) => `${row.holdingId}-${row.buyDate}`} size="small" pagination={false} scroll={{ x: 'max-content' }} dataSource={data.unrealised.rows} columns={gainColumns(false)} />
                 )}
               </Card>
             ),
@@ -133,14 +145,22 @@ export function CapitalGainsView({ asOf }: { asOf?: string }) {
                     rowKey={(row) => `${row.holdingId}-${row.buyDate}`}
                     size="small"
                     pagination={false}
-                    scroll={{ x: 640 }}
+                    scroll={{ x: 'max-content' }}
                     dataSource={data.harvestSuggestions}
                     columns={[
                       { key: 'name', title: 'Holding', dataIndex: 'holdingName' },
                       { key: 'buy', title: 'Bought', render: (_, row) => formatDate(row.buyDate) },
                       { key: 'units', title: 'Units', align: 'right', render: (_, row) => Number(row.units).toLocaleString('en-IN', { maximumFractionDigits: 3 }) },
                       { key: 'gain', title: 'Gain inside the exemption', align: 'right', render: (_, row) => money(row.gain, currency) },
-                      { key: 'warnings', title: 'Watch out for', render: (_, row) => (row.warnings.length === 0 ? '—' : row.warnings.join('; ')) },
+                      {
+                        key: 'warnings',
+                        title: 'Watch out for',
+                        /* max-content would let a sentence set the table's width, so this one
+                           column is capped and wraps inside itself. */
+                        render: (_, row) => (
+                          <div style={{ maxWidth: 280, whiteSpace: 'normal' }}>{row.warnings.length === 0 ? '—' : row.warnings.join('; ')}</div>
+                        ),
+                      },
                     ]}
                   />
                 )}
@@ -164,7 +184,7 @@ export function CapitalGainsView({ asOf }: { asOf?: string }) {
             rowKey={(row) => `${row.holdingId}-${row.buyDate}`}
             size="small"
             pagination={false}
-            scroll={{ x: 600 }}
+            scroll={{ x: 'max-content' }}
             dataSource={data.lockIns}
             columns={[
               { key: 'name', title: 'Holding', dataIndex: 'holdingName' },

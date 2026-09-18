@@ -104,15 +104,16 @@ export function HoldingsTable({ asOf, onAdd }: { asOf?: string; onAdd: () => voi
     >
       <TableToolbar>
         <Space wrap>
-          <Input.Search allowClear placeholder="Search by name or AMC" style={{ width: 240 }} onChange={(e) => setSearch(e.target.value)} />
-          <Segmented size="small" options={FILTERS} value={assetClass} onChange={(value) => setAssetClass(value as AssetClass | 'ALL')} />
+          {/* At 375px a fixed 240px search plus the segmented filter overflowed the toolbar. */}
+          <Input.Search allowClear placeholder="Search by name or AMC" style={{ width: 'min(240px, 100%)' }} onChange={(e) => setSearch(e.target.value)} />
+          <Segmented size="small" options={FILTERS} value={assetClass} style={{ maxWidth: '100%', overflowX: 'auto' }} onChange={(value) => setAssetClass(value as AssetClass | 'ALL')} />
         </Space>
         {columns.settings}
       </TableToolbar>
       {rows.length === 0 ? (
         <Empty style={{ padding: '48px 0' }} image={Empty.PRESENTED_IMAGE_SIMPLE} description="Nothing matches" />
       ) : (
-        <DataTable<HoldingSummary> rowKey="id" columns={columns.columns} dataSource={rows} pagination={false} scroll={{ x: 980 }} />
+        <DataTable<HoldingSummary> rowKey="id" columns={columns.columns} dataSource={rows} pagination={false} scroll={{ x: 'max-content' }} />
       )}
     </Card>
   );
