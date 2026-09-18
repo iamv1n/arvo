@@ -1,9 +1,9 @@
 'use client';
 
-import { Info, Warning } from '@phosphor-icons/react';
-import { Drawer, Empty } from 'antd';
+
+import { Drawer, Empty, Tooltip } from 'antd';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 
 /*
  * Caveats, collected.
@@ -31,33 +31,51 @@ interface NotesContextValue {
 
 const NotesContext = createContext<NotesContextValue | null>(null);
 
-const Tab = styled.button<{ $count: number }>`
+const breathe = keyframes`
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+`;
+
+/* A margin rule down the left of the content: it breathes while there are unread conditions,
+   so the page says "there is something to check" without spending a line of text on it. */
+const Rail = styled.button<{ $count: number; $seen: boolean }>`
   all: unset;
-  position: fixed;
-  right: 0;
-  top: 40%;
-  z-index: 20;
+  position: sticky;
+  top: 120px;
+  float: left;
+  margin-left: -18px;
+  z-index: 5;
   display: ${({ $count }) => ($count === 0 ? 'none' : 'flex')};
+  flex-direction: column;
   align-items: center;
   gap: 6px;
-  padding: 8px 10px;
-  border-radius: 6px 0 0 6px;
+  width: 10px;
   cursor: pointer;
-  background: ${({ theme }) => theme.colors.bgSurfaceRaised};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-right: none;
-  box-shadow: ${({ theme }) => theme.shadows.sm};
-  font-family: ${({ theme }) => theme.typography.fontFamilyMono};
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: ${({ theme }) => theme.colors.textSecondary};
-  writing-mode: vertical-rl;
 
-  &:hover,
-  &:focus-visible {
-    color: ${({ theme }) => theme.colors.textPrimary};
-    border-color: ${({ theme }) => theme.colors.brand};
+  .bar {
+    width: 3px;
+    height: 84px;
+    border-radius: 3px;
+    background: ${({ theme }) => theme.colors.brand};
+    animation: ${({ $seen }) => ($seen ? 'none' : breathe)} 2.4s ease-in-out infinite;
+    opacity: ${({ $seen }) => ($seen ? 0.35 : 1)};
+  }
+  .count {
+    font-family: ${({ theme }) => theme.typography.fontFamilyMono};
+    font-size: 10px;
+    color: ${({ theme }) => theme.colors.brandText};
+  }
+
+  &:hover .bar,
+  &:focus-visible .bar {
+    opacity: 1;
+    height: 110px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bar {
+      animation: none;
+    }
   }
 `;
 
@@ -71,8 +89,12 @@ const Entry = styled.article<{ $tone: 'info' | 'warning'; $active: boolean }>`
   border-bottom: 1px solid ${({ theme }) => theme.colors.borderSubtle};
   scroll-margin-top: 12px;
 
-  svg {
+  .ref {
     margin-top: 2px;
+    font-family: ${({ theme }) => theme.typography.fontFamilyMono};
+    font-size: 12px;
+    font-weight: 600;
+    text-align: right;
     color: ${({ theme, $tone }) => ($tone === 'warning' ? theme.colors.warning : theme.colors.brandText)};
   }
   h4 {
@@ -106,7 +128,10 @@ export function LabNotesProvider({ children }: { children: ReactNode }) {
 
   const unregister = useCallback((id: string) => setNotes((current) => current.filter((item) => item.id !== id)), []);
 
+  const [seen, setSeen] = useState(false);
+
   const open = useCallback((id?: string) => {
+    setSeen(true);
     setOpenId(id ?? null);
     setIsOpen(true);
   }, []);
@@ -116,10 +141,12 @@ export function LabNotesProvider({ children }: { children: ReactNode }) {
   return (
     <NotesContext.Provider value={value}>
       {children}
-      <Tab type="button" $count={notes.length} onClick={() => open()} aria-label={`Show ${notes.length} notes`}>
-        <Info size={14} weight="duotone" />
-        {notes.length} notes
-      </Tab>
+      <Tooltip title={`${notes.length} thing${notes.length === 1 ? '' : 's'} these numbers assume`} placement="right">
+        <Rail type="button" $count={notes.length} $seen={seen} onClick={() => open()} aria-label={`Show ${notes.length} notes`}>
+          <span className="bar" />
+          <span className="count">{notes.length}</span>
+        </Rail>
+      </Tooltip>
       <Drawer
         open={isOpen}
         onClose={() => setIsOpen(false)}
@@ -131,9 +158,9 @@ export function LabNotesProvider({ children }: { children: ReactNode }) {
         {notes.length === 0 ? (
           <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Nothing to caveat on this tab" style={{ marginTop: 40 }} />
         ) : (
-          notes.map((note) => (
+          notes.map((note, index) => (
             <Entry key={note.id} id={`lab-note-${note.id}`} $tone={note.tone} $active={note.id === openId}>
-              {note.tone === 'warning' ? <Warning size={16} weight="duotone" /> : <Info size={16} weight="duotone" />}
+              <span className="ref">{index + 1}</span>
               <div>
                 {note.title ? <h4>{note.title}</h4> : null}
                 <div>{note.body}</div>
@@ -150,25 +177,24 @@ export function useLabNotes() {
   return useContext(NotesContext);
 }
 
+/* A footnote reference, the way a printed page marks a condition: a raised number, not a badge. */
 const Marker = styled.button<{ $tone: 'info' | 'warning' }>`
   all: unset;
-  display: inline-grid;
-  place-items: center;
-  width: 18px;
-  height: 18px;
-  margin-left: 6px;
-  vertical-align: -3px;
-  border-radius: 999px;
+  display: inline-block;
+  margin-left: 4px;
+  padding: 0 3px;
   cursor: pointer;
+  vertical-align: super;
+  font-family: ${({ theme }) => theme.typography.fontFamilyMono};
   font-size: 10px;
-  font-weight: 700;
-  background: ${({ theme, $tone }) => ($tone === 'warning' ? theme.colors.warningSubtle : theme.colors.brandSubtle)};
+  font-weight: 600;
+  line-height: 1;
   color: ${({ theme, $tone }) => ($tone === 'warning' ? theme.colors.warning : theme.colors.brandText)};
-  border: 1px solid ${({ theme, $tone }) => ($tone === 'warning' ? theme.colors.warning : theme.colors.brand)};
+  border-bottom: 1px dotted currentColor;
 
   &:hover,
   &:focus-visible {
-    filter: brightness(1.1);
+    background: ${({ theme, $tone }) => ($tone === 'warning' ? theme.colors.warningSubtle : theme.colors.brandSubtle)};
   }
 `;
 
@@ -196,9 +222,10 @@ export function NoteMarker({ title, body, tone = 'info' }: { title?: ReactNode; 
   }, [id, title, body, tone, register, unregister]);
 
   if (!context) return null;
+  const index = context.notes.findIndex((note) => note.id === id);
   return (
     <Marker type="button" $tone={tone} onClick={() => context.open(id)} aria-label="Why this number is an estimate">
-      i
+      {index >= 0 ? index + 1 : '*'}
     </Marker>
   );
 }
