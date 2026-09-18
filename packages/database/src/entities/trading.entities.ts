@@ -249,6 +249,16 @@ export class TradingSettingsEntity {
   @Column({ name: 'emotion_tags', type: 'jsonb', default: () => "'[]'" })
   emotionTags!: string[];
 
+  /** Risk guardrails the trader set for themselves. Null means no limit; never blocking. */
+  @Column({ name: 'max_loss_per_day', type: 'numeric', precision: 19, scale: 4, nullable: true })
+  maxLossPerDay!: string | null;
+
+  @Column({ name: 'max_loss_per_week', type: 'numeric', precision: 19, scale: 4, nullable: true })
+  maxLossPerWeek!: string | null;
+
+  @Column({ name: 'max_trades_per_day', type: 'int', nullable: true })
+  maxTradesPerDay!: number | null;
+
   @UpdatedAt()
   updatedAt!: Date;
 }

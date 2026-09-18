@@ -16,6 +16,22 @@ import type {
 import type { FinanceStore, Repositories } from '../ports';
 import type { BarImportBatchRecord, BarRecord } from '../lab/bars';
 import type { BacktestRecord, PaperAccountRecord, PaperOrderRecord, StrategyRecord } from '../lab/lab-records';
+import { DEFAULT_NOTIFICATION_SETTINGS } from '../markets/types';
+import type {
+  AlertRecord,
+  AlertTriggerRecord,
+  CorporateActionRecord,
+  GuardrailBreachRecord,
+  IpoRecord,
+  NewsDigestRecord,
+  NewsFeedRecord,
+  NotificationRecord,
+  NotificationSettingsRecord,
+  QuoteRecord,
+  TradingHolidayRecord,
+  WatchlistItemRecord,
+  WatchlistRecord,
+} from '../markets/types';
 import { DEFAULT_TRADING_SETTINGS } from '../trading/types';
 import type {
   JournalEntryRecord,
@@ -65,6 +81,19 @@ interface State {
   labBacktests: Map<string, BacktestRecord>;
   paperAccounts: Map<string, PaperAccountRecord>;
   paperOrders: Map<string, PaperOrderRecord>;
+  watchlists: Map<string, WatchlistRecord>;
+  watchlistItems: Map<string, WatchlistItemRecord>;
+  quotes: Map<string, QuoteRecord>;
+  corporateActions: Map<string, CorporateActionRecord>;
+  holidays: Map<string, TradingHolidayRecord>;
+  ipos: Map<string, IpoRecord>;
+  alerts: Map<string, AlertRecord>;
+  alertTriggers: Map<string, AlertTriggerRecord>;
+  notifications: Map<string, NotificationRecord>;
+  notificationSettings: Map<string, NotificationSettingsRecord>;
+  newsFeeds: Map<string, NewsFeedRecord>;
+  newsDigests: Map<string, NewsDigestRecord>;
+  guardrailBreaches: Map<string, GuardrailBreachRecord>;
 }
 
 const now = () => new Date('2026-01-01T00:00:00Z');
@@ -106,6 +135,19 @@ export class InMemoryStore implements FinanceStore {
     tradingSettings: new Map(),
     tradeBatches: new Map(),
     tradeRows: new Map(),
+    watchlists: new Map(),
+    watchlistItems: new Map(),
+    quotes: new Map(),
+    corporateActions: new Map(),
+    holidays: new Map(),
+    ipos: new Map(),
+    alerts: new Map(),
+    alertTriggers: new Map(),
+    notifications: new Map(),
+    notificationSettings: new Map(),
+    newsFeeds: new Map(),
+    newsDigests: new Map(),
+    guardrailBreaches: new Map(),
   };
 
   accounts: Repositories['accounts'] = {
@@ -699,6 +741,232 @@ export class InMemoryStore implements FinanceStore {
     createOrder: async (input) => insert(this.state.paperOrders, { ...input, id: randomUUID(), createdAt: now(), updatedAt: now() }),
     updateOrder: async (userId, id, patch) => patchOwned(this.state.paperOrders, userId, id, patch),
     deleteOrder: async (userId, id) => void deleteOwned(this.state.paperOrders, userId, id),
+  };
+
+  // ---- markets & alerts ----
+
+  watchlists: Repositories['watchlists'] = {
+    list: async (userId) =>
+      [...this.state.watchlists.values()].filter((w) => w.userId === userId).sort((a, b) => a.position - b.position),
+    find: async (userId, id) => owned(this.state.watchlists.get(id), userId),
+    create: async (input) => insert(this.state.watchlists, { ...input, id: randomUUID(), createdAt: now(), updatedAt: now() }),
+    update: async (userId, id, patch) => patchOwned(this.state.watchlists, userId, id, patch),
+    delete: async (userId, id) => {
+      for (const [itemId, item] of this.state.watchlistItems) {
+        if (item.userId === userId && item.watchlistId === id) this.state.watchlistItems.delete(itemId);
+      }
+      deleteOwned(this.state.watchlists, userId, id);
+    },
+    count: async (userId) => [...this.state.watchlists.values()].filter((w) => w.userId === userId).length,
+    listItems: async (userId, watchlistId) =>
+      [...this.state.watchlistItems.values()]
+        .filter((i) => i.userId === userId && (!watchlistId || i.watchlistId === watchlistId))
+        .sort((a, b) => a.position - b.position),
+    findItem: async (userId, id) => owned(this.state.watchlistItems.get(id), userId),
+    createItem: async (input) => insert(this.state.watchlistItems, { ...input, id: randomUUID(), createdAt: now(), updatedAt: now() }),
+    updateItem: async (userId, id, patch) => patchOwned(this.state.watchlistItems, userId, id, patch),
+    deleteItem: async (userId, id) => void deleteOwned(this.state.watchlistItems, userId, id),
+    countItems: async (userId, watchlistId) =>
+      [...this.state.watchlistItems.values()].filter((i) => i.userId === userId && i.watchlistId === watchlistId).length,
+    reorderItems: async (userId, watchlistId, ids) => {
+      ids.forEach((id, index) => {
+        const item = owned(this.state.watchlistItems.get(id), userId);
+        if (item && item.watchlistId === watchlistId) this.state.watchlistItems.set(id, { ...item, position: index });
+      });
+    },
+  };
+
+  quotes: Repositories['quotes'] = {
+    list: async (userId) => [...this.state.quotes.values()].filter((q) => q.userId === userId).sort((a, b) => a.symbol.localeCompare(b.symbol)),
+    findBySymbols: async (userId, symbols) =>
+      [...this.state.quotes.values()].filter((q) => q.userId === userId && symbols.includes(q.symbol)),
+    upsertMany: async (rows) => {
+      for (const row of rows) {
+        const existing = [...this.state.quotes.values()].find((q) => q.userId === row.userId && q.symbol === row.symbol);
+        if (existing) this.state.quotes.set(existing.id, { ...existing, ...row, updatedAt: now() });
+        else insert(this.state.quotes, { ...row, id: randomUUID(), createdAt: now(), updatedAt: now() });
+      }
+      return rows.length;
+    },
+    delete: async (userId, symbol) => {
+      for (const [id, quote] of this.state.quotes) {
+        if (quote.userId === userId && quote.symbol === symbol) this.state.quotes.delete(id);
+      }
+    },
+  };
+
+  marketCalendar: Repositories['marketCalendar'] = {
+    listCorporateActions: async (userId, filter = {}) =>
+      [...this.state.corporateActions.values()]
+        .filter(
+          (a) =>
+            a.userId === userId &&
+            (!filter.from || a.exDate >= filter.from) &&
+            (!filter.to || a.exDate <= filter.to) &&
+            (!filter.symbols?.length || filter.symbols.includes(a.symbol)),
+        )
+        .sort((a, b) => a.exDate.localeCompare(b.exDate) || a.symbol.localeCompare(b.symbol)),
+    findCorporateAction: async (userId, id) => owned(this.state.corporateActions.get(id), userId),
+    createCorporateAction: async (input) => insert(this.state.corporateActions, { ...input, id: randomUUID(), createdAt: now(), updatedAt: now() }),
+    createCorporateActions: async (inputs) => {
+      for (const input of inputs) insert(this.state.corporateActions, { ...input, id: randomUUID(), createdAt: now(), updatedAt: now() });
+      return inputs.length;
+    },
+    updateCorporateAction: async (userId, id, patch) => patchOwned(this.state.corporateActions, userId, id, patch),
+    deleteCorporateAction: async (userId, id) => void deleteOwned(this.state.corporateActions, userId, id),
+
+    listHolidays: async (userId, exchange) =>
+      [...this.state.holidays.values()]
+        .filter((h) => h.userId === userId && (!exchange || h.exchange === exchange))
+        .sort((a, b) => a.date.localeCompare(b.date)),
+    replaceHolidays: async (userId, exchange, rows) => {
+      for (const [id, holiday] of this.state.holidays) {
+        if (holiday.userId === userId && holiday.exchange === exchange) this.state.holidays.delete(id);
+      }
+      for (const row of rows) insert(this.state.holidays, { ...row, userId, exchange, id: randomUUID(), createdAt: now() });
+      return rows.length;
+    },
+    deleteHoliday: async (userId, id) => void deleteOwned(this.state.holidays, userId, id),
+
+    listIpos: async (userId) =>
+      [...this.state.ipos.values()].filter((i) => i.userId === userId).sort((a, b) => (a.openDate ?? '').localeCompare(b.openDate ?? '')),
+    findIpo: async (userId, id) => owned(this.state.ipos.get(id), userId),
+    createIpo: async (input) => insert(this.state.ipos, { ...input, id: randomUUID(), createdAt: now(), updatedAt: now() }),
+    createIpos: async (inputs) => {
+      for (const input of inputs) insert(this.state.ipos, { ...input, id: randomUUID(), createdAt: now(), updatedAt: now() });
+      return inputs.length;
+    },
+    updateIpo: async (userId, id, patch) => patchOwned(this.state.ipos, userId, id, patch),
+    deleteIpo: async (userId, id) => void deleteOwned(this.state.ipos, userId, id),
+  };
+
+  alerts: Repositories['alerts'] = {
+    list: async (userId) =>
+      [...this.state.alerts.values()].filter((a) => a.userId === userId).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime()),
+    listDue: async () => [...this.state.alerts.values()].filter((a) => a.isEnabled),
+    find: async (userId, id) => owned(this.state.alerts.get(id), userId),
+    create: async (input) =>
+      insert(this.state.alerts, {
+        ...input,
+        id: randomUUID(),
+        lastTriggeredAt: null,
+        lastEvaluatedAt: null,
+        lastStatus: null,
+        lastMessage: null,
+        triggerCount: 0,
+        createdAt: now(),
+        updatedAt: now(),
+      }),
+    update: async (userId, id, patch) => patchOwned(this.state.alerts, userId, id, patch),
+    recordEvaluation: async (userId, id, outcome) => {
+      const alert = owned(this.state.alerts.get(id), userId);
+      if (!alert) return;
+      this.state.alerts.set(id, {
+        ...alert,
+        lastEvaluatedAt: outcome.at,
+        lastStatus: outcome.status,
+        lastMessage: outcome.message,
+        lastTriggeredAt: outcome.fired ? outcome.at : alert.lastTriggeredAt,
+        triggerCount: outcome.fired ? alert.triggerCount + 1 : alert.triggerCount,
+        isEnabled: outcome.disable ? false : alert.isEnabled,
+      });
+    },
+    delete: async (userId, id) => void deleteOwned(this.state.alerts, userId, id),
+    count: async (userId) => [...this.state.alerts.values()].filter((a) => a.userId === userId).length,
+    listTriggers: async (userId, alertId, limit = 50) =>
+      [...this.state.alertTriggers.values()]
+        .filter((t) => t.userId === userId && (!alertId || t.alertId === alertId))
+        .sort((a, b) => b.firedAt.getTime() - a.firedAt.getTime())
+        .slice(0, limit),
+    createTrigger: async (input) => insert(this.state.alertTriggers, { ...input, id: randomUUID(), createdAt: now() }),
+    pruneTriggers: async (userId, alertId, keep) => {
+      const ordered = [...this.state.alertTriggers.values()]
+        .filter((t) => t.userId === userId && t.alertId === alertId)
+        .sort((a, b) => b.firedAt.getTime() - a.firedAt.getTime());
+      for (const trigger of ordered.slice(keep)) this.state.alertTriggers.delete(trigger.id);
+    },
+  };
+
+  notifications: Repositories['notifications'] = {
+    list: async (userId, filter = {}) =>
+      [...this.state.notifications.values()]
+        .filter((n) => n.userId === userId && (!filter.unreadOnly || n.readAt === null))
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+        .slice(0, filter.limit ?? 50),
+    unreadCount: async (userId) => [...this.state.notifications.values()].filter((n) => n.userId === userId && n.readAt === null).length,
+    create: async (input) => insert(this.state.notifications, { ...input, id: randomUUID(), readAt: null, createdAt: now() }),
+    markRead: async (userId, ids) => {
+      let count = 0;
+      for (const id of ids) {
+        const found = owned(this.state.notifications.get(id), userId);
+        if (found && found.readAt === null) {
+          this.state.notifications.set(id, { ...found, readAt: now() });
+          count++;
+        }
+      }
+      return count;
+    },
+    markAllRead: async (userId) => {
+      let count = 0;
+      for (const [id, notification] of this.state.notifications) {
+        if (notification.userId === userId && notification.readAt === null) {
+          this.state.notifications.set(id, { ...notification, readAt: now() });
+          count++;
+        }
+      }
+      return count;
+    },
+    delete: async (userId, id) => void deleteOwned(this.state.notifications, userId, id),
+    prune: async (userId, keep) => {
+      const ordered = [...this.state.notifications.values()]
+        .filter((n) => n.userId === userId)
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      for (const notification of ordered.slice(keep)) this.state.notifications.delete(notification.id);
+    },
+    findSettings: async (userId) => this.state.notificationSettings.get(userId) ?? null,
+    saveSettings: async (userId, patch) => {
+      const existing = this.state.notificationSettings.get(userId) ?? { userId, ...DEFAULT_NOTIFICATION_SETTINGS, updatedAt: now() };
+      const updated = { ...existing, ...patch, updatedAt: now() };
+      this.state.notificationSettings.set(userId, updated);
+      return { ...updated };
+    },
+    listUserIdsWithAlerts: async () => [...new Set([...this.state.alerts.values()].filter((a) => a.isEnabled).map((a) => a.userId))],
+  };
+
+  news: Repositories['news'] = {
+    listFeeds: async (userId) =>
+      [...this.state.newsFeeds.values()].filter((f) => f.userId === userId).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime()),
+    findFeed: async (userId, id) => owned(this.state.newsFeeds.get(id), userId),
+    createFeed: async (input) =>
+      insert(this.state.newsFeeds, { ...input, id: randomUUID(), lastFetchedAt: null, lastError: null, createdAt: now(), updatedAt: now() }),
+    updateFeed: async (userId, id, patch) => patchOwned(this.state.newsFeeds, userId, id, patch),
+    deleteFeed: async (userId, id) => void deleteOwned(this.state.newsFeeds, userId, id),
+    listDigests: async (userId, limit = 12) =>
+      [...this.state.newsDigests.values()]
+        .filter((d) => d.userId === userId)
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+        .slice(0, limit),
+    findDigest: async (userId, id) => owned(this.state.newsDigests.get(id), userId),
+    createDigest: async (input) => insert(this.state.newsDigests, { ...input, id: randomUUID(), createdAt: now() }),
+    deleteDigest: async (userId, id) => void deleteOwned(this.state.newsDigests, userId, id),
+  };
+
+  guardrails: Repositories['guardrails'] = {
+    list: async (userId, from) =>
+      [...this.state.guardrailBreaches.values()]
+        .filter((b) => b.userId === userId && (!from || b.periodStart >= from))
+        .sort((a, b) => b.periodStart.localeCompare(a.periodStart)),
+    claim: async (input) => {
+      const existing = [...this.state.guardrailBreaches.values()].find(
+        (b) => b.userId === input.userId && b.kind === input.kind && b.periodStart === input.periodStart,
+      );
+      if (existing) return null;
+      return insert(this.state.guardrailBreaches, { ...input, id: randomUUID(), createdAt: now() });
+    },
+    markNotified: async (userId, id, at) => {
+      const found = owned(this.state.guardrailBreaches.get(id), userId);
+      if (found) this.state.guardrailBreaches.set(id, { ...found, notifiedAt: at });
+    },
   };
 
   private inPeriod(userId: string, filter: { from: string; to: string; currency: string; accountId?: string }): TransactionRecord[] {

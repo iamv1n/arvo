@@ -59,3 +59,7 @@ export * from './lab/backtest';
 export * from './lab/lab-records';
 export * from './lab/library';
 export * from './lab/lab.service';
+export * from './markets/types';
+export * from './markets/expiries';
+export * from './markets/alerts';
+export * from './markets/markets.service';

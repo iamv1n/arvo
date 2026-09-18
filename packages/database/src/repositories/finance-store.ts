@@ -96,6 +96,7 @@ import {
   toPortfolioImportBatch,
   toPortfolioImportRow,
 } from './mappers';
+import { createMarketsRepositories } from './markets-store';
 
 /** Mirrors descriptionPatternKey() in finance-core: upper-case, non A–Z runs → one space, trimmed. */
 const DESCRIPTION_PATTERN_SQL = "btrim(regexp_replace(upper(t.description), '[^A-Z]+', ' ', 'g'))";
@@ -923,6 +924,7 @@ export function createRepositories(manager: EntityManager): Repositories {
     labStrategies,
     labBacktests,
     labPaper,
+    ...createMarketsRepositories(manager),
   };
 }
 

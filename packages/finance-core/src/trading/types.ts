@@ -262,6 +262,13 @@ export interface TradingSettingsRecord {
   /** The user's own setup vocabulary, offered in the journal editor. */
   setupTags: string[];
   emotionTags: string[];
+  /**
+   * Risk guardrails the trader sets for themselves. Informational only: a breach shows a
+   * cool-off banner and sends one email, and never blocks anything. Null means no limit.
+   */
+  maxLossPerDay: string | null;
+  maxLossPerWeek: string | null;
+  maxTradesPerDay: number | null;
   updatedAt: Date;
 }
 
@@ -276,6 +283,9 @@ export const DEFAULT_TRADING_SETTINGS: Omit<TradingSettingsRecord, 'userId' | 'u
   benchmarkSeries: null,
   setupTags: ['Breakout', 'Pullback', 'Range', 'Reversal', 'Gap', 'Expiry', 'News', 'Hedge'],
   emotionTags: ['Calm', 'Confident', 'Impatient', 'Fearful', 'Greedy', 'Bored', 'Frustrated', 'FOMO'],
+  maxLossPerDay: null,
+  maxLossPerWeek: null,
+  maxTradesPerDay: null,
 };
 
 // ---- imports ----

@@ -418,6 +418,9 @@ export const toTradingSettings = (e: TradingSettingsEntity): TradingSettingsReco
   benchmarkSeries: e.benchmarkSeries,
   setupTags: e.setupTags ?? [],
   emotionTags: e.emotionTags ?? [],
+  maxLossPerDay: e.maxLossPerDay === null ? null : canonicalMoney(e.maxLossPerDay),
+  maxLossPerWeek: e.maxLossPerWeek === null ? null : canonicalMoney(e.maxLossPerWeek),
+  maxTradesPerDay: e.maxTradesPerDay,
   updatedAt: e.updatedAt,
 });
 

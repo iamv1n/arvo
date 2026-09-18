@@ -42,6 +42,15 @@ import type {
 import type { JournalRepository, TradeImportRepository, TradeRepository, TradingSettingsRepository } from './trading/types';
 import type { BarImportRepository, MarketBarRepository } from './lab/bars';
 import type { BacktestRepository, PaperRepository, StrategyRepository } from './lab/lab-records';
+import type {
+  AlertRepository,
+  GuardrailRepository,
+  MarketCalendarRepository,
+  NewsRepository,
+  NotificationRepository,
+  QuoteRepository,
+  WatchlistRepository,
+} from './markets/types';
 
 /*
  * Persistence ports implemented by @arvo/database. Every user-owned lookup takes the
@@ -184,6 +193,13 @@ export interface Repositories {
   labStrategies: StrategyRepository;
   labBacktests: BacktestRepository;
   labPaper: PaperRepository;
+  watchlists: WatchlistRepository;
+  quotes: QuoteRepository;
+  marketCalendar: MarketCalendarRepository;
+  alerts: AlertRepository;
+  notifications: NotificationRepository;
+  news: NewsRepository;
+  guardrails: GuardrailRepository;
 }
 
 /** Storage entry point: plain repositories plus an atomic unit of work. */
