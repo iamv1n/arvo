@@ -152,13 +152,13 @@ export function FuturesCalculator() {
         {result && (
           <>
             <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-              <Col xs={12} md={6}>
+              <Col xs={12} xl={6}>
                 <StatCard variant="hero" label="Notional" icon={<Coins size={16} weight="duotone" />} value={money(result.notional, CURRENCY)} hint={`${result.quantity} units`} />
               </Col>
-              <Col xs={12} md={6}>
+              <Col xs={12} xl={6}>
                 <StatCard label="Margin estimate" icon={<ShieldWarning size={17} weight="duotone" />} iconTone="warning" value={money(result.margin.total, CURRENCY)} hint="Rough — check with your broker" />
               </Col>
-              <Col xs={12} md={6}>
+              <Col xs={12} xl={6}>
                 <StatCard
                   label="Per point"
                   icon={<Scales size={17} weight="duotone" />}
@@ -167,7 +167,7 @@ export function FuturesCalculator() {
                   hint={result.mtm === null ? 'No mark price given' : `MTM ${money(result.mtm, CURRENCY)}`}
                 />
               </Col>
-              <Col xs={12} md={6}>
+              <Col xs={12} xl={6}>
                 <StatCard
                   label="Basis"
                   icon={<ArrowsClockwise size={17} weight="duotone" />}
@@ -357,16 +357,16 @@ export function SizingCalculator() {
       <Col xs={24} lg={14}>
         <Card title="Risk of ruin" size="small">
           <Row gutter={[8, 8]}>
-            <Col xs={12} md={6}>
+            <Col xs={12} xl={6}>
               <Input addonBefore="Win %" value={ruin.winRatePercent} onChange={(event) => setRuin({ ...ruin, winRatePercent: event.target.value })} inputMode="decimal" />
             </Col>
-            <Col xs={12} md={6}>
+            <Col xs={12} xl={6}>
               <Input addonBefore="Payoff" value={ruin.payoffRatio} onChange={(event) => setRuin({ ...ruin, payoffRatio: event.target.value })} inputMode="decimal" />
             </Col>
-            <Col xs={12} md={6}>
+            <Col xs={12} xl={6}>
               <Input addonBefore="Risk %" value={ruin.riskPercent} onChange={(event) => setRuin({ ...ruin, riskPercent: event.target.value })} inputMode="decimal" />
             </Col>
-            <Col xs={12} md={6}>
+            <Col xs={12} xl={6}>
               <Input addonBefore="Ruin %" value={ruin.ruinDrawdownPercent} onChange={(event) => setRuin({ ...ruin, ruinDrawdownPercent: event.target.value })} inputMode="decimal" />
             </Col>
             <Col span={24}>

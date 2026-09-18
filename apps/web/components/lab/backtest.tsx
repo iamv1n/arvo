@@ -136,7 +136,7 @@ export function BacktestTab() {
 
   return (
     <Row gutter={[16, 16]}>
-      <Col xs={24} xl={9}>
+      <Col xs={24} lg={10} xxl={9}>
         <Card
           title="The rules"
           size="small"
@@ -339,7 +339,7 @@ export function BacktestTab() {
         )}
       </Col>
 
-      <Col xs={24} xl={15}>
+      <Col xs={24} lg={14} xxl={15}>
         {error && <Alert type="error" showIcon message="That run could not be made" description={error} style={{ marginBottom: 16 }} />}
         {!result && !error && (
           <Card>
@@ -388,7 +388,7 @@ function BacktestResultView({ result }: { result: BacktestResult }) {
       {result.overfittingWarning && <Alert type="warning" showIcon message="Read this before the equity curve" description={result.overfittingWarning} style={{ marginBottom: 16 }} />}
 
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={12} md={6}>
+        <Col xs={12} xl={6}>
           <StatCard
             variant="hero"
             label="Net P&L after charges"
@@ -397,13 +397,13 @@ function BacktestResultView({ result }: { result: BacktestResult }) {
             hint={`${stats.returnPercent}% on ${money(stats.startingCapital, CURRENCY)}${stats.cagrPercent ? ` · ${stats.cagrPercent}% a year` : ''}`}
           />
         </Col>
-        <Col xs={12} md={6}>
+        <Col xs={12} xl={6}>
           <StatCard label="Max drawdown" icon={<ChartLineDown size={17} weight="duotone" />} iconTone="warning" value={`${stats.maxDrawdownPercent}%`} hint={money(stats.maxDrawdownAmount, CURRENCY)} />
         </Col>
-        <Col xs={12} md={6}>
+        <Col xs={12} xl={6}>
           <StatCard label="Win rate" icon={<Percent size={17} weight="duotone" />} iconTone="info" value={`${stats.winRatePercent}%`} hint={`${stats.wins} won · ${stats.losses} lost of ${stats.trades}`} />
         </Col>
-        <Col xs={12} md={6}>
+        <Col xs={12} xl={6}>
           <StatCard
             label="Charges"
             icon={<Coins size={17} weight="duotone" />}

@@ -4,6 +4,7 @@ import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { Calculator, ChartLine, Scales, Target } from '@phosphor-icons/react';
 import { Alert, Button, Card, Col, DatePicker, Divider, Empty, Input, InputNumber, Row, Select, Space, Table, Tooltip, Typography } from 'antd';
 import dayjs from 'dayjs';
+import styled from 'styled-components';
 import { useEffect, useMemo, useState } from 'react';
 import { errorMessage } from '../../lib/api';
 import {
@@ -47,6 +48,36 @@ const emptyLeg = (over: Partial<StrategyLeg> = {}): StrategyLeg => ({
   label: null,
   ...over,
 });
+
+/* Form fields inside the narrow left column: each keeps a readable minimum width and wraps
+   instead of squeezing an addon and a value into 60px. */
+const Fields = styled.div<{ $min?: number }>`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(${({ $min = 132 }) => $min}px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+`;
+
+const Field = styled.label`
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+
+  > span {
+    font-family: ${({ theme }) => theme.typography.fontFamilyMono};
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: ${({ theme }) => theme.colors.textMuted};
+  }
+`;
+
+const LegHead = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) auto;
+  align-items: center;
+  gap: 8px;
+`;
 
 export function PayoffBuilder() {
   const money = useMoney();
@@ -114,9 +145,10 @@ export function PayoffBuilder() {
 
   const currency = 'INR';
 
+
   return (
     <Row gutter={[16, 16]}>
-      <Col xs={24} xl={9}>
+      <Col xs={24} lg={10} xxl={9}>
         <Card
           title="The structure"
           extra={
@@ -152,74 +184,52 @@ export function PayoffBuilder() {
           <Space direction="vertical" size={10} style={{ width: '100%' }}>
             {legs.map((leg, index) => (
               <Card key={index} size="small" styles={{ body: { padding: 10 } }}>
-                <Row gutter={[8, 8]} align="middle">
-                  <Col span={9}>
-                    <Select
-                      size="small"
-                      style={{ width: '100%' }}
-                      value={leg.action}
-                      onChange={(value) => patchLeg(index, { action: value })}
-                      options={[
-                        { value: 'BUY', label: 'Buy' },
-                        { value: 'SELL', label: 'Sell' },
-                      ]}
-                    />
-                  </Col>
-                  <Col span={11}>
-                    <Select
-                      size="small"
-                      style={{ width: '100%' }}
-                      value={leg.kind}
-                      onChange={(value) =>
-                        patchLeg(index, {
-                          kind: value,
-                          strike: OPTION_KINDS.has(value) ? (leg.strike ?? assumptions.spot) : null,
-                          expiry: value === 'UNDERLYING' ? null : (leg.expiry ?? dayjs().add(30, 'day').format('YYYY-MM-DD')),
-                        })
-                      }
-                      options={Object.entries(LEG_KIND_LABELS).map(([value, label]) => ({ value, label }))}
-                    />
-                  </Col>
-                  <Col span={4} style={{ textAlign: 'right' }}>
-                    <Button size="small" type="text" danger icon={<DeleteOutlined />} onClick={() => setLegs((current) => current.filter((_, i) => i !== index))} />
-                  </Col>
-
-                  <Col span={8}>
-                    <InputNumber size="small" style={{ width: '100%' }} addonBefore="Lots" min={1} value={leg.lots} onChange={(value) => patchLeg(index, { lots: value ?? 1 })} />
-                  </Col>
-                  <Col span={8}>
-                    <InputNumber
-                      size="small"
-                      style={{ width: '100%' }}
-                      addonBefore="Size"
-                      min={1}
-                      value={leg.lotSize}
-                      onChange={(value) => patchLeg(index, { lotSize: value ?? 1 })}
-                    />
-                  </Col>
-                  <Col span={8}>
-                    <Input
-                      size="small"
-                      addonBefore="Prem"
-                      value={leg.premium}
-                      onChange={(event) => patchLeg(index, { premium: event.target.value })}
-                      inputMode="decimal"
-                    />
-                  </Col>
-
+                <LegHead>
+                  <Select
+                    size="small"
+                    value={leg.action}
+                    onChange={(value) => patchLeg(index, { action: value })}
+                    options={[
+                      { value: 'BUY', label: 'Buy' },
+                      { value: 'SELL', label: 'Sell' },
+                    ]}
+                  />
+                  <Select
+                    size="small"
+                    value={leg.kind}
+                    onChange={(value) =>
+                      patchLeg(index, {
+                        kind: value,
+                        strike: OPTION_KINDS.has(value) ? (leg.strike ?? assumptions.spot) : null,
+                        expiry: value === 'UNDERLYING' ? null : (leg.expiry ?? dayjs().add(30, 'day').format('YYYY-MM-DD')),
+                      })
+                    }
+                    options={Object.entries(LEG_KIND_LABELS).map(([value, label]) => ({ value, label }))}
+                  />
+                  <Button size="small" type="text" danger icon={<DeleteOutlined />} onClick={() => setLegs((current) => current.filter((_, i) => i !== index))} />
+                </LegHead>
+                <Fields $min={110}>
+                  <Field>
+                    <span>Lots</span>
+                    <InputNumber size="small" style={{ width: '100%' }} min={1} value={leg.lots} onChange={(value) => patchLeg(index, { lots: value ?? 1 })} />
+                  </Field>
+                  <Field>
+                    <span>Lot size</span>
+                    <InputNumber size="small" style={{ width: '100%' }} min={1} value={leg.lotSize} onChange={(value) => patchLeg(index, { lotSize: value ?? 1 })} />
+                  </Field>
+                  <Field>
+                    <span>Premium</span>
+                    <Input size="small" value={leg.premium} onChange={(event) => patchLeg(index, { premium: event.target.value })} inputMode="decimal" />
+                  </Field>
                   {OPTION_KINDS.has(leg.kind) && (
-                    <Col span={12}>
-                      <Input
-                        size="small"
-                        addonBefore="Strike"
-                        value={leg.strike ?? ''}
-                        onChange={(event) => patchLeg(index, { strike: event.target.value })}
-                        inputMode="decimal"
-                      />
-                    </Col>
+                    <Field>
+                      <span>Strike</span>
+                      <Input size="small" value={leg.strike ?? ''} onChange={(event) => patchLeg(index, { strike: event.target.value })} inputMode="decimal" />
+                    </Field>
                   )}
                   {leg.kind !== 'UNDERLYING' && (
-                    <Col span={12}>
+                    <Field>
+                      <span>Expiry</span>
                       <DatePicker
                         size="small"
                         style={{ width: '100%' }}
@@ -227,21 +237,21 @@ export function PayoffBuilder() {
                         value={leg.expiry ? dayjs(leg.expiry) : null}
                         onChange={(value) => patchLeg(index, { expiry: value ? value.format('YYYY-MM-DD') : null })}
                       />
-                    </Col>
+                    </Field>
                   )}
                   {OPTION_KINDS.has(leg.kind) && (
-                    <Col span={24}>
+                    <Field>
+                      <span>IV %</span>
                       <Input
                         size="small"
-                        addonBefore="IV %"
-                        placeholder={`${assumptions.impliedVolatilityPercent} (the default)`}
+                        placeholder={`${assumptions.impliedVolatilityPercent} default`}
                         value={leg.impliedVolatilityPercent ?? ''}
                         onChange={(event) => patchLeg(index, { impliedVolatilityPercent: event.target.value || null })}
                         inputMode="decimal"
                       />
-                    </Col>
+                    </Field>
                   )}
-                </Row>
+                </Fields>
               </Card>
             ))}
             {legs.length === 0 && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No legs yet" />}
@@ -249,17 +259,13 @@ export function PayoffBuilder() {
 
           <Divider style={{ margin: '14px 0' }} />
           <Eyebrow>Market assumptions</Eyebrow>
-          <Row gutter={[8, 8]} style={{ marginTop: 8 }}>
-            <Col span={12}>
-              <Input
-                size="small"
-                addonBefore="Spot"
-                value={assumptions.spot}
-                onChange={(event) => setAssumptions({ ...assumptions, spot: event.target.value })}
-                inputMode="decimal"
-              />
-            </Col>
-            <Col span={12}>
+          <Fields>
+            <Field>
+              <span>Spot</span>
+              <Input size="small" value={assumptions.spot} onChange={(event) => setAssumptions({ ...assumptions, spot: event.target.value })} inputMode="decimal" />
+            </Field>
+            <Field>
+              <span>As of</span>
               <DatePicker
                 size="small"
                 style={{ width: '100%' }}
@@ -267,35 +273,35 @@ export function PayoffBuilder() {
                 value={dayjs(assumptions.asOf)}
                 onChange={(value) => setAssumptions({ ...assumptions, asOf: (value ?? dayjs()).format('YYYY-MM-DD') })}
               />
-            </Col>
-            <Col span={8}>
+            </Field>
+            <Field>
+              <span>IV %</span>
               <Input
                 size="small"
-                addonBefore="IV"
                 value={assumptions.impliedVolatilityPercent}
                 onChange={(event) => setAssumptions({ ...assumptions, impliedVolatilityPercent: event.target.value })}
                 inputMode="decimal"
               />
-            </Col>
-            <Col span={8}>
+            </Field>
+            <Field>
+              <span>Risk-free %</span>
               <Input
                 size="small"
-                addonBefore="r"
                 value={assumptions.riskFreeRatePercent}
                 onChange={(event) => setAssumptions({ ...assumptions, riskFreeRatePercent: event.target.value })}
                 inputMode="decimal"
               />
-            </Col>
-            <Col span={8}>
+            </Field>
+            <Field>
+              <span>Dividend %</span>
               <Input
                 size="small"
-                addonBefore="q"
                 value={assumptions.dividendYieldPercent}
                 onChange={(event) => setAssumptions({ ...assumptions, dividendYieldPercent: event.target.value })}
                 inputMode="decimal"
               />
-            </Col>
-          </Row>
+            </Field>
+          </Fields>
           <div style={{ marginTop: 8 }}>
             <Muted>Black&#8211;Scholes, European, ACT/365. IV, the risk-free rate and the dividend yield are your assumptions, not observations.</Muted>
           </div>
@@ -306,11 +312,11 @@ export function PayoffBuilder() {
         </div>
       </Col>
 
-      <Col xs={24} xl={15}>
+      <Col xs={24} lg={14} xxl={15}>
         {error && <Alert type="error" showIcon message="That structure cannot be priced" description={error} style={{ marginBottom: 16 }} />}
 
         <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-          <Col xs={12} md={6}>
+          <Col xs={12} xl={6}>
             <StatCard
               variant="hero"
               label={num(report?.netCashflow) >= 0 ? 'Net credit' : 'Net debit'}
@@ -319,7 +325,7 @@ export function PayoffBuilder() {
               hint={num(report?.netCashflow) >= 0 ? 'Received to open' : 'Paid to open'}
             />
           </Col>
-          <Col xs={12} md={6}>
+          <Col xs={12} xl={6}>
             <StatCard
               label="Max profit"
               icon={<Target size={17} weight="duotone" />}
@@ -328,7 +334,7 @@ export function PayoffBuilder() {
               hint="At the nearest expiry"
             />
           </Col>
-          <Col xs={12} md={6}>
+          <Col xs={12} xl={6}>
             <StatCard
               label="Max loss"
               icon={<Scales size={17} weight="duotone" />}
@@ -337,7 +343,7 @@ export function PayoffBuilder() {
               hint="Bounded below at a spot of zero"
             />
           </Col>
-          <Col xs={12} md={6}>
+          <Col xs={12} xl={6}>
             <StatCard
               label="Breakevens"
               icon={<ChartLine size={17} weight="duotone" />}

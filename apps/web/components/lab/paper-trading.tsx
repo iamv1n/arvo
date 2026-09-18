@@ -115,7 +115,7 @@ export function PaperTrading() {
 
         {data && (
           <>
-            <Col xs={12} md={6}>
+            <Col xs={12} xl={6}>
               <StatCard
                 variant="hero"
                 label="Equity"
@@ -124,7 +124,7 @@ export function PaperTrading() {
                 hint={`from ${money(data.account.startingCapital, CURRENCY)}`}
               />
             </Col>
-            <Col xs={12} md={6}>
+            <Col xs={12} xl={6}>
               <StatCard
                 label="Total P&L"
                 icon={<Coins size={17} weight="duotone" />}
@@ -133,10 +133,10 @@ export function PaperTrading() {
                 hint={`${money(data.realisedPnl, CURRENCY)} realised`}
               />
             </Col>
-            <Col xs={12} md={6}>
+            <Col xs={12} xl={6}>
               <StatCard label="Cash" iconTone="info" icon={<Wallet size={17} weight="duotone" />} value={money(data.account.cash, CURRENCY)} hint="Not in a position" />
             </Col>
-            <Col xs={12} md={6}>
+            <Col xs={12} xl={6}>
               <StatCard label="Charges paid" icon={<Coins size={17} weight="duotone" />} iconTone="warning" value={money(data.charges, CURRENCY)} hint="Statutory rates, same as a real fill" />
             </Col>
 
