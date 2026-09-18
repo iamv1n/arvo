@@ -103,8 +103,8 @@ export function TradingOverview({ asOf, filters }: { asOf: string; filters: Trad
 
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={16}>
-          <Panel height={260} title="Realised equity curve" extra={<Eyebrow>Cumulative net P&amp;L by close date</Eyebrow>}>
-            <EquityCurve data={data.equityCurve} currency={currency} height={280} />
+          <Panel scroll={false} height={260} title="Realised equity curve" extra={<Eyebrow>Cumulative net P&amp;L by close date</Eyebrow>}>
+            <EquityCurve data={data.equityCurve} currency={currency} height={236} />
           </Panel>
         </Col>
         <Col xs={24} lg={8}>
@@ -148,22 +148,22 @@ export function TradingOverview({ asOf, filters }: { asOf: string; filters: Trad
         </Col>
 
         <Col xs={24} lg={12}>
-          <Panel height={240} title="Edge by segment" extra={<Eyebrow>Net of charges</Eyebrow>}>
+          <Panel scroll={false} height={216} title="Edge by segment" extra={<Eyebrow>Net of charges</Eyebrow>}>
             <EdgeBars rows={data.bySegment} currency={currency} height={240} />
           </Panel>
         </Col>
         <Col xs={24} lg={12}>
-          <Panel height={240} title="Edge by time of day" extra={<Eyebrow>By entry hour</Eyebrow>}>
+          <Panel scroll={false} height={216} title="Edge by time of day" extra={<Eyebrow>By entry hour</Eyebrow>}>
             <EdgeBars rows={data.byTimeOfDay} currency={currency} height={240} />
           </Panel>
         </Col>
         <Col xs={24} lg={12}>
-          <Panel height={240} title="Edge by weekday">
+          <Panel scroll={false} height={216} title="Edge by weekday">
             <EdgeBars rows={data.byWeekday} currency={currency} height={240} />
           </Panel>
         </Col>
         <Col xs={24} lg={12}>
-          <Panel height={240} title="Edge by setup tag" extra={<Eyebrow>From your journal</Eyebrow>}>
+          <Panel scroll={false} height={216} title="Edge by setup tag" extra={<Eyebrow>From your journal</Eyebrow>}>
             <EdgeBars rows={data.bySetup} currency={currency} height={240} />
           </Panel>
         </Col>

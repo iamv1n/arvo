@@ -97,8 +97,8 @@ export function CostsView({ asOf, filters }: { asOf: string; filters: TradeFilte
           </Panel>
         </Col>
         <Col xs={24} lg={14}>
-          <Panel height={270} title="Where the charges land" extra={<Eyebrow>Net of charges, by segment</Eyebrow>}>
-            <EdgeBars rows={data.bySegment} currency={currency} height={280} />
+          <Panel scroll={false} height={270} title="Where the charges land" extra={<Eyebrow>Net of charges, by segment</Eyebrow>}>
+            <EdgeBars rows={data.bySegment} currency={currency} height={246} />
           </Panel>
         </Col>
 
