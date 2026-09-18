@@ -28,6 +28,15 @@ import type {
   PeriodSummary,
   Transaction,
   Transfer,
+  CapitalGains,
+  FundOverlap,
+  Holding,
+  HoldingDetail,
+  PortfolioAllocation,
+  PortfolioImportSummary,
+  PortfolioReturns,
+  PortfolioSummary,
+  PortfolioImportBatch,
 } from './types';
 
 export const keys = {
@@ -42,6 +51,9 @@ export const keys = {
   goals: ['goals'] as const,
   planning: ['planning'] as const,
   scenarios: ['scenarios'] as const,
+  portfolio: ['portfolio'] as const,
+  holdings: ['holdings'] as const,
+  portfolioImports: ['portfolio-imports'] as const,
 };
 
 export interface TransactionFilters {
@@ -227,3 +239,83 @@ export const useScenarioComparison = (ids: string[]) =>
     enabled: ids.length > 0,
     placeholderData: keepPreviousData,
   });
+
+// ---- portfolio ----
+
+/**
+ * Every portfolio query is keyed by the valuation date, so a report the user is reading never
+ * silently changes underneath them. Writes invalidate the whole portfolio tree at once: one
+ * transaction moves the summary, the allocation, the returns and the tax view together.
+ */
+export const usePortfolioSummary = (asOf?: string) =>
+  useQuery({
+    queryKey: [...keys.portfolio, 'summary', asOf ?? 'today'],
+    queryFn: () => api<PortfolioSummary>('/portfolio/summary', { query: { asOf } }),
+    placeholderData: keepPreviousData,
+  });
+
+export const usePortfolioAllocation = (asOf?: string) =>
+  useQuery({
+    queryKey: [...keys.portfolio, 'allocation', asOf ?? 'today'],
+    queryFn: () => api<PortfolioAllocation>('/portfolio/allocation', { query: { asOf } }),
+    placeholderData: keepPreviousData,
+  });
+
+export const usePortfolioReturns = (params: { asOf?: string; benchmark?: string } = {}) =>
+  useQuery({
+    queryKey: [...keys.portfolio, 'returns', params.asOf ?? 'today', params.benchmark ?? 'default'],
+    queryFn: () => api<PortfolioReturns>('/portfolio/returns', { query: params }),
+    placeholderData: keepPreviousData,
+  });
+
+export const useCapitalGains = (params: { asOf?: string; financialYear?: string } = {}) =>
+  useQuery({
+    queryKey: [...keys.portfolio, 'capital-gains', params.asOf ?? 'today', params.financialYear ?? 'current'],
+    queryFn: () => api<CapitalGains>('/portfolio/capital-gains', { query: params }),
+    placeholderData: keepPreviousData,
+  });
+
+export const useFundOverlap = (asOf?: string) =>
+  useQuery({
+    queryKey: [...keys.portfolio, 'overlap', asOf ?? 'today'],
+    queryFn: () => api<FundOverlap>('/portfolio/overlap', { query: { asOf } }),
+  });
+
+export const useHoldings = () =>
+  useQuery({ queryKey: keys.holdings, queryFn: () => api<{ items: Holding[] }>('/holdings').then((r) => r.items) });
+
+export const useHolding = (id: string, asOf?: string) =>
+  useQuery({
+    queryKey: [...keys.holdings, id, asOf ?? 'today'],
+    queryFn: () => api<HoldingDetail>(`/holdings/${id}`, { query: { asOf } }),
+    enabled: Boolean(id),
+  });
+
+export const usePortfolioImports = () =>
+  useQuery({
+    queryKey: keys.portfolioImports,
+    queryFn: () => api<{ items: PortfolioImportBatch[] }>('/portfolio/imports').then((r) => r.items),
+  });
+
+export const usePortfolioImport = (id: string | null) =>
+  useQuery({
+    queryKey: [...keys.portfolioImports, id],
+    queryFn: () => api<PortfolioImportSummary>(`/portfolio/imports/${id}`),
+    enabled: Boolean(id),
+  });
+
+/** Any write to holdings or imports refreshes every derived portfolio report. */
+export function usePortfolioMutation<TInput, TResult = unknown>(fn: (input: TInput) => Promise<TResult>) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: fn,
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: keys.portfolio }),
+        queryClient.invalidateQueries({ queryKey: keys.holdings }),
+        queryClient.invalidateQueries({ queryKey: keys.portfolioImports }),
+        queryClient.invalidateQueries({ queryKey: keys.goals }),
+      ]);
+    },
+  });
+}

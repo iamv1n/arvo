@@ -492,3 +492,330 @@ export interface ReminderSettings {
   overdue: boolean;
   weeklyBriefing: boolean;
 }
+
+// ---- portfolio ----
+
+export type InstrumentKind =
+  | 'EQUITY' | 'MUTUAL_FUND' | 'ETF' | 'NPS' | 'EPF' | 'PPF' | 'FD' | 'RD' | 'SGB' | 'GOLD' | 'BOND' | 'CASH' | 'REAL_ESTATE' | 'OTHER';
+export type AssetClass = 'EQUITY' | 'DEBT' | 'GOLD' | 'REAL_ESTATE' | 'CASH' | 'OTHER';
+export type MarketCap = 'LARGE' | 'MID' | 'SMALL';
+export type FundPlan = 'DIRECT' | 'REGULAR';
+export type HoldingTransactionType =
+  | 'BUY' | 'SIP' | 'SWITCH_IN' | 'CONTRIBUTION' | 'BONUS' | 'SELL' | 'SWITCH_OUT' | 'WITHDRAWAL' | 'MATURITY' | 'DIVIDEND' | 'INTEREST' | 'VALUE_UPDATE';
+
+export interface Holding {
+  id: string;
+  name: string;
+  kind: InstrumentKind;
+  assetClass: AssetClass;
+  currency: string;
+  isin: string | null;
+  schemeCode: string | null;
+  symbol: string | null;
+  folio: string | null;
+  amc: string | null;
+  sector: string | null;
+  marketCap: MarketCap | null;
+  plan: FundPlan | null;
+  expenseRatio: string | null;
+  directExpenseRatio: string | null;
+  exitLoadDays: number | null;
+  exitLoadPercent: string | null;
+  lockInMonths: number | null;
+  latestPrice: string | null;
+  latestPriceDate: string | null;
+  goalId: string | null;
+  notes: string | null;
+  isActive: boolean;
+}
+
+export interface HoldingTransaction {
+  id: string;
+  holdingId: string;
+  date: string;
+  type: HoldingTransactionType;
+  units: string | null;
+  price: string | null;
+  amount: string;
+  charges: string;
+  note: string | null;
+  externalRef: string | null;
+}
+
+export interface HoldingPosition {
+  units: string;
+  invested: string;
+  withdrawn: string;
+  income: string;
+  netInvested: string;
+  costBasis: string;
+  value: string;
+  valueSource: 'PRICE' | 'STATED' | 'COST';
+  price: string | null;
+  priceDate: string | null;
+  unrealisedGain: string;
+  xirrPercent: number | null;
+  lots: { date: string; units: string; cost: string }[];
+  realised: { buyDate: string; sellDate: string; units: string; cost: string; proceeds: string; gain: string; heldDays: number }[];
+  warnings: string[];
+}
+
+export interface HoldingDetail {
+  holding: Holding;
+  asOf: string;
+  position: HoldingPosition;
+  transactions: HoldingTransaction[];
+}
+
+export interface HoldingSummary {
+  id: string;
+  name: string;
+  kind: InstrumentKind;
+  assetClass: AssetClass;
+  currency: string;
+  amc: string | null;
+  sector: string | null;
+  marketCap: MarketCap | null;
+  plan: FundPlan | null;
+  goalId: string | null;
+  units: string;
+  invested: string;
+  withdrawn: string;
+  income: string;
+  costBasis: string;
+  price: string | null;
+  priceDate: string | null;
+  value: string;
+  valueSource: 'PRICE' | 'STATED' | 'COST';
+  unrealisedGain: string;
+  absoluteReturnPercent: number | null;
+  xirrPercent: number | null;
+  percentOfPortfolio: number;
+  warnings: string[];
+}
+
+export interface AllocationSlice {
+  key: string;
+  label: string;
+  value: string;
+  percent: number;
+  holdingCount: number;
+}
+
+export interface PortfolioSummary {
+  asOf: string;
+  currency: string;
+  netInvested: string;
+  totalInvested: string;
+  totalWithdrawn: string;
+  totalIncome: string;
+  currentValue: string;
+  totalGain: string;
+  absoluteReturnPercent: number | null;
+  xirrPercent: number | null;
+  holdingCount: number;
+  stalePriceCount: number;
+  holdings: HoldingSummary[];
+  topHoldings: HoldingSummary[];
+  byAssetClass: AllocationSlice[];
+  disclaimer: string;
+}
+
+export interface CostDrag {
+  annualCost: string;
+  regularPlanExtraCost: string;
+  rows: {
+    holdingId: string;
+    holdingName: string;
+    value: string;
+    expenseRatio: string;
+    annualCost: string;
+    plan: FundPlan | null;
+    directExpenseRatio: string | null;
+    extraVersusDirect: string | null;
+  }[];
+  missingExpenseRatio: number;
+  note: string;
+}
+
+export interface PortfolioAllocation {
+  asOf: string;
+  currency: string;
+  totalValue: string;
+  assetClass: AllocationSlice[];
+  marketCap: AllocationSlice[];
+  sector: AllocationSlice[];
+  amc: AllocationSlice[];
+  holdings: AllocationSlice[];
+  concentration: { topHoldingPercent: number; topNPercent: number; topN: number; warnings: string[] };
+  costDrag: CostDrag;
+  disclaimer: string;
+}
+
+export interface PortfolioReturns {
+  asOf: string;
+  currency: string;
+  netInvested: string;
+  currentValue: string;
+  totalGain: string;
+  absoluteReturnPercent: number | null;
+  xirrPercent: number | null;
+  byAssetClass: { assetClass: AssetClass; value: string; netInvested: string; xirrPercent: number | null; absoluteReturnPercent: number | null }[];
+  byHolding: { holdingId: string; holdingName: string; value: string; netInvested: string; xirrPercent: number | null; absoluteReturnPercent: number | null }[];
+  benchmark: {
+    series: string;
+    value: string;
+    xirrPercent: number | null;
+    differencePercent: number | null;
+    from: string;
+    to: string;
+    warnings: string[];
+    note: string;
+  } | null;
+  availableBenchmarks: string[];
+  disclaimer: string;
+}
+
+export interface GainRow {
+  holdingId: string;
+  holdingName: string;
+  buyDate: string;
+  sellDate?: string;
+  units: string;
+  cost: string;
+  value: string;
+  gain: string;
+  term: 'SHORT' | 'LONG';
+  heldDays: number;
+  daysToLongTerm: number;
+  isEquity: boolean;
+}
+
+export interface CapitalGains {
+  asOf: string;
+  financialYear: string;
+  currency: string;
+  config: { equityLongTermDays: number; otherLongTermDays: number; ltcgExemption: string; ltcgRatePercent: string; stcgRatePercent: string };
+  realised: { shortTerm: string; longTerm: string; exemptLongTerm: string; taxableLongTerm: string; estimatedTax: string; rows: GainRow[] };
+  unrealised: { shortTerm: string; longTerm: string; rows: GainRow[] };
+  harvestHeadroom: string;
+  harvestSuggestions: { holdingId: string; holdingName: string; buyDate: string; units: string; gain: string; warnings: string[] }[];
+  lockIns: { holdingId: string; holdingName: string; buyDate: string; unlocksOn: string; units: string; value: string; daysLeft: number }[];
+  disclaimer: string;
+}
+
+export interface RebalanceResult {
+  asOf: string;
+  currency: string;
+  totalValue: string;
+  driftBandPercent: number;
+  classes: {
+    assetClass: AssetClass;
+    currentValue: string;
+    currentPercent: number;
+    targetPercent: number;
+    targetValue: string;
+    difference: string;
+    withinBand: boolean;
+  }[];
+  trades: {
+    holdingId: string;
+    holdingName: string;
+    assetClass: AssetClass;
+    action: 'BUY' | 'SELL';
+    amount: string;
+    units: string | null;
+    estimatedTax: string;
+    estimatedGain: string;
+    warnings: string[];
+  }[];
+  estimatedTaxTotal: string;
+  warnings: string[];
+  disclaimer: string;
+}
+
+export interface GoalProjectionResult {
+  asOf: string;
+  currency: string;
+  unmappedHoldings: number;
+  goals: {
+    goalId: string;
+    goalName: string;
+    targetAmount: string;
+    targetDate: string;
+    currency: string;
+    holdingIds: string[];
+    currentValue: string;
+    monthsLeft: number;
+    monthlyContribution: string;
+    probability: number;
+    p10: string;
+    p50: string;
+    p90: string;
+    blend: { assetClass: AssetClass; percent: number }[];
+    assumptions: { paths: number; seed: number; blendReturnPercent: number; blendVolatilityPercent: number };
+    disclaimer: string;
+  }[];
+}
+
+export interface FundOverlap {
+  asOf: string;
+  currency: string;
+  pairs: {
+    aHoldingId: string;
+    aName: string;
+    bHoldingId: string;
+    bName: string;
+    overlapPercent: number;
+    commonCount: number;
+    topCommon: { name: string; aWeight: string; bWeight: string }[];
+  }[];
+  missingDisclosures: { holdingId: string; name: string }[];
+  note: string;
+}
+
+export type PortfolioImportSource = 'CAS_PDF' | 'BROKER_CSV' | 'AMFI_NAV' | 'BENCHMARK_CSV' | 'FUND_DISCLOSURE_CSV';
+
+export interface PortfolioImportBatch {
+  id: string;
+  filename: string;
+  source: PortfolioImportSource;
+  status: 'PENDING' | 'READY' | 'COMMITTED' | 'FAILED';
+  warnings: string[];
+  error: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PortfolioImportRow {
+  id: string;
+  batchId: string;
+  rowNumber: number;
+  status: 'NEW' | 'DUPLICATE' | 'ERROR' | 'COMMITTED' | 'SKIPPED';
+  message: string | null;
+  holdingId: string | null;
+  parsed: {
+    instrumentName: string;
+    kind: InstrumentKind;
+    isin: string | null;
+    schemeCode: string | null;
+    symbol: string | null;
+    folio: string | null;
+    amc: string | null;
+    date: string;
+    type: HoldingTransactionType;
+    units: string | null;
+    price: string | null;
+    amount: string;
+    charges: string;
+    note: string | null;
+    externalRef: string;
+  };
+}
+
+export interface PortfolioImportSummary {
+  batch: PortfolioImportBatch;
+  counts: { total: number; new: number; duplicate: number; error: number; committed: number; skipped: number };
+  applied: number;
+  rows: PortfolioImportRow[];
+}

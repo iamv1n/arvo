@@ -69,6 +69,9 @@ export interface PortfolioSummary {
   holdingCount: number;
   /** Holdings with no usable price, so their value is cost or a stated figure. */
   stalePriceCount: number;
+  /** Every holding, largest first. */
+  holdings: HoldingSummary[];
+  /** The first ten of `holdings`, for the overview card. */
   topHoldings: HoldingSummary[];
   byAssetClass: AllocationSlice[];
   disclaimer: string;
@@ -221,6 +224,7 @@ export class PortfolioService {
       xirrPercent: xirrPercent(mergeCashflows(live)),
       holdingCount: live.length,
       stalePriceCount: live.filter((p) => p.valueSource === 'COST' && p.units > 0n).length,
+      holdings: rows,
       topHoldings: rows.slice(0, 10),
       byAssetClass: slices(live, totalValue, (p) => p.holding.assetClass, (key) => ASSET_CLASS_LABELS[key as AssetClass] ?? key),
       disclaimer: PORTFOLIO_DISCLAIMER,
