@@ -356,7 +356,7 @@ export function PayoffBuilder() {
             </Card>
           </Col>
           <Col xs={24} xxl={10}>
-            <Card title="Margin estimate" size="small">
+            <Card title="Margin estimate" size="small" style={{ position: 'relative' }}>
               <Figure $size={26}>{report ? money(report.margin.total, currency) : '—'}</Figure>
               <div style={{ marginTop: 8 }}>
                 <Row gutter={[8, 4]}>

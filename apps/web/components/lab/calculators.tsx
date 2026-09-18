@@ -184,7 +184,7 @@ export function FuturesCalculator() {
               </Col>
               {result.rollover && (
                 <Col xs={24} lg={12}>
-                  <Card title="Rolling to the next series" size="small">
+                  <Card title="Rolling to the next series" size="small" style={{ position: 'relative' }}>
                     <Eyebrow>Spread</Eyebrow>
                     <div>
                       <Figure $size={22}>{result.rollover.spread}</Figure> <Muted>points</Muted>

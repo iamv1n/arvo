@@ -1,7 +1,7 @@
 'use client';
 
 import { Flask, Info, Warning } from '@phosphor-icons/react';
-import { Alert, Tooltip } from 'antd';
+import { Tooltip } from 'antd';
 import { useEffect, useState, type ReactNode } from 'react';
 import styled from 'styled-components';
 
@@ -100,16 +100,85 @@ export function LabBanner() {
   );
 }
 
-/** A quieter in-panel version, for a specific caveat rather than the standing one. */
+/**
+ * A quieter in-panel caveat. Once read, it folds into a small "i" bubble that sits in the corner
+ * of the same box, so the warning stays one click away without eating the panel.
+ */
+const NoteRow = styled.div<{ $tone: 'info' | 'warning' }>`
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 8px 10px;
+  border-radius: ${({ theme }) => theme.radii.sm}px;
+  border-left: 3px solid ${({ theme, $tone }) => ($tone === 'warning' ? theme.colors.warning : theme.colors.brand)};
+  background: ${({ theme, $tone }) => ($tone === 'warning' ? theme.colors.warningSubtle : theme.colors.brandSubtle)};
+  font-size: 12px;
+  line-height: 1.5;
+  color: ${({ theme }) => theme.colors.textSecondary};
+
+  .anticon,
+  svg {
+    flex-shrink: 0;
+    color: ${({ theme, $tone }) => ($tone === 'warning' ? theme.colors.warning : theme.colors.brandText)};
+  }
+  button {
+    all: unset;
+    cursor: pointer;
+    padding: 0 2px;
+    color: ${({ theme }) => theme.colors.textMuted};
+    font-size: 12px;
+  }
+  button:hover,
+  button:focus-visible {
+    color: ${({ theme }) => theme.colors.textPrimary};
+  }
+`;
+
+const Bubble = styled.button<{ $tone: 'info' | 'warning' }>`
+  all: unset;
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  cursor: pointer;
+  background: ${({ theme, $tone }) => ($tone === 'warning' ? theme.colors.warningSubtle : theme.colors.brandSubtle)};
+  color: ${({ theme, $tone }) => ($tone === 'warning' ? theme.colors.warning : theme.colors.brandText)};
+  border: 1px solid ${({ theme, $tone }) => ($tone === 'warning' ? theme.colors.warning : theme.colors.brand)};
+  font-size: 11px;
+  font-weight: 700;
+
+  &:hover,
+  &:focus-visible {
+    filter: brightness(1.08);
+  }
+`;
+
 export function LabNote({ text, type = 'info' }: { text: ReactNode; type?: 'info' | 'warning' }) {
+  const [open, setOpen] = useState(true);
+  if (!open) {
+    return (
+      <Tooltip title={text}>
+        <Bubble type="button" $tone={type} onClick={() => setOpen(true)} aria-label="Show the caveat">
+          i
+        </Bubble>
+      </Tooltip>
+    );
+  }
   return (
-    <Alert
-      type={type}
-      showIcon
-      icon={type === 'warning' ? <Warning size={17} weight="duotone" /> : <Info size={17} weight="duotone" />}
-      message={text}
-      style={{ marginTop: 12 }}
-    />
+    <NoteRow $tone={type}>
+      {type === 'warning' ? <Warning size={15} weight="duotone" /> : <Info size={15} weight="duotone" />}
+      <span style={{ flex: 1, minWidth: 0 }}>{text}</span>
+      <button type="button" onClick={() => setOpen(false)} aria-label="Hide this caveat">
+        ×
+      </button>
+    </NoteRow>
   );
 }
 
