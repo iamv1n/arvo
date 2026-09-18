@@ -1,4 +1,4 @@
-import { DomainError, TRADING_DISCLAIMER, type FinanceCore, type TransactionRecord } from '@arvo/finance-core';
+import { BACKTEST_DISCLAIMER, DomainError, LAB_DISCLAIMER, TRADING_DISCLAIMER, type FinanceCore, type StrategyLeg, type TransactionRecord } from '@arvo/finance-core';
 import { TransactionType } from '@arvo/types';
 import { z } from 'zod';
 
@@ -655,6 +655,138 @@ export const getTradingTaxSummary = defineTool({
   },
 });
 
+/*
+ * Strategy Lab tools.
+ *
+ * Both are read-only in the strongest sense the lab can offer: the option evaluator is a pure
+ * computation over numbers the caller supplies and touches no storage at all, and the backtest
+ * reader returns a run the user already made. Neither can create, change or delete anything,
+ * and neither goes near a market.
+ *
+ * These are level 1-2, education and simulation. The descriptions say so in the words a model
+ * will repeat back, because the commonest failure mode of an LLM with an options calculator is
+ * presenting a payoff as a suggestion.
+ */
+
+const optionLeg = z.object({
+  kind: z.enum(['CALL', 'PUT', 'FUTURE', 'UNDERLYING']),
+  action: z.enum(['BUY', 'SELL']),
+  lots: z.int().min(1).max(10_000).describe('Whole lots'),
+  lot_size: z.int().min(1).max(100_000).describe('Contract multiplier, e.g. 75 for NIFTY'),
+  strike: amount.optional().describe('Required for CALL and PUT'),
+  premium: amount.describe('Premium per unit, or the entry price for a future or the underlying'),
+  expiry: date.optional().describe('Required for CALL, PUT and FUTURE'),
+  implied_volatility_percent: amount.optional().describe("This leg's own implied volatility"),
+});
+
+export const evaluateOptionStrategy = defineTool({
+  name: 'finance_evaluate_option_strategy',
+  title: 'Evaluate an option strategy',
+  description:
+    "Works out what a hypothetical multi-leg option structure would do: profit and loss at expiry across a range of underlying prices, breakevens, maximum profit and loss (flagged when either is unlimited), net Greeks (delta, gamma, theta per day, vega, rho), an estimated probability of profit from the lognormal the model assumes, and a rough margin estimate. Black-Scholes, European, ACT/365, with the spot, volatility, rate and dividend yield the caller supplies. Use for \"what does an iron condor on NIFTY at 24000 look like?\" or \"what is the breakeven on this straddle?\". Pure computation on numbers given to it: it reads no market data, saves nothing, and holds no view. Education and simulation only (advice level 1) - never a recommendation to place the trade, and the margin figure is an approximation to check with a broker.",
+  inputSchema: z.object({
+    legs: z.array(optionLeg).min(1).max(12),
+    spot: amount.describe('Underlying price'),
+    as_of: date.optional().describe('Valuation date, YYYY-MM-DD (default today)'),
+    implied_volatility_percent: amount.optional().describe('Annual volatility for any leg without its own; default 14'),
+    risk_free_rate_percent: amount.optional().describe('Default 6.5'),
+    dividend_yield_percent: amount.optional().describe('Default 0'),
+  }),
+  async run(ctx, input) {
+    const legs: StrategyLeg[] = input.legs.map((leg) => ({
+      kind: leg.kind,
+      action: leg.action,
+      lots: leg.lots,
+      lotSize: leg.lot_size,
+      strike: leg.strike ?? null,
+      premium: leg.premium,
+      expiry: leg.expiry ?? null,
+      impliedVolatilityPercent: leg.implied_volatility_percent ?? null,
+      label: null,
+    }));
+    const report = ctx.core.lab.payoff(legs, {
+      spot: input.spot,
+      asOf: input.as_of ?? ctx.today,
+      riskFreeRatePercent: input.risk_free_rate_percent ?? '6.5',
+      dividendYieldPercent: input.dividend_yield_percent ?? '0',
+      impliedVolatilityPercent: input.implied_volatility_percent ?? '14',
+    });
+    return {
+      netCashflow: report.netCashflow,
+      breakevens: report.breakevens,
+      maxProfit: report.maxProfit,
+      maxLoss: report.maxLoss,
+      netGreeks: report.netGreeks,
+      probabilityOfProfit: report.probabilityOfProfit,
+      margin: report.margin,
+      legs: report.legs.map((leg) => ({
+        label: leg.label,
+        kind: leg.kind,
+        action: leg.action,
+        quantity: leg.quantity,
+        strike: leg.strike,
+        expiry: leg.expiry,
+        premium: leg.premium,
+        theoreticalValue: leg.theoreticalValue,
+        greeks: leg.greeks,
+      })),
+      // The full curve is 121 points; a sample keeps the response readable for a model.
+      payoffSample: report.series.filter((_point, index) => index % 10 === 0),
+      disclaimer: LAB_DISCLAIMER,
+      provenance: {
+        as_of: input.as_of ?? ctx.today,
+        method: 'Black-Scholes-Merton, European, ACT/365, continuous dividend yield. Nothing here was read from a market.',
+      },
+    };
+  },
+});
+
+export const getBacktestSummary = defineTool({
+  name: 'finance_get_backtest_summary',
+  title: 'Get a backtest summary',
+  description:
+    "The headline results of backtests the user has already run in the Strategy Lab: net P&L and return, CAGR, maximum drawdown, Sharpe, win rate, expectancy, profit factor, total charges, exposure, the per-year breakdown, the walk-forward split where one was used, and the overfitting warning where one applies. With no id it lists every stored run, newest first; with an id it returns that one in full. Use for \"how did my crossover strategy do?\" or \"what was the drawdown on that backtest?\". Read-only: it runs nothing and stores nothing. The results are a simulation over historical bars the user imported, with assumed fills - past performance says nothing about future results, and a good backtest is not a reason to trade.",
+  inputSchema: z.object({
+    backtest_id: uuid.optional().describe('One stored run; omit to list them all'),
+    strategy_id: uuid.optional().describe('Only runs from this saved strategy'),
+  }),
+  async run(ctx, input) {
+    if (!input.backtest_id) {
+      const items = await ctx.core.lab.listBacktests(ctx.userId, input.strategy_id);
+      return {
+        backtests: items,
+        count: items.length,
+        disclaimer: BACKTEST_DISCLAIMER,
+        provenance: { method: 'Stored results of runs the user made; nothing was re-run to answer this.' },
+      };
+    }
+    const record = await ctx.core.lab.requireBacktest(ctx.userId, input.backtest_id);
+    const { result } = record;
+    return {
+      id: record.id,
+      name: record.name,
+      symbol: record.symbol,
+      timeframe: record.timeframe,
+      from: record.from,
+      to: record.to,
+      createdAt: record.createdAt,
+      stats: result.stats,
+      perYear: result.perYear,
+      walkForward: result.walkForward,
+      overfittingWarning: result.overfittingWarning,
+      assumptions: result.assumptions,
+      // The trade list and equity curve can run to thousands of rows; a model wants the shape.
+      tradeCount: result.trades.length,
+      firstTrades: result.trades.slice(0, 10),
+      disclaimer: BACKTEST_DISCLAIMER,
+      provenance: {
+        method: 'A deterministic replay over bars the user imported, with next-bar fills, slippage and the full Indian charge model.',
+        bars: result.stats.bars,
+      },
+    };
+  },
+});
+
 export const FINANCE_TOOLS: FinanceTool[] = [
   getAccounts,
   getAccountBalance,
@@ -681,6 +813,8 @@ export const FINANCE_TOOLS: FinanceTool[] = [
   getCapitalGains,
   getTradingMetrics,
   getTradingTaxSummary,
+  evaluateOptionStrategy,
+  getBacktestSummary,
 ] as unknown as FinanceTool[];
 
 

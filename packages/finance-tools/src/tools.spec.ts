@@ -28,7 +28,7 @@ async function fixture() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return result.data as Record<string, any>;
   };
-  return { core, bank, call, ctx, food };
+  return { core, store, bank, call, ctx, food };
 }
 
 describe('finance tools', () => {
@@ -71,7 +71,7 @@ describe('finance tools', () => {
     const bad = await runTool(findTool('finance_run_what_if')!, { core: (await fixture()).core, userId: USER_A, currency: 'INR', today: '2026-08-20' }, { adjustments: [{ type: 'income', mode: 'x', value: '1' }] });
     expect(bad.ok).toBe(false);
     expect(await call('finance_run_what_if', { adjustments: [] }, USER_B)).toMatchObject({ yearlyImpact: '0.00', baseline: { liquid: '0.00' } });
-    expect(FINANCE_TOOLS).toHaveLength(25);
+    expect(FINANCE_TOOLS).toHaveLength(27);
   });
 
   it('report the portfolio, its allocation, its returns and its capital gains for the caller only', async () => {
@@ -200,6 +200,96 @@ describe('finance tools', () => {
     const { ctx } = await fixture();
     const result = await runTool(findTool('finance_get_account_balance')!, ctx(USER_B), { account_id: bank.id });
     expect(result).toMatchObject({ ok: false, error: { code: 'ACCOUNT_NOT_FOUND' } });
+  });
+
+  it('evaluate an option structure without touching storage or a market', async () => {
+    const { call } = await fixture();
+    const condor = await call('finance_evaluate_option_strategy', {
+      spot: '24000',
+      as_of: '2026-09-19',
+      implied_volatility_percent: '14',
+      legs: [
+        { kind: 'PUT', action: 'BUY', lots: 1, lot_size: 75, strike: '23800', premium: '40', expiry: '2026-10-29' },
+        { kind: 'PUT', action: 'SELL', lots: 1, lot_size: 75, strike: '23900', premium: '60', expiry: '2026-10-29' },
+        { kind: 'CALL', action: 'SELL', lots: 1, lot_size: 75, strike: '24100', premium: '60', expiry: '2026-10-29' },
+        { kind: 'CALL', action: 'BUY', lots: 1, lot_size: 75, strike: '24200', premium: '40', expiry: '2026-10-29' },
+      ],
+    });
+    expect(condor.breakevens).toHaveLength(2);
+    expect(condor.maxProfit).toMatchObject({ unlimited: false, amount: '3000.00' });
+    expect(condor.maxLoss.unlimited).toBe(false);
+    expect(condor.netGreeks.delta).toBeDefined();
+    expect(condor.margin.disclaimer).toContain('SPAN');
+    expect(condor.disclaimer).toContain('not investment advice');
+    expect(condor.payoffSample.length).toBeGreaterThan(5);
+
+    // A long call is the unlimited-upside case, and the tool has to say so rather than
+    // inventing a number.
+    const call1 = await call('finance_evaluate_option_strategy', {
+      spot: '24000',
+      legs: [{ kind: 'CALL', action: 'BUY', lots: 1, lot_size: 75, strike: '24000', premium: '150', expiry: '2026-10-29' }],
+    });
+    expect(call1.maxProfit).toMatchObject({ unlimited: true, amount: null });
+
+    const bad = await runTool(findTool('finance_evaluate_option_strategy')!, (await fixture()).ctx(), { spot: '24000', legs: [] });
+    expect(bad).toMatchObject({ ok: false, error: { code: 'INVALID_TOOL_INPUT' } });
+  });
+
+  it('read stored backtests for the caller only, and never run one', async () => {
+    const { core, store, call, ctx } = await fixture();
+    const spec = {
+      name: 'Crossover',
+      symbol: 'TESTCO',
+      timeframe: 'DAY' as const,
+      direction: 'LONG' as const,
+      startingCapital: '1000000',
+      entry: { type: 'ALWAYS' as const },
+      exit: null,
+      stopLoss: null,
+      target: null,
+      trailingStop: null,
+      maxBarsInTrade: 3,
+      intradaySquareOffTime: null,
+      maxPositions: 1,
+      sizing: { method: 'FIXED_QUANTITY' as const, quantity: 10, lotSize: 1 },
+      execution: {
+        fill: 'NEXT_BAR_OPEN' as const,
+        slippageType: 'BPS' as const,
+        slippage: 0,
+        segment: 'EQUITY_DELIVERY' as const,
+        exchange: 'NSE' as const,
+        broker: 'estimate',
+      },
+    };
+    await core.lab.createStrategy(USER_A, { name: 'Crossover', spec });
+    const bars = Array.from({ length: 40 }, (_unused, i) => ({
+      userId: USER_A,
+      symbol: 'TESTCO',
+      timeframe: 'DAY' as const,
+      date: `2024-0${Math.floor(i / 28) + 1}-${String((i % 28) + 1).padStart(2, '0')}`,
+      time: null,
+      open: String(100 + i),
+      high: String(101 + i),
+      low: String(99 + i),
+      close: String(100 + i),
+      volume: '1000',
+    }));
+    await store.marketBars.insertMany(bars);
+    const { record } = await core.lab.runBacktest(USER_A, { spec });
+
+    const listed = await call('finance_get_backtest_summary', {});
+    expect(listed.count).toBe(1);
+    expect(listed.disclaimer).toContain('Past performance');
+
+    const one = await call('finance_get_backtest_summary', { backtest_id: record!.id });
+    expect(one.stats.bars).toBe(40);
+    expect(one.assumptions.join(' ')).toContain('next bar');
+    expect(one.tradeCount).toBeGreaterThan(0);
+
+    // Another user sees nothing, and cannot reach the run by id.
+    expect((await call('finance_get_backtest_summary', {}, USER_B)).count).toBe(0);
+    const denied = await runTool(findTool('finance_get_backtest_summary')!, ctx(USER_B), { backtest_id: record!.id });
+    expect(denied).toMatchObject({ ok: false, error: { code: 'LAB_BACKTEST_NOT_FOUND' } });
   });
 
   it('reject invalid input with structured errors', async () => {
