@@ -10,6 +10,7 @@ import { formatDate, formatMoney } from '../../lib/format';
 import { useGoals, usePortfolioMutation, usePortfolioSummary } from '../../lib/queries';
 import type { GoalProjectionResult } from '../../lib/types';
 import { useMoney } from '../../lib/use-money';
+import { ExpandableChart } from '../expandable-chart';
 import { Panel } from '../panel';
 import { Eyebrow, SectionTitle } from '../planning';
 import { ResultStrip } from '../result-strip';
@@ -105,30 +106,37 @@ export function GoalsTab({ asOf }: { asOf?: string }) {
                   ]}
                 />
                 <div style={{ marginTop: 12 }}>
-                  <ResponsiveContainer width="100%" height={168}>
-                    <BarChart data={rows} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                      <CartesianGrid vertical={false} stroke={theme.colors.borderSubtle} />
-                      <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fill: theme.colors.textMuted, fontSize: 11 }} />
-                      <YAxis
-                        tickLine={false}
-                        axisLine={false}
-                        width={64}
-                        tick={{ fill: theme.colors.textMuted, fontSize: 11 }}
-                        tickFormatter={(v: number) => formatMoney(v, currency, { compact: true })}
-                      />
-                      <Tooltip
-                        cursor={{ fill: theme.colors.bgMuted }}
-                        formatter={(v) => formatMoney(Number(v), currency)}
-                        contentStyle={{ background: theme.colors.bgSurfaceRaised, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.md }}
-                        itemStyle={{ color: theme.colors.textPrimary }}
-                      />
-                      <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={48}>
-                        {rows.map((row) => (
-                          <Cell key={row.name} fill={row.value >= target ? theme.colors.income : theme.colors.warning} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
+                  <ExpandableChart
+                    title={`${goal.goalName} — projected outcomes`}
+                    height={168}
+                    caption={`Where this goal could land by ${formatDate(goal.targetDate)}, from ${goal.assumptions.paths.toLocaleString('en-IN')} simulated futures. Bars above the target are green.`}
+                    render={(chartHeight) => (
+                      <ResponsiveContainer width="100%" height={chartHeight}>
+                        <BarChart data={rows} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                          <CartesianGrid vertical={false} stroke={theme.colors.borderSubtle} />
+                          <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fill: theme.colors.textMuted, fontSize: 11 }} />
+                          <YAxis
+                            tickLine={false}
+                            axisLine={false}
+                            width={64}
+                            tick={{ fill: theme.colors.textMuted, fontSize: 11 }}
+                            tickFormatter={(v: number) => formatMoney(v, currency, { compact: true })}
+                          />
+                          <Tooltip
+                            cursor={{ fill: theme.colors.bgMuted }}
+                            formatter={(v) => formatMoney(Number(v), currency)}
+                            contentStyle={{ background: theme.colors.bgSurfaceRaised, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.md }}
+                            itemStyle={{ color: theme.colors.textPrimary }}
+                          />
+                          <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={48}>
+                            {rows.map((row) => (
+                              <Cell key={row.name} fill={row.value >= target ? theme.colors.income : theme.colors.warning} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
+                  />
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 12 }}>
                   <Eyebrow>Adding per month</Eyebrow>

@@ -18,6 +18,7 @@ import {
 import { useMoney } from '../../lib/use-money';
 import { Eyebrow, Figure, Stamp } from '../planning';
 import { Panel } from '../panel';
+import { ExpandableChart } from '../expandable-chart';
 import { PayoffChart } from './payoff-chart';
 import { ResultStrip } from '../result-strip';
 import { Advanced, Extreme, Field, Fields, FormScroll, LEG_KIND_LABELS, LabNote, Muted, OUTLOOK_LABELS, Signed, num } from './shared';
@@ -328,7 +329,12 @@ export function PayoffBuilder() {
         />
 
         <Panel height={260} scroll={false} style={{ marginTop: 12 }} title="Payoff" extra={<Eyebrow>Solid: at expiry &nbsp;·&nbsp; dashed: today</Eyebrow>}>
-          <PayoffChart series={report?.series ?? []} spot={assumptions.spot} breakevens={report?.breakevens ?? []} height={236} currency={currency} />
+          <ExpandableChart
+            title="Payoff"
+            height={212}
+            caption="Solid line: profit and loss at expiry. Dashed line: the same position marked today. Markers are the breakevens."
+            render={(h) => <PayoffChart series={report?.series ?? []} spot={assumptions.spot} breakevens={report?.breakevens ?? []} height={h} currency={currency} />}
+          />
         </Panel>
 
         <Row gutter={[12, 12]} style={{ marginTop: 12 }}>

@@ -5,6 +5,7 @@ import { Card, Col, Empty, Row, Skeleton, Tooltip } from 'antd';
 import styled from 'styled-components';
 import { DataTable, useTableColumns } from '../data-table';
 import { Eyebrow } from '../planning';
+import { ExpandableChart } from '../expandable-chart';
 import { Panel } from '../panel';
 import { StatCard } from '../stat-card';
 import { useTradingMetrics, type TradeFilters } from '../../lib/queries';
@@ -105,7 +106,12 @@ export function TradingOverview({ asOf, filters }: { asOf: string; filters: Trad
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={16}>
           <Panel scroll={false} height={236} title="Realised equity curve" extra={<Eyebrow>Cumulative net P&amp;L by close date</Eyebrow>}>
-            <EquityCurve data={data.equityCurve} currency={currency} height={236} />
+            <ExpandableChart
+              title="Realised equity curve"
+              height={188}
+              caption="Cumulative net P&amp;L by close date, with the drawdown from the running peak shaded underneath."
+              render={(h) => <EquityCurve data={data.equityCurve} currency={currency} height={h} />}
+            />
           </Panel>
         </Col>
         <Col xs={24} lg={8}>
@@ -136,22 +142,42 @@ export function TradingOverview({ asOf, filters }: { asOf: string; filters: Trad
 
         <Col xs={24} lg={12}>
           <Panel scroll={false} height={212} title="Edge by segment" extra={<Eyebrow>Net of charges</Eyebrow>}>
-            <EdgeBars rows={data.bySegment} currency={currency} height={212} />
+            <ExpandableChart
+              title="Edge by segment"
+              height={164}
+              caption="Net P&amp;L after charges per bucket. Green bars made money, red bars lost it."
+              render={(h) => <EdgeBars rows={data.bySegment} currency={currency} height={h} />}
+            />
           </Panel>
         </Col>
         <Col xs={24} lg={12}>
           <Panel scroll={false} height={212} title="Edge by time of day" extra={<Eyebrow>By entry hour</Eyebrow>}>
-            <EdgeBars rows={data.byTimeOfDay} currency={currency} height={212} />
+            <ExpandableChart
+              title="Edge by time of day"
+              height={164}
+              caption="Net P&amp;L after charges per bucket. Green bars made money, red bars lost it."
+              render={(h) => <EdgeBars rows={data.byTimeOfDay} currency={currency} height={h} />}
+            />
           </Panel>
         </Col>
         <Col xs={24} lg={12}>
           <Panel scroll={false} height={212} title="Edge by weekday">
-            <EdgeBars rows={data.byWeekday} currency={currency} height={212} />
+            <ExpandableChart
+              title="Edge by weekday"
+              height={164}
+              caption="Net P&amp;L after charges per bucket. Green bars made money, red bars lost it."
+              render={(h) => <EdgeBars rows={data.byWeekday} currency={currency} height={h} />}
+            />
           </Panel>
         </Col>
         <Col xs={24} lg={12}>
           <Panel scroll={false} height={212} title="Edge by setup tag" extra={<Eyebrow>From your journal</Eyebrow>}>
-            <EdgeBars rows={data.bySetup} currency={currency} height={212} />
+            <ExpandableChart
+              title="Edge by setup tag"
+              height={164}
+              caption="Net P&amp;L after charges per bucket. Green bars made money, red bars lost it."
+              render={(h) => <EdgeBars rows={data.bySetup} currency={currency} height={h} />}
+            />
           </Panel>
         </Col>
 

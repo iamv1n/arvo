@@ -5,6 +5,7 @@ import { Empty } from 'antd';
 import type { ReactNode } from 'react';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import styled, { useTheme } from 'styled-components';
+import { ExpandableChart } from '../expandable-chart';
 import { NoticeStrip } from '../notice-strip';
 import { formatMoney } from '../../lib/format';
 import type { AllocationSlice, AssetClass, HoldingTransactionType, InstrumentKind } from '../../lib/types';
@@ -214,19 +215,58 @@ export function AllocationSplit({
   currency,
   height = 200,
   empty = 'Nothing to show yet',
+  title,
 }: {
   data: AllocationSlice[];
   currency: string;
   height?: number;
   empty?: string;
+  /** When given, the donut can be clicked to open at full size with the whole legend. */
+  title?: string;
 }) {
   if (data.length === 0) return <Empty description={empty} image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ padding: '32px 0' }} />;
   return (
     <Split>
       <div style={{ minWidth: 0 }}>
-        <AllocationDonut data={data} currency={currency} height={height} />
+        {title ? (
+          <ExpandableChart
+            title={title}
+            height={height}
+            caption={<WideLegend data={data} currency={currency} />}
+            render={(h) => <AllocationDonut data={data} currency={currency} height={h} />}
+          />
+        ) : (
+          <AllocationDonut data={data} currency={currency} height={height} />
+        )}
       </div>
       <AllocationLegend data={data} currency={currency} />
     </Split>
+  );
+}
+
+/* In the enlarged view there is room for every slice, in as many columns as fit. */
+const LegendColumns = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  column-gap: ${({ theme }) => theme.space[6]}px;
+`;
+
+function WideLegend({ data, currency }: { data: AllocationSlice[]; currency: string }) {
+  const theme = useTheme();
+  const palette = theme.colors.chart;
+  return (
+    <LegendColumns>
+      {data.map((slice, i) => (
+        <Legend key={slice.key} style={{ maxHeight: 'none', overflow: 'visible' }}>
+          <li>
+            <span className="swatch" style={{ background: palette[i % palette.length] }} aria-hidden />
+            <span>{slice.label}</span>
+            <span className="figure">
+              {slice.percent}% · {formatMoney(slice.value, currency, { compact: true })}
+            </span>
+          </li>
+        </Legend>
+      ))}
+    </LegendColumns>
   );
 }

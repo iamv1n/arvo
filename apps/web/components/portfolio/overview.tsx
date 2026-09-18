@@ -140,7 +140,7 @@ export function PortfolioOverview({ asOf }: { asOf?: string }) {
         <Col xs={24} lg={10}>
           {/* The donut is sized to the body, so the panel never grows an inner scrollbar. */}
           <Panel title="Where the money is" height={236} scroll={false}>
-            <AllocationSplit data={data.byAssetClass} currency={currency} height={200} />
+            <AllocationSplit data={data.byAssetClass} currency={currency} height={188} title="Where the money is" />
           </Panel>
         </Col>
         <Col xs={24} lg={14}>

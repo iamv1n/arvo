@@ -6,6 +6,7 @@ import { useTradingMetrics, usePositions, type TradeFilters } from '../../lib/qu
 import type { ChargeBreakdown, TradePosition } from '../../lib/types';
 import { useMoney } from '../../lib/use-money';
 import { Eyebrow } from '../planning';
+import { ExpandableChart } from '../expandable-chart';
 import { Panel } from '../panel';
 import { StatCard } from '../stat-card';
 import { EdgeBars } from './charts';
@@ -102,7 +103,12 @@ export function CostsView({ asOf, filters }: { asOf: string; filters: TradeFilte
         </Col>
         <Col xs={24} lg={14}>
           <Panel scroll={false} height={300} title="Where the charges land" extra={<Eyebrow>Net of charges, by segment</Eyebrow>}>
-            <EdgeBars rows={data.bySegment} currency={currency} height={300} />
+            <ExpandableChart
+              title="Where the charges land"
+              height={252}
+              caption="Net P&amp;L after charges, per segment."
+              render={(h) => <EdgeBars rows={data.bySegment} currency={currency} height={h} />}
+            />
           </Panel>
         </Col>
 

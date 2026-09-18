@@ -15,7 +15,7 @@ import { AllocationSplit, NotAdvice } from './shared';
 function SliceCard({ title, data, currency, empty }: { title: string; data: AllocationSlice[]; currency: string; empty: string }) {
   return (
     <Panel title={title} height={236} scroll={false}>
-      <AllocationSplit data={data} currency={currency} height={200} empty={empty} />
+      <AllocationSplit data={data} currency={currency} height={188} empty={empty} title={title} />
     </Panel>
   );
 }

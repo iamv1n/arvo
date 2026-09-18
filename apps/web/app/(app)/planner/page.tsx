@@ -9,6 +9,7 @@ import styled, { useTheme } from 'styled-components';
 import { CategorySelect } from '../../../components/category-select';
 import { PageHeader } from '../../../components/page-header';
 import { Eyebrow, Figure, SectionTitle, Stamp, type StampTone } from '../../../components/planning';
+import { ExpandableChart } from '../../../components/expandable-chart';
 import { ProjectionChart } from '../../../components/projection-chart';
 import { ResultStrip } from '../../../components/result-strip';
 import { api, errorMessage } from '../../../lib/api';
@@ -190,16 +191,23 @@ function Affordability() {
             <Skeleton active paragraph={{ rows: 7 }} />
           ) : r ? (
             <>
-              <ProjectionChart
-                months={r.series.map((p) => p.month)}
-                lines={[
-                  { key: 'without', name: 'Without purchase', color: theme.colors.textMuted, dashed: true },
-                  { key: 'with', name: 'With purchase', color: theme.colors.brand },
-                ]}
-                values={{ without: r.series.map((p) => p.without), with: r.series.map((p) => p.with) }}
-                buffer={r.bufferTarget}
-                currency={currency}
+              <ExpandableChart
+                title="Liquid cash, next 12 months"
                 height={240}
+                caption="Your liquid balance month by month, with and without this purchase, against your buffer target."
+                render={(h) => (
+                  <ProjectionChart
+                    months={r.series.map((p) => p.month)}
+                    lines={[
+                      { key: 'without', name: 'Without purchase', color: theme.colors.textMuted, dashed: true },
+                      { key: 'with', name: 'With purchase', color: theme.colors.brand },
+                    ]}
+                    values={{ without: r.series.map((p) => p.without), with: r.series.map((p) => p.with) }}
+                    buffer={r.bufferTarget}
+                    currency={currency}
+                    height={h}
+                  />
+                )}
               />
               <Baseline baseline={r.baseline} currency={currency} />
             </>
@@ -387,15 +395,22 @@ function WhatIf() {
                     ]}
                   />
                 </div>
-                <ProjectionChart
-                  months={r.series.map((p) => p.month)}
-                  lines={[
-                    { key: 'baseline', name: 'Baseline', color: theme.colors.textMuted, dashed: true },
-                    { key: 'scenario', name: 'With changes', color: theme.colors.brand },
-                  ]}
-                  values={{ baseline: r.series.map((p) => p.baseline), scenario: r.series.map((p) => p.scenario) }}
-                  currency={currency}
+                <ExpandableChart
+                  title="Scenario against baseline"
                   height={260}
+                  caption="Your liquid balance month by month: the baseline plan against the same plan with these changes."
+                  render={(h) => (
+                    <ProjectionChart
+                      months={r.series.map((p) => p.month)}
+                      lines={[
+                        { key: 'baseline', name: 'Baseline', color: theme.colors.textMuted, dashed: true },
+                        { key: 'scenario', name: 'With changes', color: theme.colors.brand },
+                      ]}
+                      values={{ baseline: r.series.map((p) => p.baseline), scenario: r.series.map((p) => p.scenario) }}
+                      currency={currency}
+                      height={h}
+                    />
+                  )}
                 />
                 <Baseline baseline={r.baseline} currency={currency} />
               </>
@@ -534,15 +549,22 @@ function SavedScenarios({ onLoad }: { onLoad: (s: Scenario) => void }) {
               )
             ) : (
               <>
-                <ProjectionChart
-                  months={c.months}
-                  lines={[
-                    { key: 'baseline', name: 'Baseline', color: theme.colors.textMuted, dashed: true },
-                    ...c.scenarios.map((s, i) => ({ key: s.id, name: s.name, color: palette[i % palette.length] })),
-                  ]}
-                  values={{ baseline: c.baselineSeries, ...Object.fromEntries(c.scenarios.map((s) => [s.id, s.series])) }}
-                  currency={currency}
+                <ExpandableChart
+                  title="Compared"
                   height={240}
+                  caption="Every ticked scenario overlaid on the baseline projection."
+                  render={(h) => (
+                    <ProjectionChart
+                      months={c.months}
+                      lines={[
+                        { key: 'baseline', name: 'Baseline', color: theme.colors.textMuted, dashed: true },
+                        ...c.scenarios.map((s, i) => ({ key: s.id, name: s.name, color: palette[i % palette.length] })),
+                      ]}
+                      values={{ baseline: c.baselineSeries, ...Object.fromEntries(c.scenarios.map((s) => [s.id, s.series])) }}
+                      currency={currency}
+                      height={h}
+                    />
+                  )}
                 />
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, marginTop: 12 }}>
                   {c.scenarios.map((s, i) => (

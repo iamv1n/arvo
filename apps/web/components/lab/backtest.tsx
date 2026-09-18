@@ -19,6 +19,7 @@ import {
   type StrategySpec,
 } from '../../lib/lab';
 import { useMoney } from '../../lib/use-money';
+import { ExpandableChart } from '../expandable-chart';
 import { Eyebrow } from '../planning';
 import { Panel } from '../panel';
 import { EquityAndDrawdown } from './payoff-chart';
@@ -468,7 +469,12 @@ function BacktestResultView({ result }: { result: BacktestResult }) {
       />
 
       <Panel height={240} scroll={false} style={{ marginTop: 12 }} title="Equity and drawdown" extra={<Eyebrow>{`${stats.bars} bars · ${result.elapsedMs} ms`}</Eyebrow>}>
-        <EquityAndDrawdown data={result.equityCurve} height={216} />
+        <ExpandableChart
+          title="Equity and drawdown"
+          height={192}
+          caption="Equity of the simulated strategy over the test window, with drawdown from the running peak shaded underneath."
+          render={(h) => <EquityAndDrawdown data={result.equityCurve} height={h} />}
+        />
       </Panel>
 
       <Row gutter={[12, 12]} style={{ marginTop: 12 }}>
