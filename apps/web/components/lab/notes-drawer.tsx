@@ -43,13 +43,13 @@ const Rail = styled.button<{ $count: number; $seen: boolean }>`
   position: sticky;
   top: 120px;
   float: left;
-  margin-left: -18px;
+  margin-left: -22px;
   z-index: 5;
   display: ${({ $count }) => ($count === 0 ? 'none' : 'flex')};
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  width: 10px;
+  width: 14px;
   cursor: pointer;
 
   .bar {
@@ -63,7 +63,10 @@ const Rail = styled.button<{ $count: number; $seen: boolean }>`
   .count {
     font-family: ${({ theme }) => theme.typography.fontFamilyMono};
     font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     color: ${({ theme }) => theme.colors.brandText};
+    writing-mode: vertical-rl;
   }
 
   &:hover .bar,
@@ -144,14 +147,14 @@ export function LabNotesProvider({ children }: { children: ReactNode }) {
       <Tooltip title={`${notes.length} thing${notes.length === 1 ? '' : 's'} these numbers assume`} placement="right">
         <Rail type="button" $count={notes.length} $seen={seen} onClick={() => open()} aria-label={`Show ${notes.length} notes`}>
           <span className="bar" />
-          <span className="count">{notes.length}</span>
+          <span className="count">{notes.length} notes</span>
         </Rail>
       </Tooltip>
       <Drawer
         open={isOpen}
         onClose={() => setIsOpen(false)}
-        placement="right"
-        width={420}
+        placement="left"
+        width={440}
         title="What these numbers assume"
         styles={{ body: { padding: 0 } }}
       >
@@ -177,27 +180,6 @@ export function useLabNotes() {
   return useContext(NotesContext);
 }
 
-/* A footnote reference, the way a printed page marks a condition: a raised number, not a badge. */
-const Marker = styled.button<{ $tone: 'info' | 'warning' }>`
-  all: unset;
-  display: inline-block;
-  margin-left: 4px;
-  padding: 0 3px;
-  cursor: pointer;
-  vertical-align: super;
-  font-family: ${({ theme }) => theme.typography.fontFamilyMono};
-  font-size: 10px;
-  font-weight: 600;
-  line-height: 1;
-  color: ${({ theme, $tone }) => ($tone === 'warning' ? theme.colors.warning : theme.colors.brandText)};
-  border-bottom: 1px dotted currentColor;
-
-  &:hover,
-  &:focus-visible {
-    background: ${({ theme, $tone }) => ($tone === 'warning' ? theme.colors.warningSubtle : theme.colors.brandSubtle)};
-  }
-`;
-
 let counter = 0;
 
 /**
@@ -221,11 +203,6 @@ export function NoteMarker({ title, body, tone = 'info' }: { title?: ReactNode; 
     return () => unregister(id);
   }, [id, title, body, tone, register, unregister]);
 
-  if (!context) return null;
-  const index = context.notes.findIndex((note) => note.id === id);
-  return (
-    <Marker type="button" $tone={tone} onClick={() => context.open(id)} aria-label="Why this number is an estimate">
-      {index >= 0 ? index + 1 : '*'}
-    </Marker>
-  );
+  // Nothing is drawn in the content: the conditions live in the drawer, reached from the rail.
+  return null;
 }

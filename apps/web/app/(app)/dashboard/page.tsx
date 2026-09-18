@@ -10,6 +10,7 @@ import { Highlights } from '../../../components/highlights';
 import { OverviewStats } from '../../../components/overview-stats';
 import { CategoryDonut, categoryColors, IncomeExpenseChart } from '../../../components/charts';
 import { PageHeader } from '../../../components/page-header';
+import { ExpandableChart } from '../../../components/expandable-chart';
 import { Panel } from '../../../components/panel';
 import { RowList } from '../../../components/row-list';
 import { CoolOffBanner } from '../../../components/cool-off-banner';
@@ -66,6 +67,12 @@ const CategoryRow = styled.div`
   }
 `;
 
+const CategoryLegend = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  column-gap: ${({ theme }) => theme.space[5]}px;
+`;
+
 export default function DashboardPage() {
   const { user } = useAuth();
   const theme = useTheme();
@@ -95,6 +102,18 @@ export default function DashboardPage() {
   const palette = categoryColors(theme);
   const firstName = user?.name.split(' ')[0];
   const compact = (v: string | number) => money(v, currency, { compact: true });
+
+  /* The same legend serves the panel and, in two columns, the enlarged donut. */
+  const categoryRows = topSpend.slice(0, 8).map((c, i) => (
+    <CategoryRow key={c.categoryId ?? 'none'}>
+      <span className="dot" style={{ background: palette[i % palette.length] }} />
+      <Typography.Text ellipsis>{c.name}</Typography.Text>
+      <Typography.Text strong style={{ fontVariantNumeric: 'tabular-nums' }}>
+        {compact(c.amount)}
+      </Typography.Text>
+      <Progress className="bar" percent={(Number(c.amount) / maxSpend) * 100} showInfo={false} strokeColor={palette[i % palette.length]} size={{ height: 4 }} />
+    </CategoryRow>
+  ));
 
   return (
     <>
@@ -141,7 +160,16 @@ export default function DashboardPage() {
 
         <Col xs={24} xl={15}>
           <Panel height={CHART_HEIGHT} title="Income vs expenses" extra={<Typography.Text type="secondary">Last 6 months</Typography.Text>}>
-            {monthly.isPending ? <Skeleton active paragraph={{ rows: 6 }} /> : <IncomeExpenseChart data={monthly.data ?? []} currency={currency} height={CHART_HEIGHT - 48} />}
+            {monthly.isPending ? (
+              <Skeleton active paragraph={{ rows: 6 }} />
+            ) : (
+              <ExpandableChart
+                title="Income vs expenses"
+                height={CHART_HEIGHT - 48}
+                caption="Income and expenses per month over the last six months."
+                render={(h) => <IncomeExpenseChart data={monthly.data ?? []} currency={currency} height={h} />}
+              />
+            )}
           </Panel>
         </Col>
 
@@ -154,26 +182,15 @@ export default function DashboardPage() {
             ) : (
               <Flex gap={16} align="center" style={{ height: '100%' }}>
                 <div style={{ width: 150, flexShrink: 0 }}>
-                  <CategoryDonut data={topSpend} currency={currency} size={150} />
+                  <ExpandableChart
+                    title="Spending by category"
+                    height={150}
+                    label="spending by category"
+                    caption={<CategoryLegend>{categoryRows}</CategoryLegend>}
+                    render={(h) => <CategoryDonut data={topSpend} currency={currency} size={h} />}
+                  />
                 </div>
-                <div style={{ flex: 1, minWidth: 0, maxHeight: '100%', overflowY: 'auto', paddingRight: 4 }}>
-                  {topSpend.slice(0, 8).map((c, i) => (
-                    <CategoryRow key={c.categoryId ?? 'none'}>
-                      <span className="dot" style={{ background: palette[i % palette.length] }} />
-                      <Typography.Text ellipsis>{c.name}</Typography.Text>
-                      <Typography.Text strong style={{ fontVariantNumeric: 'tabular-nums' }}>
-                        {compact(c.amount)}
-                      </Typography.Text>
-                      <Progress
-                        className="bar"
-                        percent={(Number(c.amount) / maxSpend) * 100}
-                        showInfo={false}
-                        strokeColor={palette[i % palette.length]}
-                        size={{ height: 4 }}
-                      />
-                    </CategoryRow>
-                  ))}
-                </div>
+                <div style={{ flex: 1, minWidth: 0, maxHeight: '100%', overflowY: 'auto', paddingRight: 4 }}>{categoryRows}</div>
               </Flex>
             )}
           </Panel>

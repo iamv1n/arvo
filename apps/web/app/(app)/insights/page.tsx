@@ -4,6 +4,7 @@ import { Col, Row, Segmented, Skeleton, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { useMemo, useState } from 'react';
 import styled from 'styled-components';
+import { ExpandableChart } from '../../../components/expandable-chart';
 import { Highlights } from '../../../components/highlights';
 import {
   BurnUpChart,
@@ -144,12 +145,30 @@ export default function InsightsPage() {
       <Row gutter={[16, 16]}>
         <Col xs={24} xl={14}>
           <Panel scroll={false} height={232} title="Spending calendar" extra={<Typography.Text type="secondary">Hover a day</Typography.Text>}>
-            {patterns.isPending ? <Skeleton active /> : <SpendingHeatmap days={p?.daily ?? []} currency={currency} cellSize={13} />}
+            {patterns.isPending ? (
+              <Skeleton active />
+            ) : (
+              <ExpandableChart
+                title="Spending calendar"
+                height={184}
+                caption="Each square is a day; darker squares are heavier spending days. Hover a day for the total."
+                render={(_h, expanded) => <SpendingHeatmap days={p?.daily ?? []} currency={currency} cellSize={expanded ? 26 : 13} />}
+              />
+            )}
           </Panel>
         </Col>
         <Col xs={24} xl={10}>
           <Panel scroll={false} height={232} title="Weekly rhythm" extra={<Typography.Text type="secondary">Average per day</Typography.Text>}>
-            {patterns.isPending ? <Skeleton active /> : <WeekdayRhythm weekdays={p?.weekdays ?? []} currency={currency} height={184} />}
+            {patterns.isPending ? (
+              <Skeleton active />
+            ) : (
+              <ExpandableChart
+                title="Weekly rhythm"
+                height={184}
+                caption="Average spending on each weekday over the last twelve weeks. The highlighted column is the heaviest day."
+                render={(h) => <WeekdayRhythm weekdays={p?.weekdays ?? []} currency={currency} height={h} />}
+              />
+            )}
           </Panel>
         </Col>
       </Row>
@@ -161,12 +180,30 @@ export default function InsightsPage() {
       <Row gutter={[16, 16]}>
         <Col xs={24} xl={14}>
           <Panel scroll={false} height={268} title="Spending burn-up" extra={<Typography.Text type="secondary">Cumulative by day</Typography.Text>}>
-            {patterns.isPending ? <Skeleton active /> : <BurnUpChart data={p?.burnUp ?? []} currency={currency} height={220} />}
+            {patterns.isPending ? (
+              <Skeleton active />
+            ) : (
+              <ExpandableChart
+                title="Spending burn-up"
+                height={220}
+                caption="Cumulative spending by day of month: this month against last month and the three-month average."
+                render={(h) => <BurnUpChart data={p?.burnUp ?? []} currency={currency} height={h} />}
+              />
+            )}
           </Panel>
         </Col>
         <Col xs={24} xl={10}>
           <Panel scroll={false} height={268} title="Where the money went" extra={<Typography.Text type="secondary">Income → left over</Typography.Text>}>
-            {patterns.isPending ? <Skeleton active /> : <MonthWaterfall steps={p?.waterfall ?? []} currency={currency} height={220} />}
+            {patterns.isPending ? (
+              <Skeleton active />
+            ) : (
+              <ExpandableChart
+                title="Where the money went"
+                height={220}
+                caption="Income steps down through each category to what is left over this month."
+                render={(h) => <MonthWaterfall steps={p?.waterfall ?? []} currency={currency} height={h} />}
+              />
+            )}
           </Panel>
         </Col>
       </Row>
@@ -183,7 +220,16 @@ export default function InsightsPage() {
         </Col>
         <Col xs={24} xl={15}>
           <Panel scroll={false} height={268} title="Merchant map" extra={<Typography.Text type="secondary">Last 3 months</Typography.Text>}>
-            {merchants.isPending ? <Skeleton active /> : <MerchantTreemap merchants={merchants.data ?? []} currency={currency} height={220} />}
+            {merchants.isPending ? (
+              <Skeleton active />
+            ) : (
+              <ExpandableChart
+                title="Merchant map"
+                height={220}
+                caption="Area is spending per merchant over the last three months."
+                render={(h) => <MerchantTreemap merchants={merchants.data ?? []} currency={currency} height={h} />}
+              />
+            )}
           </Panel>
         </Col>
         <Col span={24}>

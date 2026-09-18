@@ -9,6 +9,7 @@ import { useMemo, useState } from 'react';
 import { useTheme } from 'styled-components';
 import { Amount } from '../../../components/amount';
 import { IncomeExpenseChart } from '../../../components/charts';
+import { ExpandableChart } from '../../../components/expandable-chart';
 import { PageHeader } from '../../../components/page-header';
 import { StatCard } from '../../../components/stat-card';
 import { useAuth } from '../../../lib/auth';
@@ -96,7 +97,16 @@ export default function AnalyticsPage() {
 
         <Col span={24}>
           <Card title="Last 12 months">
-            {trend.isPending ? <Skeleton active /> : <IncomeExpenseChart data={trend.data ?? []} currency={currency} height={240} />}
+            {trend.isPending ? (
+              <Skeleton active />
+            ) : (
+              <ExpandableChart
+                title="Last 12 months"
+                height={240}
+                caption="Income and expenses per month over the last twelve months."
+                render={(h) => <IncomeExpenseChart data={trend.data ?? []} currency={currency} height={h} />}
+              />
+            )}
           </Card>
         </Col>
 
