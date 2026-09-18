@@ -12,8 +12,14 @@ import type {
   MerchantRecord,
   TransactionRecord,
   TransferRecord,
+  BenchmarkPointRecord,
+  FundHoldingRecord,
+  HoldingRecord,
+  HoldingTransactionRecord,
+  PortfolioImportBatchRecord,
+  PortfolioImportRowRecord,
 } from '@arvo/finance-core';
-import { formatMoney, parseMoney } from '@arvo/finance-core';
+import { formatMoney, formatUnits, parseMoney, parseUnits } from '@arvo/finance-core';
 import type {
   BudgetEntity,
   GoalEntity,
@@ -28,6 +34,12 @@ import type {
   MerchantEntity,
   TransactionEntity,
   TransferEntity,
+  BenchmarkPointEntity,
+  FundHoldingEntity,
+  HoldingEntity,
+  HoldingTransactionEntity,
+  PortfolioImportBatchEntity,
+  PortfolioImportRowEntity,
 } from '../entities';
 
 /** numeric(19,4) comes back as "649.5000"; expose the core's canonical form "649.50". */
@@ -221,4 +233,95 @@ export const toScenario = (e: ScenarioEntity): ScenarioRecord => ({
   adjustments: e.adjustments,
   createdAt: e.createdAt,
   updatedAt: e.updatedAt,
+});
+
+// ---- portfolio ----
+
+/** numeric(24,5) comes back as a string; re-format it so it always has 5 fraction digits. */
+const canonicalUnits = (value: string): string => formatUnits(parseUnits(value));
+
+export const toHolding = (e: HoldingEntity): HoldingRecord => ({
+  id: e.id,
+  userId: e.userId,
+  name: e.name,
+  kind: e.kind,
+  assetClass: e.assetClass,
+  currency: e.currency,
+  isin: e.isin,
+  schemeCode: e.schemeCode,
+  symbol: e.symbol,
+  folio: e.folio,
+  amc: e.amc,
+  sector: e.sector,
+  marketCap: e.marketCap,
+  plan: e.plan,
+  expenseRatio: e.expenseRatio === null ? null : canonicalMoney(e.expenseRatio),
+  directExpenseRatio: e.directExpenseRatio === null ? null : canonicalMoney(e.directExpenseRatio),
+  exitLoadDays: e.exitLoadDays,
+  exitLoadPercent: e.exitLoadPercent === null ? null : canonicalMoney(e.exitLoadPercent),
+  lockInMonths: e.lockInMonths,
+  latestPrice: e.latestPrice === null ? null : canonicalMoney(e.latestPrice),
+  latestPriceDate: e.latestPriceDate,
+  goalId: e.goalId,
+  notes: e.notes,
+  isActive: e.isActive,
+  createdAt: e.createdAt,
+  updatedAt: e.updatedAt,
+});
+
+export const toHoldingTransaction = (e: HoldingTransactionEntity): HoldingTransactionRecord => ({
+  id: e.id,
+  userId: e.userId,
+  holdingId: e.holdingId,
+  date: e.date,
+  type: e.type,
+  units: e.units === null ? null : canonicalUnits(e.units),
+  price: e.price === null ? null : canonicalMoney(e.price),
+  amount: canonicalMoney(e.amount),
+  charges: canonicalMoney(e.charges),
+  note: e.note,
+  externalRef: e.externalRef,
+  createdAt: e.createdAt,
+  updatedAt: e.updatedAt,
+});
+
+export const toBenchmarkPoint = (e: BenchmarkPointEntity): BenchmarkPointRecord => ({
+  userId: e.userId,
+  series: e.series,
+  date: e.date,
+  value: canonicalMoney(e.value),
+});
+
+export const toFundHolding = (e: FundHoldingEntity): FundHoldingRecord => ({
+  id: e.id,
+  userId: e.userId,
+  holdingId: e.holdingId,
+  name: e.name,
+  isin: e.isin,
+  weight: canonicalMoney(e.weight),
+  asOf: e.asOf,
+});
+
+export const toPortfolioImportBatch = (e: PortfolioImportBatchEntity): PortfolioImportBatchRecord => ({
+  id: e.id,
+  userId: e.userId,
+  filename: e.filename,
+  source: e.source,
+  status: e.status,
+  warnings: e.warnings,
+  error: e.error,
+  createdAt: e.createdAt,
+  updatedAt: e.updatedAt,
+});
+
+export const toPortfolioImportRow = (e: PortfolioImportRowEntity): PortfolioImportRowRecord => ({
+  id: e.id,
+  userId: e.userId,
+  batchId: e.batchId,
+  rowNumber: e.rowNumber,
+  status: e.status,
+  message: e.message,
+  holdingId: e.holdingId,
+  parsed: e.parsed,
+  createdAt: e.createdAt,
 });

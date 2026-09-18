@@ -5,3 +5,6 @@ export const MONEY_COLUMN: ColumnOptions = { type: 'numeric', precision: 19, sca
 
 export const CreatedAt = () => CreateDateColumn({ name: 'created_at', type: 'timestamptz' });
 export const UpdatedAt = () => UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' });
+
+/** numeric(24,5): instrument quantities. Matches finance-core UNITS_SCALE. */
+export const UNITS_COLUMN: ColumnOptions = { type: 'numeric', precision: 24, scale: 5 };

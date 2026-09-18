@@ -13,6 +13,10 @@ import type {
   Repositories,
   TransactionRepository,
   TransferRepository,
+  HoldingRepository,
+  HoldingTransactionRepository,
+  PortfolioDataRepository,
+  PortfolioImportRepository,
 } from '@arvo/finance-core';
 import { ImportStatus, type TransactionType } from '@arvo/types';
 import { Between, In, IsNull, Not, type DataSource, type EntityManager, type EntityTarget, type ObjectLiteral } from 'typeorm';
@@ -31,6 +35,12 @@ import {
   MerchantEntity,
   TransactionEntity,
   TransferEntity,
+  BenchmarkPointEntity,
+  FundHoldingEntity,
+  HoldingEntity,
+  HoldingTransactionEntity,
+  PortfolioImportBatchEntity,
+  PortfolioImportRowEntity,
 } from '../entities';
 import {
   toAccount,
@@ -46,6 +56,12 @@ import {
   toRule,
   toTransaction,
   toTransfer,
+  toBenchmarkPoint,
+  toFundHolding,
+  toHolding,
+  toHoldingTransaction,
+  toPortfolioImportBatch,
+  toPortfolioImportRow,
 } from './mappers';
 
 /** Mirrors descriptionPatternKey() in finance-core: upper-case, non A–Z runs → one space, trimmed. */
@@ -54,6 +70,11 @@ const DESCRIPTION_PATTERN_SQL = "btrim(regexp_replace(upper(t.description), '[^A
 // TypeORM's deep-partial update typing rejects jsonb records; values are validated by finance-core.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyPatch = any;
+
+/** Aggregates read date columns back as strings on some drivers and Dates on others. */
+function isoDate(value: string | Date): string {
+  return typeof value === 'string' ? value.slice(0, 10) : value.toISOString().slice(0, 10);
+}
 
 /** Escapes LIKE/ILIKE wildcards so user search text matches literally. */
 function escapeLike(value: string): string {
@@ -464,7 +485,145 @@ export function createRepositories(manager: EntityManager): Repositories {
     delete: async (userId, id) => void (await manager.delete(ScenarioEntity, { id, userId })),
   };
 
-  return { accounts, categories, merchants, transactions, transfers, imports, rules, recurring, budgets, goals, scenarios };
+  const holdings: HoldingRepository = {
+    findAll: async (userId) => (await manager.find(HoldingEntity, { where: { userId }, order: { name: 'ASC', id: 'ASC' } })).map(toHolding),
+    findById: async (userId, id) => {
+      const row = await manager.findOneBy(HoldingEntity, { id, userId });
+      return row ? toHolding(row) : null;
+    },
+    findByIdentity: async (userId, identity) => {
+      // Identifiers are tried in order of how specific they are; the folio disambiguates
+      // the same scheme held in two folios.
+      const attempts: ObjectLiteral[] = [];
+      if (identity.isin) attempts.push({ userId, isin: identity.isin });
+      if (identity.schemeCode) attempts.push({ userId, schemeCode: identity.schemeCode });
+      if (identity.symbol) attempts.push({ userId, symbol: identity.symbol });
+      if (identity.name) attempts.push({ userId, name: identity.name });
+      for (const where of attempts) {
+        const candidates = await manager.find(HoldingEntity, { where: where as AnyPatch, order: { createdAt: 'ASC' } });
+        const match = identity.folio ? (candidates.find((c) => c.folio === identity.folio) ?? candidates.find((c) => c.folio === null)) : candidates[0];
+        if (match) return toHolding(match);
+      }
+      return null;
+    },
+    create: async (input) => toHolding(await manager.save(manager.create(HoldingEntity, input as AnyPatch))),
+    update: async (userId, id, patch) => toHolding(await updateOwned(HoldingEntity, userId, id, patch)),
+    delete: async (userId, id) => void (await manager.delete(HoldingEntity, { id, userId })),
+    setPricesBySchemeCode: async (userId, prices) => {
+      if (prices.length === 0) return 0;
+      const owned = await manager.find(HoldingEntity, { where: { userId, schemeCode: Not(IsNull()) } });
+      const byCode = new Map(prices.map((p) => [p.schemeCode, p]));
+      let updated = 0;
+      for (const holding of owned) {
+        const price = holding.schemeCode ? byCode.get(holding.schemeCode) : undefined;
+        if (!price) continue;
+        await manager.update(HoldingEntity, { id: holding.id, userId }, { latestPrice: price.price, latestPriceDate: price.date } as AnyPatch);
+        updated++;
+      }
+      return updated;
+    },
+  };
+
+  const holdingTransactions: HoldingTransactionRepository = {
+    findAll: async (userId) =>
+      (await manager.find(HoldingTransactionEntity, { where: { userId }, order: { date: 'ASC', createdAt: 'ASC', id: 'ASC' } })).map(toHoldingTransaction),
+    findByHolding: async (userId, holdingId) =>
+      (await manager.find(HoldingTransactionEntity, { where: { userId, holdingId }, order: { date: 'ASC', createdAt: 'ASC', id: 'ASC' } })).map(
+        toHoldingTransaction,
+      ),
+    findById: async (userId, id) => {
+      const row = await manager.findOneBy(HoldingTransactionEntity, { id, userId });
+      return row ? toHoldingTransaction(row) : null;
+    },
+    create: async (input) => toHoldingTransaction(await manager.save(manager.create(HoldingTransactionEntity, input as AnyPatch))),
+    createMany: async (inputs) => {
+      for (let i = 0; i < inputs.length; i += 500) await manager.insert(HoldingTransactionEntity, inputs.slice(i, i + 500) as AnyPatch);
+      return inputs.length;
+    },
+    update: async (userId, id, patch) => toHoldingTransaction(await updateOwned(HoldingTransactionEntity, userId, id, patch)),
+    delete: async (userId, id) => void (await manager.delete(HoldingTransactionEntity, { id, userId })),
+    deleteByHolding: async (userId, holdingId) => void (await manager.delete(HoldingTransactionEntity, { userId, holdingId })),
+    findExistingRefs: async (userId, refs) => {
+      if (refs.length === 0) return [];
+      const found: string[] = [];
+      for (let i = 0; i < refs.length; i += 500) {
+        const rows = await manager.find(HoldingTransactionEntity, {
+          where: { userId, externalRef: In(refs.slice(i, i + 500)) },
+          select: { externalRef: true },
+        });
+        found.push(...rows.map((r) => r.externalRef as string));
+      }
+      return found;
+    },
+  };
+
+  const portfolioData: PortfolioDataRepository = {
+    listBenchmarkSeries: async (userId) => {
+      const rows = (await manager
+        .createQueryBuilder(BenchmarkPointEntity, 'p')
+        .select('p.series', 'series')
+        .addSelect('COUNT(*)', 'points')
+        .addSelect('MIN(p.date)', 'from')
+        .addSelect('MAX(p.date)', 'to')
+        .where('p.user_id = :userId', { userId })
+        .groupBy('p.series')
+        .orderBy('p.series', 'ASC')
+        .getRawMany()) as { series: string; points: string; from: string | Date; to: string | Date }[];
+      return rows.map((r) => ({ series: r.series, points: Number(r.points), from: isoDate(r.from), to: isoDate(r.to) }));
+    },
+    findBenchmarkPoints: async (userId, series) =>
+      (await manager.find(BenchmarkPointEntity, { where: { userId, series }, order: { date: 'ASC' } })).map(toBenchmarkPoint),
+    replaceBenchmark: async (userId, series, points) => {
+      await manager.delete(BenchmarkPointEntity, { userId, series });
+      for (let i = 0; i < points.length; i += 500) {
+        await manager.insert(BenchmarkPointEntity, points.slice(i, i + 500).map((p) => ({ userId, series, ...p })) as AnyPatch);
+      }
+      return points.length;
+    },
+    findFundHoldings: async (userId, holdingId) =>
+      (await manager.find(FundHoldingEntity, { where: { userId, holdingId }, order: { weight: 'DESC' } })).map(toFundHolding),
+    replaceFundHoldings: async (userId, holdingId, rows) => {
+      await manager.delete(FundHoldingEntity, { userId, holdingId });
+      for (let i = 0; i < rows.length; i += 500) await manager.insert(FundHoldingEntity, rows.slice(i, i + 500) as AnyPatch);
+      return rows.length;
+    },
+  };
+
+  const portfolioImports: PortfolioImportRepository = {
+    listBatches: async (userId) =>
+      (await manager.find(PortfolioImportBatchEntity, { where: { userId }, order: { createdAt: 'DESC' } })).map(toPortfolioImportBatch),
+    findBatch: async (userId, id) => {
+      const row = await manager.findOneBy(PortfolioImportBatchEntity, { id, userId });
+      return row ? toPortfolioImportBatch(row) : null;
+    },
+    createBatch: async (input) => toPortfolioImportBatch(await manager.save(manager.create(PortfolioImportBatchEntity, input as AnyPatch))),
+    updateBatch: async (userId, id, patch) => toPortfolioImportBatch(await updateOwned(PortfolioImportBatchEntity, userId, id, patch)),
+    deleteBatch: async (userId, id) => void (await manager.delete(PortfolioImportBatchEntity, { id, userId })),
+    insertRows: async (rows) => {
+      for (let i = 0; i < rows.length; i += 500) await manager.insert(PortfolioImportRowEntity, rows.slice(i, i + 500) as AnyPatch);
+    },
+    findRows: async (userId, batchId) =>
+      (await manager.find(PortfolioImportRowEntity, { where: { userId, batchId }, order: { rowNumber: 'ASC' } })).map(toPortfolioImportRow),
+    updateRow: async (userId, id, patch) => toPortfolioImportRow(await updateOwned(PortfolioImportRowEntity, userId, id, patch)),
+  };
+
+  return {
+    accounts,
+    categories,
+    merchants,
+    transactions,
+    transfers,
+    imports,
+    rules,
+    recurring,
+    budgets,
+    goals,
+    scenarios,
+    holdings,
+    holdingTransactions,
+    portfolioData,
+    portfolioImports,
+  };
 }
 
 export function createFinanceStore(dataSource: DataSource): FinanceStore {

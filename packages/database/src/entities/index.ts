@@ -6,6 +6,14 @@ import { OAuthAuthorizationEntity, OAuthClientEntity, OAuthTokenEntity } from '.
 import { ImportBatchEntity, ImportColumnMappingEntity, ImportErrorEntity, ImportRowEntity } from './import.entities';
 import { RecurringSeriesEntity } from './recurring.entity';
 import { BudgetEntity, GoalEntity, ScenarioEntity } from './planning.entities';
+import {
+  BenchmarkPointEntity,
+  FundHoldingEntity,
+  HoldingEntity,
+  HoldingTransactionEntity,
+  PortfolioImportBatchEntity,
+  PortfolioImportRowEntity,
+} from './portfolio.entities';
 import { RuleEntity } from './rule.entity';
 import { CategoryEntity } from './category.entity';
 import { MerchantEntity } from './merchant.entity';
@@ -24,6 +32,12 @@ export {
   BudgetEntity,
   GoalEntity,
   ScenarioEntity,
+  HoldingEntity,
+  HoldingTransactionEntity,
+  BenchmarkPointEntity,
+  FundHoldingEntity,
+  PortfolioImportBatchEntity,
+  PortfolioImportRowEntity,
   ApiTokenEntity,
   OAuthAuthorizationEntity,
   OAuthClientEntity,
@@ -70,4 +84,10 @@ export const ENTITIES = [
   AdvisorMessageEntity,
   AdvisorSuggestionEntity,
   AdvisorBriefingEntity,
+  HoldingEntity,
+  HoldingTransactionEntity,
+  BenchmarkPointEntity,
+  FundHoldingEntity,
+  PortfolioImportBatchEntity,
+  PortfolioImportRowEntity,
 ];
