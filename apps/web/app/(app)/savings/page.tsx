@@ -32,7 +32,7 @@ const Hero = styled.section`
 
   .big {
     font-family: ${({ theme }) => theme.typography.fontFamilySerif};
-    /* Must not run off a 375px phone: the floor is small enough for ₹1,24,350.00/month. */
+    /* Must survive a 375px phone: the floor is small enough for ₹1,24,350.00/month. */
     font-size: clamp(30px, 7vw, 60px);
     overflow-wrap: anywhere;
     font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
@@ -133,8 +133,7 @@ export default function SavingsPage() {
 
   const rationale = (o: SavingsOpportunity): string => {
     const r = o.rationale;
-    const pct =
-      r.changePercent !== null ? ` · ${r.changePercent > 0 ? '+' : ''}${r.changePercent}%` : '';
+    const pct = r.changePercent !== null ? ` · ${r.changePercent > 0 ? '+' : ''}${r.changePercent}%` : '';
     switch (o.kind) {
       case 'category_creep':
       case 'merchant_creep':
@@ -181,12 +180,7 @@ export default function SavingsPage() {
         )}
       </div>
       <Tooltip title="See the transactions">
-        <Link
-          className="go"
-          href={evidenceHref(o)}
-          aria-label={`Transactions for ${o.title}`}
-          style={{ display: 'grid', placeItems: 'center' }}
-        >
+        <Link className="go" href={evidenceHref(o)} aria-label={`Transactions for ${o.title}`} style={{ display: 'grid', placeItems: 'center' }}>
           <ArrowRight size={20} />
         </Link>
       </Tooltip>
@@ -195,10 +189,7 @@ export default function SavingsPage() {
 
   return (
     <>
-      <PageHeader
-        title="Save more"
-        subtitle="Where your spending crept up, what got pricier and what fees cost you — every figure traced to transactions."
-      />
+      <PageHeader title="Save more" subtitle="Where your spending crept up, what got pricier and what fees cost you — every figure traced to transactions." />
 
       <Hero>
         <div>

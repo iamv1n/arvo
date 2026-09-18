@@ -2,25 +2,7 @@
 
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  App,
-  Button,
-  Card,
-  Checkbox,
-  Col,
-  DatePicker,
-  Dropdown,
-  Empty,
-  Form,
-  Input,
-  InputNumber,
-  Modal,
-  Popconfirm,
-  Row,
-  Segmented,
-  Skeleton,
-  Typography,
-} from 'antd';
+import { App, Button, Card, Checkbox, Col, DatePicker, Dropdown, Empty, Form, Input, InputNumber, Modal, Popconfirm, Row, Segmented, Skeleton, Typography } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { useEffect, useMemo, useState } from 'react';
 import styled, { useTheme } from 'styled-components';
@@ -32,13 +14,7 @@ import { ResultStrip } from '../../../components/result-strip';
 import { api, errorMessage } from '../../../lib/api';
 import { useAuth } from '../../../lib/auth';
 import { keys, useScenarioComparison, useScenarios } from '../../../lib/queries';
-import type {
-  AffordabilityResult,
-  AffordabilityStatus,
-  Scenario,
-  ScenarioAdjustment,
-  WhatIfResult,
-} from '../../../lib/types';
+import type { AffordabilityResult, AffordabilityStatus, Scenario, ScenarioAdjustment, WhatIfResult } from '../../../lib/types';
 import { useMoney } from '../../../lib/use-money';
 
 type Tab = 'afford' | 'what-if';
@@ -57,9 +33,9 @@ const BigStamp = styled(Stamp)`
 `;
 
 /*
- * Assumption fields. The planner's form lives in a third of the page, so fixed 24-column
- * fractions squeezed a date picker and a number into ~120px each. An auto-fit track lets a
- * field claim a whole line when the column is narrow, with the label above it in small mono.
+ * Assumption fields. This form lives in a third of the page, so fixed 24-column fractions
+ * squeezed a date picker and a number into ~120px each. An auto-fit track lets a field claim a
+ * whole line when the column is narrow, with its name above it in small mono.
  */
 const Fields = styled.div`
   display: grid;
@@ -149,11 +125,7 @@ function Affordability() {
       message.warning('Enter an amount like 70000');
       return;
     }
-    check.mutate({
-      amount: amount.trim(),
-      bufferMonths: buffer,
-      ...(date ? { date: date.format('YYYY-MM-DD') } : {}),
-    });
+    check.mutate({ amount: amount.trim(), bufferMonths: buffer, ...(date ? { date: date.format('YYYY-MM-DD') } : {}) });
   };
 
   return (
@@ -164,14 +136,7 @@ function Affordability() {
             <Fields>
               <Field style={{ gridColumn: '1 / -1' }}>
                 <span className="name">Amount</span>
-                <Input
-                  size="large"
-                  inputMode="decimal"
-                  prefix="₹"
-                  placeholder="70000"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                />
+                <Input size="large" inputMode="decimal" prefix="₹" placeholder="70000" value={amount} onChange={(e) => setAmount(e.target.value)} />
               </Field>
               <Field>
                 <span className="name">When</span>
@@ -179,22 +144,13 @@ function Affordability() {
                   style={{ width: '100%' }}
                   value={date}
                   onChange={setDate}
-                  disabledDate={(d) =>
-                    d.isBefore(dayjs(), 'day') || d.isAfter(dayjs().add(12, 'month').endOf('month'))
-                  }
+                  disabledDate={(d) => d.isBefore(dayjs(), 'day') || d.isAfter(dayjs().add(12, 'month').endOf('month'))}
                 />
                 <span className="hint">Empty means today</span>
               </Field>
               <Field>
                 <span className="name">Buffer (months)</span>
-                <InputNumber
-                  style={{ width: '100%' }}
-                  min={0}
-                  max={24}
-                  step={0.5}
-                  value={buffer}
-                  onChange={(v) => setBuffer(v ?? 0)}
-                />
+                <InputNumber style={{ width: '100%' }} min={0} max={24} step={0.5} value={buffer} onChange={(v) => setBuffer(v ?? 0)} />
               </Field>
             </Fields>
             <Button type="primary" htmlType="submit" block size="large" loading={check.isPending}>
@@ -204,42 +160,19 @@ function Affordability() {
 
           {r && (
             <>
-              <div
-                style={{
-                  margin: '28px 0 16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                  flexWrap: 'wrap',
-                }}
-              >
+              <div style={{ margin: '28px 0 16px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                 <BigStamp $tone={STATUS[r.status].tone}>{STATUS[r.status].label}</BigStamp>
-                {r.status !== 'affordable' && r.affordableFrom && (
-                  <Eyebrow>
-                    Comfortable from {dayjs(`${r.affordableFrom}-01`).format('MMM YYYY')}
-                  </Eyebrow>
-                )}
+                {r.status !== 'affordable' && r.affordableFrom && <Eyebrow>Comfortable from {dayjs(`${r.affordableFrom}-01`).format('MMM YYYY')}</Eyebrow>}
               </div>
+              {/* Long, signed and sometimes wordy ("Never at this pace") — a ruled ribbon, not stat cards. */}
               <ResultStrip
                 items={[
-                  {
-                    label: 'Cash after',
-                    value: money(r.cashAfter, currency),
-                    tone: Number(r.cashAfter) < 0 ? 'negative' : 'neutral',
-                  },
-                  {
-                    label: 'Buffer left',
-                    value: r.bufferMonthsAfter === null ? '—' : `${r.bufferMonthsAfter} mo`,
-                  },
+                  { label: 'Cash after', value: money(r.cashAfter, currency), tone: Number(r.cashAfter) < 0 ? 'negative' : 'neutral' },
+                  { label: 'Buffer left', value: r.bufferMonthsAfter === null ? '—' : `${r.bufferMonthsAfter} mo` },
                   { label: 'Buffer target', value: money(r.bufferTarget, currency) },
                   {
                     label: 'Back to buffer',
-                    value:
-                      r.monthsToRecover === null
-                        ? 'Never at this pace'
-                        : r.monthsToRecover === 0
-                          ? 'Never below'
-                          : `${r.monthsToRecover} mo`,
+                    value: r.monthsToRecover === null ? 'Never at this pace' : r.monthsToRecover === 0 ? 'Never below' : `${r.monthsToRecover} mo`,
                   },
                 ]}
               />
@@ -251,11 +184,7 @@ function Affordability() {
         <Card
           style={{ height: '100%' }}
           title="Liquid cash, next 12 months"
-          extra={
-            r && (
-              <Eyebrow>Saving {money(r.baseline.monthlySurplus, currency)}/mo after goals</Eyebrow>
-            )
-          }
+          extra={r && <Eyebrow>Saving {money(r.baseline.monthlySurplus, currency)}/mo after goals</Eyebrow>}
         >
           {check.isPending ? (
             <Skeleton active paragraph={{ rows: 7 }} />
@@ -264,18 +193,10 @@ function Affordability() {
               <ProjectionChart
                 months={r.series.map((p) => p.month)}
                 lines={[
-                  {
-                    key: 'without',
-                    name: 'Without purchase',
-                    color: theme.colors.textMuted,
-                    dashed: true,
-                  },
+                  { key: 'without', name: 'Without purchase', color: theme.colors.textMuted, dashed: true },
                   { key: 'with', name: 'With purchase', color: theme.colors.brand },
                 ]}
-                values={{
-                  without: r.series.map((p) => p.without),
-                  with: r.series.map((p) => p.with),
-                }}
+                values={{ without: r.series.map((p) => p.without), with: r.series.map((p) => p.with) }}
                 buffer={r.bufferTarget}
                 currency={currency}
                 height={240}
@@ -283,11 +204,7 @@ function Affordability() {
               <Baseline baseline={r.baseline} currency={currency} />
             </>
           ) : (
-            <Empty
-              style={{ padding: '72px 0' }}
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description="Enter an amount to see how it plays out against your buffer."
-            />
+            <Empty style={{ padding: '72px 0' }} image={Empty.PRESENTED_IMAGE_SIMPLE} description="Enter an amount to see how it plays out against your buffer." />
           )}
         </Card>
       </Col>
@@ -295,26 +212,13 @@ function Affordability() {
   );
 }
 
-function Baseline({
-  baseline,
-  currency,
-}: {
-  baseline: AffordabilityResult['baseline'];
-  currency: string;
-}) {
+function Baseline({ baseline, currency }: { baseline: AffordabilityResult['baseline']; currency: string }) {
   const money = useMoney();
-  const span = baseline.months.length
-    ? `${dayjs(`${baseline.months[0]}-01`).format('MMM')}–${dayjs(`${baseline.months.at(-1)}-01`).format('MMM')}`
-    : '';
+  const span = baseline.months.length ? `${dayjs(`${baseline.months[0]}-01`).format('MMM')}–${dayjs(`${baseline.months.at(-1)}-01`).format('MMM')}` : '';
   return (
     <Typography.Paragraph type="secondary" style={{ margin: '12px 0 0', fontSize: 12 }}>
-      Bank and cash {money(baseline.liquid, currency)} · income{' '}
-      {money(baseline.monthlyIncome, currency)} − spending{' '}
-      {money(baseline.monthlyExpenses, currency)}
-      {Number(baseline.goalContributions) > 0 && (
-        <> − goals {money(baseline.goalContributions, currency)}</>
-      )}{' '}
-      a month ({span} average)
+      Bank and cash {money(baseline.liquid, currency)} · income {money(baseline.monthlyIncome, currency)} − spending {money(baseline.monthlyExpenses, currency)}
+      {Number(baseline.goalContributions) > 0 && <> − goals {money(baseline.goalContributions, currency)}</>} a month ({span} average)
     </Typography.Paragraph>
   );
 }
@@ -322,21 +226,8 @@ function Baseline({
 // ---------------------------------------------------------------- what-if
 
 type Draft =
-  | {
-      id: number;
-      type: 'category';
-      categoryId: string | null;
-      mode: 'amount' | 'percent';
-      value: string;
-      fromMonth: string | null;
-    }
-  | {
-      id: number;
-      type: 'income';
-      mode: 'amount' | 'percent';
-      value: string;
-      fromMonth: string | null;
-    }
+  | { id: number; type: 'category'; categoryId: string | null; mode: 'amount' | 'percent'; value: string; fromMonth: string | null }
+  | { id: number; type: 'income'; mode: 'amount' | 'percent'; value: string; fromMonth: string | null }
   | { id: number; type: 'one_off'; month: string | null; amount: string; label: string };
 
 let nextId = 1;
@@ -345,23 +236,12 @@ const newDraft = (type: Draft['type']): Draft =>
     ? { id: nextId++, type, categoryId: null, mode: 'amount', value: '', fromMonth: null }
     : type === 'income'
       ? { id: nextId++, type, mode: 'amount', value: '', fromMonth: null }
-      : {
-          id: nextId++,
-          type,
-          month: dayjs().add(1, 'month').format('YYYY-MM'),
-          amount: '',
-          label: '',
-        };
+      : { id: nextId++, type, month: dayjs().add(1, 'month').format('YYYY-MM'), amount: '', label: '' };
 
 function toAdjustment(d: Draft): ScenarioAdjustment | null {
   if (d.type === 'one_off') {
     if (!d.month || !POSITIVE.test(d.amount.trim()) || Number(d.amount) <= 0) return null;
-    return {
-      type: 'one_off',
-      month: d.month,
-      amount: d.amount.trim(),
-      ...(d.label.trim() ? { label: d.label.trim() } : {}),
-    };
+    return { type: 'one_off', month: d.month, amount: d.amount.trim(), ...(d.label.trim() ? { label: d.label.trim() } : {}) };
   }
   const value = d.value.trim();
   if (!DECIMAL.test(value) || Number(value) === 0) return null;
@@ -373,34 +253,12 @@ function toAdjustment(d: Draft): ScenarioAdjustment | null {
 }
 
 function fromAdjustment(a: ScenarioAdjustment): Draft {
-  if (a.type === 'one_off')
-    return {
-      id: nextId++,
-      type: 'one_off',
-      month: a.month,
-      amount: a.amount,
-      label: a.label ?? '',
-    };
-  if (a.type === 'income')
-    return {
-      id: nextId++,
-      type: 'income',
-      mode: a.mode,
-      value: a.value,
-      fromMonth: a.fromMonth ?? null,
-    };
-  return {
-    id: nextId++,
-    type: 'category',
-    categoryId: a.categoryId,
-    mode: a.mode,
-    value: a.value,
-    fromMonth: a.fromMonth ?? null,
-  };
+  if (a.type === 'one_off') return { id: nextId++, type: 'one_off', month: a.month, amount: a.amount, label: a.label ?? '' };
+  if (a.type === 'income') return { id: nextId++, type: 'income', mode: a.mode, value: a.value, fromMonth: a.fromMonth ?? null };
+  return { id: nextId++, type: 'category', categoryId: a.categoryId, mode: a.mode, value: a.value, fromMonth: a.fromMonth ?? null };
 }
 
-const monthDisabled = (d: Dayjs) =>
-  d.isBefore(dayjs(), 'month') || d.isAfter(dayjs().add(12, 'month'), 'month');
+const monthDisabled = (d: Dayjs) => d.isBefore(dayjs(), 'month') || d.isAfter(dayjs().add(12, 'month'), 'month');
 
 function WhatIf() {
   const money = useMoney();
@@ -410,10 +268,7 @@ function WhatIf() {
   const [drafts, setDrafts] = useState<Draft[]>(() => [newDraft('category')]);
   const [saving, setSaving] = useState(false);
 
-  const adjustments = useMemo(
-    () => drafts.map(toAdjustment).filter((a): a is ScenarioAdjustment => a !== null),
-    [drafts],
-  );
+  const adjustments = useMemo(() => drafts.map(toAdjustment).filter((a): a is ScenarioAdjustment => a !== null), [drafts]);
   const [debounced, setDebounced] = useState(adjustments);
   useEffect(() => {
     const t = setTimeout(() => setDebounced(adjustments), 350);
@@ -422,18 +277,13 @@ function WhatIf() {
 
   const run = useQuery({
     queryKey: [...keys.planning, 'what-if', JSON.stringify(debounced)],
-    queryFn: () =>
-      api<WhatIfResult>('/planning/what-if', { method: 'POST', body: { adjustments: debounced } }),
+    queryFn: () => api<WhatIfResult>('/planning/what-if', { method: 'POST', body: { adjustments: debounced } }),
     placeholderData: (prev) => prev,
   });
   const r = run.data;
-  const categoryAverage = useMemo(
-    () => new Map(r?.baseline.categories.map((c) => [c.categoryId, c.monthly]) ?? []),
-    [r],
-  );
+  const categoryAverage = useMemo(() => new Map(r?.baseline.categories.map((c) => [c.categoryId, c.monthly]) ?? []), [r]);
 
-  const update = (id: number, patch: Partial<Draft>) =>
-    setDrafts((list) => list.map((d) => (d.id === id ? ({ ...d, ...patch } as Draft) : d)));
+  const update = (id: number, patch: Partial<Draft>) => setDrafts((list) => list.map((d) => (d.id === id ? ({ ...d, ...patch } as Draft) : d)));
   const remove = (id: number) => setDrafts((list) => list.filter((d) => d.id !== id));
 
   const yearly = r ? Number(r.yearlyImpact) : 0;
@@ -454,38 +304,20 @@ function WhatIf() {
                     { key: 'income', label: 'Income' },
                     { key: 'one_off', label: 'One-off expense' },
                   ],
-                  onClick: ({ key }) =>
-                    setDrafts((list) => [...list, newDraft(key as Draft['type'])]),
+                  onClick: ({ key }) => setDrafts((list) => [...list, newDraft(key as Draft['type'])]),
                 }}
               >
                 <Button icon={<PlusOutlined />}>Add</Button>
               </Dropdown>
             }
           >
-            {drafts.length === 0 && (
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="Add a change to see its effect."
-              />
-            )}
+            {drafts.length === 0 && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Add a change to see its effect." />}
             {drafts.map((d) => (
               <AdjustmentRow key={d.id}>
                 {d.type === 'category' && (
                   <>
-                    <CategorySelect
-                      allowClear={false}
-                      value={d.categoryId}
-                      onChange={(v) => update(d.id, { categoryId: v })}
-                      placeholder="Category"
-                      style={{ flex: '1 1 180px' }}
-                    />
-                    <ModeValue
-                      mode={d.mode}
-                      value={d.value}
-                      onMode={(mode) => update(d.id, { mode })}
-                      onValue={(value) => update(d.id, { value })}
-                      placeholder={d.mode === 'percent' ? '-50' : '10000'}
-                    />
+                    <CategorySelect allowClear={false} value={d.categoryId} onChange={(v) => update(d.id, { categoryId: v })} placeholder="Category" style={{ flex: '1 1 180px' }} />
+                    <ModeValue mode={d.mode} value={d.value} onMode={(mode) => update(d.id, { mode })} onValue={(value) => update(d.id, { value })} placeholder={d.mode === 'percent' ? '-50' : '10000'} />
                   </>
                 )}
                 {d.type === 'income' && (
@@ -493,40 +325,14 @@ function WhatIf() {
                     <Typography.Text strong style={{ flex: '1 1 180px' }}>
                       Income
                     </Typography.Text>
-                    <ModeValue
-                      mode={d.mode}
-                      value={d.value}
-                      onMode={(mode) => update(d.id, { mode })}
-                      onValue={(value) => update(d.id, { value })}
-                      placeholder={d.mode === 'percent' ? '10' : '15000'}
-                    />
+                    <ModeValue mode={d.mode} value={d.value} onMode={(mode) => update(d.id, { mode })} onValue={(value) => update(d.id, { value })} placeholder={d.mode === 'percent' ? '10' : '15000'} />
                   </>
                 )}
                 {d.type === 'one_off' && (
                   <>
-                    <Input
-                      value={d.label}
-                      onChange={(e) => update(d.id, { label: e.target.value })}
-                      placeholder="One-off (e.g. Laptop)"
-                      maxLength={80}
-                      style={{ flex: '1 1 150px' }}
-                    />
-                    <Input
-                      inputMode="decimal"
-                      prefix="₹"
-                      value={d.amount}
-                      onChange={(e) => update(d.id, { amount: e.target.value })}
-                      placeholder="70000"
-                      style={{ flex: '1 1 120px', minWidth: 110 }}
-                    />
-                    <DatePicker
-                      picker="month"
-                      allowClear={false}
-                      value={d.month ? dayjs(`${d.month}-01`) : null}
-                      disabledDate={monthDisabled}
-                      onChange={(v) => update(d.id, { month: v ? v.format('YYYY-MM') : null })}
-                      style={{ flex: '1 1 120px', minWidth: 110 }}
-                    />
+                    <Input value={d.label} onChange={(e) => update(d.id, { label: e.target.value })} placeholder="One-off (e.g. Laptop)" maxLength={80} style={{ flex: '1 1 150px' }} />
+                    <Input inputMode="decimal" prefix="₹" value={d.amount} onChange={(e) => update(d.id, { amount: e.target.value })} placeholder="70000" style={{ flex: '1 1 120px', minWidth: 110 }} />
+                    <DatePicker picker="month" allowClear={false} value={d.month ? dayjs(`${d.month}-01`) : null} disabledDate={monthDisabled} onChange={(v) => update(d.id, { month: v ? v.format('YYYY-MM') : null })} style={{ flex: '1 1 120px', minWidth: 110 }} />
                   </>
                 )}
                 {d.type !== 'one_off' && (
@@ -539,56 +345,26 @@ function WhatIf() {
                     style={{ flex: '1 1 140px', minWidth: 130 }}
                   />
                 )}
-                <Button
-                  type="text"
-                  icon={<DeleteOutlined />}
-                  aria-label="Remove"
-                  onClick={() => remove(d.id)}
-                />
+                <Button type="text" icon={<DeleteOutlined />} aria-label="Remove" onClick={() => remove(d.id)} />
                 {d.type === 'category' && d.categoryId && (
                   <Eyebrow style={{ flexBasis: '100%' }}>
-                    Usually {money(categoryAverage.get(d.categoryId) ?? 0, currency)}/month ·
-                    positive = spend more
+                    Usually {money(categoryAverage.get(d.categoryId) ?? 0, currency)}/month · positive = spend more
                   </Eyebrow>
                 )}
               </AdjustmentRow>
             ))}
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginTop: 16,
-                gap: 8,
-              }}
-            >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, gap: 8 }}>
               <Eyebrow>
                 {adjustments.length} of {drafts.length} applied
               </Eyebrow>
-              <Button
-                type="primary"
-                disabled={adjustments.length === 0}
-                onClick={() => setSaving(true)}
-              >
+              <Button type="primary" disabled={adjustments.length === 0} onClick={() => setSaving(true)}>
                 Save as scenario
               </Button>
             </div>
           </Card>
         </Col>
         <Col xs={24} xl={14}>
-          <Card
-            style={{ height: '100%' }}
-            title="Projection vs today's pace"
-            extra={
-              r && (
-                <Eyebrow>
-                  {run.isFetching
-                    ? 'Updating…'
-                    : `12 months from ${dayjs(r.asOf).format('MMM YYYY')}`}
-                </Eyebrow>
-              )
-            }
-          >
+          <Card style={{ height: '100%' }} title="Projection vs today's pace" extra={r && <Eyebrow>{run.isFetching ? 'Updating…' : `12 months from ${dayjs(r.asOf).format('MMM YYYY')}`}</Eyebrow>}>
             {!r ? (
               <Skeleton active paragraph={{ rows: 8 }} />
             ) : (
@@ -601,10 +377,7 @@ function WhatIf() {
                         value: `${yearly > 0 ? '+' : ''}${money(r.yearlyImpact, currency)}`,
                         tone: yearly > 0 ? 'positive' : yearly < 0 ? 'negative' : 'neutral',
                       },
-                      {
-                        label: 'Monthly change',
-                        value: `${Number(r.monthlyChange) > 0 ? '+' : ''}${money(r.monthlyChange, currency)}`,
-                      },
+                      { label: 'Monthly change', value: `${Number(r.monthlyChange) > 0 ? '+' : ''}${money(r.monthlyChange, currency)}` },
                       {
                         label: 'Lowest point',
                         value: money(r.lowest.amount, currency, { compact: true }),
@@ -617,18 +390,10 @@ function WhatIf() {
                 <ProjectionChart
                   months={r.series.map((p) => p.month)}
                   lines={[
-                    {
-                      key: 'baseline',
-                      name: 'Baseline',
-                      color: theme.colors.textMuted,
-                      dashed: true,
-                    },
+                    { key: 'baseline', name: 'Baseline', color: theme.colors.textMuted, dashed: true },
                     { key: 'scenario', name: 'With changes', color: theme.colors.brand },
                   ]}
-                  values={{
-                    baseline: r.series.map((p) => p.baseline),
-                    scenario: r.series.map((p) => p.scenario),
-                  }}
+                  values={{ baseline: r.series.map((p) => p.baseline), scenario: r.series.map((p) => p.scenario) }}
                   currency={currency}
                   height={260}
                 />
@@ -660,36 +425,13 @@ function ModeValue({
 }) {
   return (
     <>
-      <Segmented<'amount' | 'percent'>
-        size="small"
-        value={mode}
-        onChange={onMode}
-        options={[
-          { value: 'amount', label: '₹' },
-          { value: 'percent', label: '%' },
-        ]}
-      />
-      <Input
-        inputMode="decimal"
-        value={value}
-        onChange={(e) => onValue(e.target.value)}
-        placeholder={placeholder}
-        style={{ flex: '1 1 100px', minWidth: 92 }}
-        suffix={mode === 'percent' ? '%' : undefined}
-      />
+      <Segmented<'amount' | 'percent'> size="small" value={mode} onChange={onMode} options={[{ value: 'amount', label: '₹' }, { value: 'percent', label: '%' }]} />
+      <Input inputMode="decimal" value={value} onChange={(e) => onValue(e.target.value)} placeholder={placeholder} style={{ flex: '1 1 100px', minWidth: 92 }} suffix={mode === 'percent' ? '%' : undefined} />
     </>
   );
 }
 
-function SaveScenarioModal({
-  open,
-  adjustments,
-  onClose,
-}: {
-  open: boolean;
-  adjustments: ScenarioAdjustment[];
-  onClose: () => void;
-}) {
+function SaveScenarioModal({ open, adjustments, onClose }: { open: boolean; adjustments: ScenarioAdjustment[]; onClose: () => void }) {
   const [form] = Form.useForm<{ name: string; description?: string }>();
   const { message } = App.useApp();
   const queryClient = useQueryClient();
@@ -709,21 +451,9 @@ function SaveScenarioModal({
     }
   };
   return (
-    <Modal
-      open={open}
-      title="Save scenario"
-      okText="Save"
-      onOk={onOk}
-      onCancel={onClose}
-      confirmLoading={save.isPending}
-      destroyOnHidden
-    >
+    <Modal open={open} title="Save scenario" okText="Save" onOk={onOk} onCancel={onClose} confirmLoading={save.isPending} destroyOnHidden>
       <Form form={form} layout="vertical" requiredMark={false}>
-        <Form.Item
-          name="name"
-          label="Name"
-          rules={[{ required: true, whitespace: true, max: 120, message: 'Give it a name' }]}
-        >
+        <Form.Item name="name" label="Name" rules={[{ required: true, whitespace: true, max: 120, message: 'Give it a name' }]}>
           <Input placeholder="Move to a bigger flat" />
         </Form.Item>
         <Form.Item name="description" label="Note" rules={[{ max: 500 }]}>
@@ -761,28 +491,18 @@ function SavedScenarios({ onLoad }: { onLoad: (s: Scenario) => void }) {
       </SectionTitle>
       <Row gutter={[16, 16]}>
         <Col xs={24} xl={10}>
-          <Card
-            styles={{ body: { padding: list.length ? 0 : undefined } }}
-            style={{ height: '100%' }}
-          >
+          <Card styles={{ body: { padding: list.length ? 0 : undefined } }} style={{ height: '100%' }}>
             {scenarios.isPending ? (
               <Skeleton active />
             ) : list.length === 0 ? (
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="Save a what-if to compare it later."
-              />
+              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Save a what-if to compare it later." />
             ) : (
               list.map((s) => (
                 <AdjustmentRow key={s.id} style={{ padding: '12px 20px' }}>
                   <Checkbox
                     checked={ids.includes(s.id)}
                     disabled={!ids.includes(s.id) && ids.length >= 5}
-                    onChange={(e) =>
-                      setSelected((cur) =>
-                        e.target.checked ? [...cur, s.id] : cur.filter((id) => id !== s.id),
-                      )
-                    }
+                    onChange={(e) => setSelected((cur) => (e.target.checked ? [...cur, s.id] : cur.filter((id) => id !== s.id)))}
                   />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <Typography.Text strong ellipsis style={{ display: 'block' }}>
@@ -796,18 +516,8 @@ function SavedScenarios({ onLoad }: { onLoad: (s: Scenario) => void }) {
                   <Button size="small" onClick={() => onLoad(s)}>
                     Load
                   </Button>
-                  <Popconfirm
-                    title="Delete this scenario?"
-                    onConfirm={() =>
-                      remove.mutateAsync(s.id).catch((e) => message.error(errorMessage(e)))
-                    }
-                  >
-                    <Button
-                      size="small"
-                      type="text"
-                      icon={<DeleteOutlined />}
-                      aria-label="Delete"
-                    />
+                  <Popconfirm title="Delete this scenario?" onConfirm={() => remove.mutateAsync(s.id).catch((e) => message.error(errorMessage(e)))}>
+                    <Button size="small" type="text" icon={<DeleteOutlined />} aria-label="Delete" />
                   </Popconfirm>
                 </AdjustmentRow>
               ))
@@ -820,33 +530,17 @@ function SavedScenarios({ onLoad }: { onLoad: (s: Scenario) => void }) {
               ids.length > 0 ? (
                 <Skeleton active paragraph={{ rows: 6 }} />
               ) : (
-                <Empty
-                  style={{ padding: '48px 0' }}
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description="Tick scenarios to overlay them."
-                />
+                <Empty style={{ padding: '48px 0' }} image={Empty.PRESENTED_IMAGE_SIMPLE} description="Tick scenarios to overlay them." />
               )
             ) : (
               <>
                 <ProjectionChart
                   months={c.months}
                   lines={[
-                    {
-                      key: 'baseline',
-                      name: 'Baseline',
-                      color: theme.colors.textMuted,
-                      dashed: true,
-                    },
-                    ...c.scenarios.map((s, i) => ({
-                      key: s.id,
-                      name: s.name,
-                      color: palette[i % palette.length],
-                    })),
+                    { key: 'baseline', name: 'Baseline', color: theme.colors.textMuted, dashed: true },
+                    ...c.scenarios.map((s, i) => ({ key: s.id, name: s.name, color: palette[i % palette.length] })),
                   ]}
-                  values={{
-                    baseline: c.baselineSeries,
-                    ...Object.fromEntries(c.scenarios.map((s) => [s.id, s.series])),
-                  }}
+                  values={{ baseline: c.baselineSeries, ...Object.fromEntries(c.scenarios.map((s) => [s.id, s.series])) }}
                   currency={currency}
                   height={240}
                 />

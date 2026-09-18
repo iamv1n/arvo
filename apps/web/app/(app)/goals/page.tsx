@@ -1,24 +1,7 @@
 'use client';
 
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
-import {
-  App,
-  Button,
-  Card,
-  Col,
-  DatePicker,
-  Empty,
-  Form,
-  Input,
-  Modal,
-  Popconfirm,
-  Progress,
-  Row,
-  Select,
-  Skeleton,
-  Tooltip,
-  Typography,
-} from 'antd';
+import { App, Button, Card, Col, DatePicker, Empty, Form, Input, Modal, Popconfirm, Progress, Row, Select, Skeleton, Tooltip, Typography } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { useEffect, useState } from 'react';
 import styled, { useTheme } from 'styled-components';
@@ -80,12 +63,8 @@ export default function GoalsPage() {
   const currency = rows[0]?.currency ?? 'INR';
   const open = rows.filter((g) => g.status !== 'achieved' && g.currency === currency);
   const monthly = open.reduce((sum, g) => sum + Number(g.requiredMonthly), 0);
-  const saved = rows
-    .filter((g) => g.currency === currency)
-    .reduce((sum, g) => sum + Number(g.current), 0);
-  const target = rows
-    .filter((g) => g.currency === currency)
-    .reduce((sum, g) => sum + Number(g.targetAmount), 0);
+  const saved = rows.filter((g) => g.currency === currency).reduce((sum, g) => sum + Number(g.current), 0);
+  const target = rows.filter((g) => g.currency === currency).reduce((sum, g) => sum + Number(g.targetAmount), 0);
 
   return (
     <>
@@ -101,21 +80,10 @@ export default function GoalsPage() {
 
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} md={8}>
-          <StatCard
-            variant="hero"
-            label="Needed per month"
-            loading={goals.isPending}
-            value={money(monthly, currency)}
-            hint={`Across ${open.length} open goal${open.length === 1 ? '' : 's'}`}
-          />
+          <StatCard variant="hero" label="Needed per month" loading={goals.isPending} value={money(monthly, currency)} hint={`Across ${open.length} open goal${open.length === 1 ? '' : 's'}`} />
         </Col>
         <Col xs={24} md={8}>
-          <StatCard
-            label="Saved so far"
-            loading={goals.isPending}
-            value={money(saved, currency)}
-            hint={target ? `of ${money(target, currency)} targeted` : undefined}
-          />
+          <StatCard label="Saved so far" loading={goals.isPending} value={money(saved, currency)} hint={target ? `of ${money(target, currency)} targeted` : undefined} />
         </Col>
         <Col xs={24} md={8}>
           <StatCard
@@ -134,11 +102,7 @@ export default function GoalsPage() {
         </Card>
       ) : rows.length === 0 ? (
         <Card>
-          <Empty
-            style={{ padding: '32px 0' }}
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description="No goals yet. An emergency fund is a good first one."
-          >
+          <Empty style={{ padding: '32px 0' }} image={Empty.PRESENTED_IMAGE_SIMPLE} description="No goals yet. An emergency fund is a good first one.">
             <Button type="primary" icon={<PlusOutlined />} onClick={() => setEditing('new')}>
               Create a goal
             </Button>
@@ -157,44 +121,20 @@ export default function GoalsPage() {
                       <Typography.Text strong ellipsis style={{ fontSize: 16, display: 'block' }}>
                         {g.name}
                       </Typography.Text>
-                      <Eyebrow>
-                        {g.accountName ? `Tracks ${g.accountName}` : 'Manual savings'}
-                      </Eyebrow>
+                      <Eyebrow>{g.accountName ? `Tracks ${g.accountName}` : 'Manual savings'}</Eyebrow>
                     </div>
                     <div style={{ whiteSpace: 'nowrap' }}>
                       <Tooltip title="Edit">
-                        <Button
-                          type="text"
-                          size="small"
-                          icon={<EditOutlined />}
-                          aria-label="Edit"
-                          onClick={() => setEditing(g)}
-                        />
+                        <Button type="text" size="small" icon={<EditOutlined />} aria-label="Edit" onClick={() => setEditing(g)} />
                       </Tooltip>
-                      <Popconfirm
-                        title="Delete this goal?"
-                        onConfirm={() =>
-                          remove.mutateAsync(g.id).catch((e) => message.error(errorMessage(e)))
-                        }
-                      >
-                        <Button
-                          type="text"
-                          size="small"
-                          icon={<DeleteOutlined />}
-                          aria-label="Delete"
-                        />
+                      <Popconfirm title="Delete this goal?" onConfirm={() => remove.mutateAsync(g.id).catch((e) => message.error(errorMessage(e)))}>
+                        <Button type="text" size="small" icon={<DeleteOutlined />} aria-label="Delete" />
                       </Popconfirm>
                     </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                     <Tooltip title={`Expected by now: ${g.expectedPercent}%`}>
-                      <Progress
-                        type="circle"
-                        size={72}
-                        percent={g.percent}
-                        strokeColor={color}
-                        format={(p) => `${p}%`}
-                      />
+                      <Progress type="circle" size={72} percent={g.percent} strokeColor={color} format={(p) => `${p}%`} />
                     </Tooltip>
                     <div style={{ minWidth: 0 }}>
                       <Figure>{money(g.current, g.currency)}</Figure>
@@ -208,24 +148,12 @@ export default function GoalsPage() {
                   </div>
                   <Facts>
                     <div>
-                      <dt>
-                        <Eyebrow>Per month</Eyebrow>
-                      </dt>
-                      <dd>
-                        {g.status === 'achieved' ? '—' : money(g.requiredMonthly, g.currency)}
-                      </dd>
+                      <dt><Eyebrow>Per month</Eyebrow></dt>
+                      <dd>{g.status === 'achieved' ? '—' : money(g.requiredMonthly, g.currency)}</dd>
                     </div>
                     <div>
-                      <dt>
-                        <Eyebrow>By {formatDate(g.targetDate)}</Eyebrow>
-                      </dt>
-                      <dd>
-                        {g.status === 'achieved'
-                          ? 'Done'
-                          : g.monthsLeft === 0
-                            ? 'Past due'
-                            : `${g.monthsLeft} month${g.monthsLeft === 1 ? '' : 's'} left`}
-                      </dd>
+                      <dt><Eyebrow>By {formatDate(g.targetDate)}</Eyebrow></dt>
+                      <dd>{g.status === 'achieved' ? 'Done' : g.monthsLeft === 0 ? 'Past due' : `${g.monthsLeft} month${g.monthsLeft === 1 ? '' : 's'} left`}</dd>
                     </div>
                   </Facts>
                 </GoalCard>
@@ -235,11 +163,7 @@ export default function GoalsPage() {
         </Row>
       )}
 
-      <GoalFormModal
-        goal={editing === 'new' ? undefined : (editing ?? undefined)}
-        open={editing !== null}
-        onClose={() => setEditing(null)}
-      />
+      <GoalFormModal goal={editing === 'new' ? undefined : (editing ?? undefined)} open={editing !== null} onClose={() => setEditing(null)} />
     </>
   );
 }
@@ -252,15 +176,7 @@ interface Values {
   savedAmount?: string;
 }
 
-function GoalFormModal({
-  open,
-  goal,
-  onClose,
-}: {
-  open: boolean;
-  goal?: GoalProgress;
-  onClose: () => void;
-}) {
+function GoalFormModal({ open, goal, onClose }: { open: boolean; goal?: GoalProgress; onClose: () => void }) {
   const [form] = Form.useForm<Values>();
   const { message } = App.useApp();
   const accounts = useAccounts();
@@ -273,22 +189,14 @@ function GoalFormModal({
       accountId: values.accountId ?? null,
       savedAmount: values.accountId ? undefined : values.savedAmount || '0',
     };
-    return goal
-      ? api(`/goals/${goal.id}`, { method: 'PATCH', body })
-      : api('/goals', { method: 'POST', body });
+    return goal ? api(`/goals/${goal.id}`, { method: 'PATCH', body }) : api('/goals', { method: 'POST', body });
   });
 
   useEffect(() => {
     if (!open) return;
     form.resetFields();
     if (goal) {
-      form.setFieldsValue({
-        name: goal.name,
-        targetAmount: goal.targetAmount,
-        targetDate: dayjs(goal.targetDate),
-        accountId: goal.accountId,
-        savedAmount: goal.savedAmount,
-      });
+      form.setFieldsValue({ name: goal.name, targetAmount: goal.targetAmount, targetDate: dayjs(goal.targetDate), accountId: goal.accountId, savedAmount: goal.savedAmount });
     }
   }, [open, goal, form]);
 
@@ -305,50 +213,29 @@ function GoalFormModal({
 
   const moneyRule = { pattern: /^\d{1,15}(\.\d{1,4})?$/, message: 'A positive amount like 200000' };
   return (
-    <Modal
-      open={open}
-      title={goal ? 'Edit goal' : 'New goal'}
-      okText={goal ? 'Save' : 'Create'}
-      onOk={onOk}
-      onCancel={onClose}
-      confirmLoading={save.isPending}
-      destroyOnHidden
-    >
+    <Modal open={open} title={goal ? 'Edit goal' : 'New goal'} okText={goal ? 'Save' : 'Create'} onOk={onOk} onCancel={onClose} confirmLoading={save.isPending} destroyOnHidden>
       <Form form={form} layout="vertical" requiredMark={false}>
         <Form.Item name="name" label="Name" rules={[{ required: true, max: 120 }]}>
           <Input placeholder="Emergency fund" />
         </Form.Item>
         <Row gutter={12}>
           <Col span={12}>
-            <Form.Item
-              name="targetAmount"
-              label="Target amount"
-              rules={[{ required: true }, moneyRule]}
-            >
+            <Form.Item name="targetAmount" label="Target amount" rules={[{ required: true }, moneyRule]}>
               <Input inputMode="decimal" placeholder="200000" />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item name="targetDate" label="Target date" rules={[{ required: true }]}>
-              <DatePicker
-                style={{ width: '100%' }}
-                disabledDate={(d) => d.isBefore(dayjs(), 'day')}
-              />
+              <DatePicker style={{ width: '100%' }} disabledDate={(d) => d.isBefore(dayjs(), 'day')} />
             </Form.Item>
           </Col>
         </Row>
-        <Form.Item
-          name="accountId"
-          label="Linked account"
-          extra="Its balance counts as progress. Leave empty to track savings manually."
-        >
+        <Form.Item name="accountId" label="Linked account" extra="Its balance counts as progress. Leave empty to track savings manually.">
           <Select
             allowClear
             placeholder="None, track manually"
             loading={accounts.isPending}
-            options={(accounts.data ?? [])
-              .filter((a) => a.isActive)
-              .map((a) => ({ value: a.id, label: `${a.name} (${a.currency})` }))}
+            options={(accounts.data ?? []).filter((a) => a.isActive).map((a) => ({ value: a.id, label: `${a.name} (${a.currency})` }))}
           />
         </Form.Item>
         {!accountId && (
