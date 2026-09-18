@@ -39,6 +39,7 @@ import type {
   PortfolioDataRepository,
   PortfolioImportRepository,
 } from './portfolio/types';
+import type { JournalRepository, TradeImportRepository, TradeRepository, TradingSettingsRepository } from './trading/types';
 
 /*
  * Persistence ports implemented by @arvo/database. Every user-owned lookup takes the
@@ -172,6 +173,10 @@ export interface Repositories {
   holdingTransactions: HoldingTransactionRepository;
   portfolioData: PortfolioDataRepository;
   portfolioImports: PortfolioImportRepository;
+  trades: TradeRepository;
+  tradingJournal: JournalRepository;
+  tradingSettings: TradingSettingsRepository;
+  tradeImports: TradeImportRepository;
 }
 
 /** Storage entry point: plain repositories plus an atomic unit of work. */
