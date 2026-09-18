@@ -13,6 +13,8 @@ import { Panel } from '../panel';
 
 const Decision = styled.div`
   padding: ${({ theme }) => theme.space[3]}px ${({ theme }) => theme.space[4]}px;
+  display: grid;
+  gap: 2px;
   border-left: 3px solid ${({ theme }) => theme.colors.brand};
   background: ${({ theme }) => theme.colors.brandSubtle};
   border-radius: 0 ${({ theme }) => theme.radii.md}px ${({ theme }) => theme.radii.md}px 0;
@@ -30,15 +32,27 @@ const Narrative = styled.p`
 `;
 
 const Line = styled.div`
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: baseline;
-  gap: 12px;
+  gap: 4px 12px;
   padding: 6px 0;
   font-size: 13px;
 
   & + & {
     border-top: 1px dashed ${({ theme }) => theme.colors.borderSubtle};
+  }
+  .what {
+    min-width: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    overflow: hidden;
+  }
+  .what > span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .figure {
     font-family: ${({ theme }) => theme.typography.fontFamilyMono};
@@ -85,14 +99,18 @@ function Body({ view, compact }: { view: BriefingView; compact: boolean }) {
           <Eyebrow style={{ display: 'block', marginTop: 6 }}>Written by {view.provider} from the figures below</Eyebrow>
         </div>
       )}
-      <Decision>{b.decision.text}</Decision>
+      <Decision>
+        <Eyebrow>One decision</Eyebrow>
+        {b.decision.text}
+      </Decision>
       {b.budgets.attention.length > 0 && (
         <Section>
           <Eyebrow>Budgets pacing over</Eyebrow>
           {b.budgets.attention.slice(0, compact ? 2 : 4).map((a) => (
             <Line key={a.budgetId}>
-              <span>
-                {a.categoryName} <Stamp $tone={STATUS_TONE[a.status] ?? 'neutral'}>{a.status.replace('_', ' ')}</Stamp>
+              <span className="what">
+                <span>{a.categoryName}</span>
+                <Stamp $tone={STATUS_TONE[a.status] ?? 'neutral'}>{a.status.replace('_', ' ')}</Stamp>
               </span>
               <span className="figure">
                 {money(a.spent)} / {money(a.limit)}
@@ -106,8 +124,9 @@ function Body({ view, compact }: { view: BriefingView; compact: boolean }) {
           <Eyebrow>Goals</Eyebrow>
           {b.goals.slice(0, 3).map((g) => (
             <Line key={g.goalId}>
-              <span>
-                {g.name} <Stamp $tone={STATUS_TONE[g.status] ?? 'neutral'}>{g.status.replace('_', ' ')}</Stamp>
+              <span className="what">
+                <span>{g.name}</span>
+                <Stamp $tone={STATUS_TONE[g.status] ?? 'neutral'}>{g.status.replace('_', ' ')}</Stamp>
               </span>
               <span className="figure">{g.percent}%</span>
             </Line>
@@ -119,7 +138,9 @@ function Body({ view, compact }: { view: BriefingView; compact: boolean }) {
           <Eyebrow>Ways to spend less · {money(b.savings.totalMonthly)}/mo</Eyebrow>
           {b.savings.top.slice(0, compact ? 2 : 3).map((s) => (
             <Line key={s.id}>
-              <span>{s.title}</span>
+              <span className="what">
+                <span>{s.title}</span>
+              </span>
               <span className="figure">{money(s.monthlySaving)}</span>
             </Line>
           ))}
@@ -130,8 +151,10 @@ function Body({ view, compact }: { view: BriefingView; compact: boolean }) {
           <Eyebrow>Next 7 days</Eyebrow>
           {b.upcoming.slice(0, 4).map((u) => (
             <Line key={`${u.label}-${u.date}`}>
-              <span>
-                {dayjs(u.date).format('ddd D MMM')} · {u.label}
+              <span className="what">
+                <span>
+                  {dayjs(u.date).format('ddd D MMM')} · {u.label}
+                </span>
               </span>
               <span className="figure">{money(u.amount)}</span>
             </Line>
@@ -153,23 +176,23 @@ export function BriefingCard({ height, compact = false }: { height: number; comp
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
           <CalendarBlank size={18} weight="duotone" />
           Weekly briefing
-          {view && <Eyebrow>Week of {dayjs(view.weekStart).format('D MMM')}</Eyebrow>}
         </span>
       }
       extra={
-        compact ? (
-          <Link href="/advisor">Open advisor</Link>
-        ) : (
-          view && <GenerateButton />
-        )
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+          {view && <Eyebrow>Week of {dayjs(view.weekStart).format('D MMM')}</Eyebrow>}
+          {compact ? <Link href="/advisor">Open advisor</Link> : view && <GenerateButton />}
+        </span>
       }
     >
       {briefing.isPending ? (
         <Skeleton active />
       ) : !view ? (
-        <Empty image={<Compass size={40} weight="duotone" />} styles={{ image: { height: 44 } }} description="No briefing yet. Build one from this week's numbers.">
-          <GenerateButton label="Build briefing" />
-        </Empty>
+        <div style={{ height: '100%', display: 'grid', placeContent: 'center' }}>
+          <Empty image={<Compass size={40} weight="duotone" />} styles={{ image: { height: 44 } }} description="No briefing yet. Build one from this week's numbers.">
+            <GenerateButton label="Build briefing" />
+          </Empty>
+        </div>
       ) : (
         <>
           <Body view={view} compact={compact} />
