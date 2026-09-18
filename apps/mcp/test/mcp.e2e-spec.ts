@@ -97,7 +97,16 @@ describe('MCP server over Streamable HTTP (e2e)', () => {
     const client = await connect(alice.token);
     const { tools } = await client.listTools();
     expect(tools.map((t) => t.name)).toEqual(
-      expect.arrayContaining(['finance_get_cashflow', 'finance_get_spending_summary', 'finance_compare_periods', 'finance_get_net_worth']),
+      expect.arrayContaining([
+        'finance_get_cashflow',
+        'finance_get_spending_summary',
+        'finance_compare_periods',
+        'finance_get_net_worth',
+        'finance_get_portfolio_summary',
+        'finance_get_portfolio_allocation',
+        'finance_get_portfolio_returns',
+        'finance_get_capital_gains',
+      ]),
     );
     expect(tools.every((t) => t.annotations?.readOnlyHint === true)).toBe(true);
     // Advisor-only draft tools never reach MCP clients.

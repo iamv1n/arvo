@@ -71,7 +71,43 @@ describe('finance tools', () => {
     const bad = await runTool(findTool('finance_run_what_if')!, { core: (await fixture()).core, userId: USER_A, currency: 'INR', today: '2026-08-20' }, { adjustments: [{ type: 'income', mode: 'x', value: '1' }] });
     expect(bad.ok).toBe(false);
     expect(await call('finance_run_what_if', { adjustments: [] }, USER_B)).toMatchObject({ yearlyImpact: '0.00', baseline: { liquid: '0.00' } });
-    expect(FINANCE_TOOLS).toHaveLength(19);
+    expect(FINANCE_TOOLS).toHaveLength(23);
+  });
+
+  it('report the portfolio, its allocation, its returns and its capital gains for the caller only', async () => {
+    const { core, call } = await fixture();
+    const fund = await core.holdings.create(USER_A, {
+      name: 'Flexi Cap Direct',
+      kind: 'MUTUAL_FUND',
+      currency: 'INR',
+      amc: 'PPFAS',
+      marketCap: 'LARGE',
+      expenseRatio: '0.63',
+      latestPrice: '100',
+      latestPriceDate: '2026-08-20',
+    });
+    await core.holdings.addTransaction(USER_A, fund.id, { date: '2024-08-20', type: 'BUY', units: '1000', price: '50' });
+
+    const summary = await call('finance_get_portfolio_summary', {});
+    expect(summary).toMatchObject({ totalInvested: '50000.00', currentValue: '100000.00', totalGain: '50000.00', holdingCount: 1 });
+    expect(summary.disclaimer).toContain('not advice');
+    expect(summary.provenance).toMatchObject({ as_of: '2026-08-20', holdings: 1 });
+
+    const allocation = await call('finance_get_portfolio_allocation', {});
+    expect(allocation.assetClass).toEqual([expect.objectContaining({ key: 'EQUITY', percent: 100 })]);
+    expect(allocation.costDrag.annualCost).toBe('630.00');
+
+    const returns = await call('finance_get_portfolio_returns', {});
+    expect(returns.xirrPercent).toBeCloseTo(41.42, 1);
+    expect(returns.benchmark).toBeNull();
+    expect(returns.provenance.method).toContain('XIRR');
+
+    const gains = await call('finance_get_capital_gains', {});
+    expect(gains).toMatchObject({ financialYear: '2026-27', harvestHeadroom: '125000.00' });
+    expect(gains.unrealised.longTerm).toBe('50000.00');
+    expect(gains.provenance.method).toBe('FIFO lots');
+
+    expect(await call('finance_get_portfolio_summary', {}, USER_B)).toMatchObject({ holdingCount: 0, currentValue: '0.00' });
   });
 
   it('have unique, provider-safe names and JSON-schema-convertible inputs', () => {

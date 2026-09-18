@@ -1,6 +1,6 @@
 import { createFinanceStore, databaseOptions } from '@arvo/database';
 import { FinanceCore } from '@arvo/finance-core';
-import { ArvoStatementParser, LocalFileStore } from '@arvo/imports';
+import { ArvoPortfolioParser, ArvoStatementParser, LocalFileStore } from '@arvo/imports';
 import { resolve } from 'node:path';
 import { Global, Inject, Module, type OnApplicationShutdown } from '@nestjs/common';
 import { DataSource } from 'typeorm';
@@ -25,6 +25,7 @@ import { APP_CONFIG, type AppConfig } from '../config/app-config';
             // Relative paths resolve from the repository root so every app shares one store.
             files: new LocalFileStore(resolve(__dirname, '../../../..', config.storagePath)),
           },
+          portfolioImports: { parser: new ArvoPortfolioParser() },
         }),
     },
   ],

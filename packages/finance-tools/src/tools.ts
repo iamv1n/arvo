@@ -513,6 +513,69 @@ export const runWhatIf = defineTool({
   },
 });
 
+// ---- portfolio (advice level 0-2: analysis, education, simulation) ----
+
+export const getPortfolioSummary = defineTool({
+  name: 'finance_get_portfolio_summary',
+  title: 'Get portfolio summary',
+  description:
+    'The investment portfolio on a date: total invested, money taken out, current value, absolute return and XIRR (money-weighted, actual/365), the split by asset class and the ten largest holdings with their own gain and XIRR. Values come from the latest price the user entered or imported, or from a stated value for things with no unit price (EPF, PPF, property). Use for "how are my investments doing?". Read-only; never a recommendation to buy or sell.',
+  inputSchema: z.object({ as_of: date.optional().describe('Valuation date, YYYY-MM-DD (default today)') }),
+  async run(ctx, input) {
+    const result = await ctx.core.portfolio.summary(ctx.userId, { asOf: input.as_of ?? ctx.today, currency: ctx.currency });
+    return { ...result, provenance: { as_of: result.asOf, holdings: result.holdingCount, holdings_without_a_price: result.stalePriceCount } };
+  },
+});
+
+export const getPortfolioAllocation = defineTool({
+  name: 'finance_get_portfolio_allocation',
+  title: 'Get portfolio allocation',
+  description:
+    'How the portfolio is split: by asset class, by market cap and sector and AMC where the user recorded them, and per holding. Includes concentration (largest holding, largest five) with warnings, and the annual expense-ratio cost plus the extra a regular plan costs over its direct equivalent. Use for "am I too concentrated?" or "what am I paying in fees?". Read-only; information, not advice.',
+  inputSchema: z.object({ as_of: date.optional().describe('Valuation date, YYYY-MM-DD (default today)') }),
+  async run(ctx, input) {
+    const result = await ctx.core.portfolio.allocation(ctx.userId, { asOf: input.as_of ?? ctx.today, currency: ctx.currency });
+    return { ...result, provenance: { as_of: result.asOf, total_value: result.totalValue, holdings: result.holdings.length } };
+  },
+});
+
+export const getPortfolioReturns = defineTool({
+  name: 'finance_get_portfolio_returns',
+  title: 'Get portfolio returns and benchmark comparison',
+  description:
+    'XIRR and absolute return overall, per asset class and per holding. When the user has imported an index series (for example Nifty 50 TRI), it also replays the same cashflows on the same dates into that index and reports what they would be worth, its XIRR, and the difference in percentage points. Use for "am I beating the index?". Read-only; a comparison, not advice.',
+  inputSchema: z.object({
+    as_of: date.optional().describe('Valuation date, YYYY-MM-DD (default today)'),
+    benchmark: z.string().max(80).optional().describe('Index series name; defaults to the first one imported'),
+  }),
+  async run(ctx, input) {
+    const result = await ctx.core.portfolio.returns(ctx.userId, { asOf: input.as_of ?? ctx.today, currency: ctx.currency, benchmark: input.benchmark });
+    return {
+      ...result,
+      provenance: { as_of: result.asOf, method: 'XIRR, actual/365, Newton with bisection fallback', benchmark: result.benchmark?.series ?? null },
+    };
+  },
+});
+
+export const getCapitalGains = defineTool({
+  name: 'finance_get_capital_gains',
+  title: 'Get capital gains (realised and unrealised)',
+  description:
+    'Capital gains from FIFO lots for an Indian financial year (1 April to 31 March): realised short-term and long-term gains with the section 112A exemption applied, an estimated tax at the configured rates, unrealised gains on open lots, the exemption headroom left, tax-harvesting candidates and ELSS-style lock-ins still running. Use for "what will I owe?" or "how much room is left under the LTCG exemption?". Read-only; information, not tax advice.',
+  inputSchema: z.object({
+    as_of: date.optional().describe('Valuation date, YYYY-MM-DD (default today)'),
+    financial_year: z.string().regex(/^\d{4}-\d{2}$/, 'Use YYYY-YY, e.g. 2026-27').optional(),
+  }),
+  async run(ctx, input) {
+    const result = await ctx.core.portfolio.capitalGains(ctx.userId, {
+      asOf: input.as_of ?? ctx.today,
+      currency: ctx.currency,
+      financialYear: input.financial_year,
+    });
+    return { ...result, provenance: { as_of: result.asOf, financial_year: result.financialYear, method: 'FIFO lots', rates: result.config } };
+  },
+});
+
 export const FINANCE_TOOLS: FinanceTool[] = [
   getAccounts,
   getAccountBalance,
@@ -533,6 +596,10 @@ export const FINANCE_TOOLS: FinanceTool[] = [
   getSavingsOpportunities,
   checkAffordability,
   runWhatIf,
+  getPortfolioSummary,
+  getPortfolioAllocation,
+  getPortfolioReturns,
+  getCapitalGains,
 ] as unknown as FinanceTool[];
 
 export class ToolInputError extends Error {
