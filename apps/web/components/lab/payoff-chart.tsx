@@ -36,7 +36,7 @@ export function PayoffChart({
   series,
   spot,
   breakevens,
-  height = 300,
+  height = 220,
   currency = 'INR',
 }: {
   series: PayoffPoint[];
@@ -49,7 +49,7 @@ export function PayoffChart({
   const money = useMoney();
   const tooltip = useTooltipStyle();
   if (series.length === 0) {
-    return <Empty description="Add a leg to see the payoff" image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ padding: `${height / 3}px 0` }} />;
+    return <Empty description="Add a leg to see the payoff" image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ padding: `${Math.round(height / 4)}px 0`, margin: 0 }} />;
   }
   const rows = series.map((point) => ({
     spot: Number(point.spot),
@@ -61,7 +61,7 @@ export function PayoffChart({
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <ComposedChart data={rows} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+      <ComposedChart data={rows} margin={{ top: 6, right: 10, left: 0, bottom: 0 }}>
         <CartesianGrid vertical={false} stroke={theme.colors.borderSubtle} />
         <XAxis
           dataKey="spot"
@@ -76,7 +76,7 @@ export function PayoffChart({
         <YAxis
           tickLine={false}
           axisLine={false}
-          width={74}
+          width={58}
           tick={{ fill: theme.colors.textMuted, fontSize: 12 }}
           tickFormatter={(value: number) => money(value, currency, { compact: true })}
         />
@@ -105,7 +105,6 @@ export function PayoffChart({
           connectNulls
           isAnimationActive={false}
         />
-        <Legend wrapperStyle={{ fontSize: 12, color: theme.colors.textMuted }} />
         <Tooltip
           {...tooltip}
           labelFormatter={(value) => `Underlying at ${Number(value).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`}
@@ -129,11 +128,11 @@ export function EquityAndDrawdown({
   const theme = useTheme();
   const money = useMoney();
   const tooltip = useTooltipStyle();
-  if (data.length === 0) return <Empty description="No equity curve" image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ padding: `${height / 3}px 0` }} />;
+  if (data.length === 0) return <Empty description="No equity curve" image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ padding: `${Math.round(height / 4)}px 0`, margin: 0 }} />;
   const rows = data.map((point) => ({ date: point.date, Equity: Number(point.equity), Drawdown: Number(point.drawdownPercent) }));
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <ComposedChart data={rows} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+      <ComposedChart data={rows} margin={{ top: 6, right: 10, left: 0, bottom: 0 }}>
         <CartesianGrid vertical={false} stroke={theme.colors.borderSubtle} />
         <XAxis dataKey="date" tickLine={false} axisLine={false} minTickGap={40} tick={{ fill: theme.colors.textMuted, fontSize: 12 }} />
         <YAxis
