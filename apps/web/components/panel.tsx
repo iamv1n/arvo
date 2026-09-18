@@ -18,7 +18,9 @@ export function Panel({
   return (
     <Card
       {...props}
-      style={{ height: '100%', display: 'flex', flexDirection: 'column', ...props.style }}
+      /* The body already has a fixed height, so the card sizes to its content instead of
+         stretching to the tallest sibling in a row and leaving a band of empty space. */
+      style={{ display: 'flex', flexDirection: 'column', ...props.style }}
       styles={{
         body: {
           height,

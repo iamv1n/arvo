@@ -406,8 +406,8 @@ function BacktestResultView({ result }: { result: BacktestResult }) {
         ]}
       />
 
-      <Panel height={170} scroll={false} style={{ marginTop: 12 }} title="Equity and drawdown" extra={<Eyebrow>{`${stats.bars} bars · ${result.elapsedMs} ms`}</Eyebrow>}>
-        <EquityAndDrawdown data={result.equityCurve} height={146} />
+      <Panel height={240} scroll={false} style={{ marginTop: 12 }} title="Equity and drawdown" extra={<Eyebrow>{`${stats.bars} bars · ${result.elapsedMs} ms`}</Eyebrow>}>
+        <EquityAndDrawdown data={result.equityCurve} height={216} />
       </Panel>
 
       <Row gutter={[12, 12]} style={{ marginTop: 12 }}>
