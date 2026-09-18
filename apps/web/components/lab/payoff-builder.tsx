@@ -342,18 +342,21 @@ export function PayoffBuilder() {
           ]}
         />
 
-        <Panel height={220} style={{ marginTop: 12 }} title="Payoff" extra={<Eyebrow>Solid: at expiry &nbsp;·&nbsp; dashed: today</Eyebrow>}>
-          <PayoffChart series={report?.series ?? []} spot={assumptions.spot} breakevens={report?.breakevens ?? []} height={200} currency={currency} />
-        </Panel>
-
+        {/* On a wide screen the chart and the Greeks sit side by side, so the numbers are not
+            pushed a screen below the picture they describe. */}
         <Row gutter={[12, 12]} style={{ marginTop: 12 }}>
-          <Col xs={24} lg={14}>
+          <Col xs={24} xxl={14}>
+            <Panel height={190} title="Payoff" extra={<Eyebrow>Solid: at expiry &nbsp;·&nbsp; dashed: today</Eyebrow>}>
+              <PayoffChart series={report?.series ?? []} spot={assumptions.spot} breakevens={report?.breakevens ?? []} height={170} currency={currency} />
+            </Panel>
+          </Col>
+          <Col xs={24} xxl={10}>
             <Card title="Greeks" size="small">
               <GreeksTable legs={report?.legs ?? []} net={report?.netGreeks} />
               <Muted>Position Greeks: per-unit sensitivity times quantity and direction. Theta is per calendar day; vega and rho per one point.</Muted>
             </Card>
           </Col>
-          <Col xs={24} lg={10}>
+          <Col xs={24} xxl={10}>
             <Card title="Margin estimate" size="small">
               <Figure $size={26}>{report ? money(report.margin.total, currency) : '—'}</Figure>
               <div style={{ marginTop: 8 }}>
