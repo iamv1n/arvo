@@ -23,7 +23,7 @@ import { Eyebrow } from '../planning';
 import { Panel } from '../panel';
 import { EquityAndDrawdown } from './payoff-chart';
 import { ResultStrip } from '../result-strip';
-import { EXIT_REASON_LABELS, LabNote, Muted, Signed, num } from './shared';
+import { Advanced, EXIT_REASON_LABELS, Field, Fields, LabNote, Muted, Signed, num } from './shared';
 
 /*
  * The backtest tab.
@@ -155,35 +155,43 @@ export function BacktestTab() {
         >
           <Row gutter={[8, 8]}>
             <Col span={24}>
-              <Input addonBefore="Name" value={current?.name ?? ''} onChange={(event) => patch({ name: event.target.value })} />
-            </Col>
-            <Col span={14}>
-              <Select
-                style={{ width: '100%' }}
-                value={`${current?.symbol}|${current?.timeframe}`}
-                onChange={(value) => {
-                  const [symbol, timeframe] = value.split('|');
-                  patch({ symbol, timeframe: timeframe as 'DAY' | 'MINUTE' });
-                }}
-                options={available.map((item) => ({
-                  value: `${item.symbol}|${item.timeframe}`,
-                  label: `${item.symbol} · ${item.timeframe === 'DAY' ? 'daily' : 'minute'} · ${item.bars.toLocaleString('en-IN')} bars`,
-                }))}
-              />
-            </Col>
-            <Col span={10}>
-              <Select
-                style={{ width: '100%' }}
-                value={current?.direction}
-                onChange={(value) => patch({ direction: value })}
-                options={[
-                  { value: 'LONG', label: 'Long only' },
-                  { value: 'SHORT', label: 'Short only' },
-                ]}
-              />
-            </Col>
-            <Col span={24}>
-              <Input addonBefore="Capital" value={current?.startingCapital ?? ''} onChange={(event) => patch({ startingCapital: event.target.value })} inputMode="decimal" />
+              <Fields $min={128} style={{ marginTop: 0 }}>
+                <Field>
+                  <span>Name</span>
+                  <Input size="small" value={current?.name ?? ''} onChange={(event) => patch({ name: event.target.value })} />
+                </Field>
+                <Field>
+                  <span>Instrument</span>
+                  <Select
+                    size="small"
+                    value={`${current?.symbol}|${current?.timeframe}`}
+                    onChange={(value) => {
+                      const [symbol, timeframe] = value.split('|');
+                      patch({ symbol, timeframe: timeframe as 'DAY' | 'MINUTE' });
+                    }}
+                    options={available.map((item) => ({
+                      value: `${item.symbol}|${item.timeframe}`,
+                      label: `${item.symbol} · ${item.timeframe === 'DAY' ? 'daily' : 'minute'} · ${item.bars.toLocaleString('en-IN')} bars`,
+                    }))}
+                  />
+                </Field>
+                <Field>
+                  <span>Direction</span>
+                  <Select
+                    size="small"
+                    value={current?.direction}
+                    onChange={(value) => patch({ direction: value })}
+                    options={[
+                      { value: 'LONG', label: 'Long only' },
+                      { value: 'SHORT', label: 'Short only' },
+                    ]}
+                  />
+                </Field>
+                <Field>
+                  <span>Capital</span>
+                  <Input size="small" value={current?.startingCapital ?? ''} onChange={(event) => patch({ startingCapital: event.target.value })} inputMode="decimal" />
+                </Field>
+              </Fields>
             </Col>
 
             <Col span={24}>
@@ -211,107 +219,115 @@ export function BacktestTab() {
                 <Eyebrow>Risk</Eyebrow>
               </Divider>
             </Col>
-            <Col span={12}>
-              <ExitRuleInput label="Stop" value={current?.stopLoss ?? null} onChange={(value) => patch({ stopLoss: value })} />
+            <Col span={24}>
+              <Fields $min={128} style={{ marginTop: 0 }}>
+                <ExitRuleInput label="Stop" value={current?.stopLoss ?? null} onChange={(value) => patch({ stopLoss: value })} />
+                <ExitRuleInput label="Target" value={current?.target ?? null} onChange={(value) => patch({ target: value })} />
+                <ExitRuleInput label="Trail" value={current?.trailingStop ?? null} onChange={(value) => patch({ trailingStop: value })} />
+              </Fields>
+              <Advanced label="Time limits">
+                <Fields $min={128}>
+                  <Field>
+                    <span>Max bars</span>
+                    <InputNumber
+                      size="small"
+                      placeholder="None"
+                      min={1}
+                      value={current?.maxBarsInTrade ?? undefined}
+                      onChange={(value) => patch({ maxBarsInTrade: value ?? null })}
+                    />
+                  </Field>
+                  {current?.timeframe === 'MINUTE' && (
+                    <Field>
+                      <span>Square off</span>
+                      <Input
+                        size="small"
+                        placeholder="15:15"
+                        value={current.intradaySquareOffTime ?? ''}
+                        onChange={(event) => patch({ intradaySquareOffTime: event.target.value || null })}
+                      />
+                    </Field>
+                  )}
+                </Fields>
+              </Advanced>
             </Col>
-            <Col span={12}>
-              <ExitRuleInput label="Target" value={current?.target ?? null} onChange={(value) => patch({ target: value })} />
-            </Col>
-            <Col span={12}>
-              <ExitRuleInput label="Trail" value={current?.trailingStop ?? null} onChange={(value) => patch({ trailingStop: value })} />
-            </Col>
-            <Col span={12}>
-              <InputNumber
-                style={{ width: '100%' }}
-                addonBefore="Max bars"
-                placeholder="None"
-                min={1}
-                value={current?.maxBarsInTrade ?? undefined}
-                onChange={(value) => patch({ maxBarsInTrade: value ?? null })}
-              />
-            </Col>
-            {current?.timeframe === 'MINUTE' && (
-              <Col span={12}>
-                <Input
-                  addonBefore="Square off"
-                  placeholder="15:15"
-                  value={current.intradaySquareOffTime ?? ''}
-                  onChange={(event) => patch({ intradaySquareOffTime: event.target.value || null })}
-                />
-              </Col>
-            )}
 
             <Col span={24}>
               <Divider style={{ margin: '6px 0' }}>
                 <Eyebrow>Size and execution</Eyebrow>
               </Divider>
             </Col>
-            <Col span={12}>
-              <Select
-                style={{ width: '100%' }}
-                value={current?.sizing.method}
-                onChange={(value) => patch({ sizing: { ...(current as StrategySpec).sizing, method: value } })}
-                options={[
-                  { value: 'FIXED_QUANTITY', label: 'Fixed quantity' },
-                  { value: 'FIXED_FRACTIONAL', label: 'Fraction of equity' },
-                  { value: 'FIXED_RISK', label: 'Fixed risk (needs a stop)' },
-                ]}
-              />
-            </Col>
-            <Col span={12}>
-              {current?.sizing.method === 'FIXED_QUANTITY' ? (
-                <InputNumber
-                  style={{ width: '100%' }}
-                  addonBefore="Qty"
-                  min={1}
-                  value={current.sizing.quantity ?? 100}
-                  onChange={(value) => patch({ sizing: { ...current.sizing, quantity: value ?? 1 } })}
-                />
-              ) : (
-                <InputNumber
-                  style={{ width: '100%' }}
-                  addonBefore="%"
-                  min={0.01}
-                  max={100}
-                  value={current?.sizing.percent ?? 25}
-                  onChange={(value) => patch({ sizing: { ...(current as StrategySpec).sizing, percent: value ?? 1 } })}
-                />
-              )}
-            </Col>
-            <Col span={12}>
-              <InputNumber
-                style={{ width: '100%' }}
-                addonBefore="Lot size"
-                min={1}
-                value={current?.sizing.lotSize ?? 1}
-                onChange={(value) => patch({ sizing: { ...(current as StrategySpec).sizing, lotSize: value ?? 1 } })}
-              />
-            </Col>
-            <Col span={12}>
-              <InputNumber
-                style={{ width: '100%' }}
-                addonBefore="Slippage"
-                addonAfter={current?.execution.slippageType === 'BPS' ? 'bps' : 'pts'}
-                min={0}
-                value={current?.execution.slippage ?? 0}
-                onChange={(value) => patch({ execution: { ...(current as StrategySpec).execution, slippage: value ?? 0 } })}
-              />
+            <Col span={24}>
+              <Fields $min={128} style={{ marginTop: 0 }}>
+                <Field>
+                  <span>Sizing</span>
+                  <Select
+                    size="small"
+                    value={current?.sizing.method}
+                    onChange={(value) => patch({ sizing: { ...(current as StrategySpec).sizing, method: value } })}
+                    options={[
+                      { value: 'FIXED_QUANTITY', label: 'Fixed quantity' },
+                      { value: 'FIXED_FRACTIONAL', label: 'Fraction of equity' },
+                      { value: 'FIXED_RISK', label: 'Fixed risk' },
+                    ]}
+                  />
+                </Field>
+                <Field>
+                  <span>{current?.sizing.method === 'FIXED_QUANTITY' ? 'Qty' : 'Percent'}</span>
+                  {current?.sizing.method === 'FIXED_QUANTITY' ? (
+                    <InputNumber size="small" min={1} value={current.sizing.quantity ?? 100} onChange={(value) => patch({ sizing: { ...current.sizing, quantity: value ?? 1 } })} />
+                  ) : (
+                    <InputNumber
+                      size="small"
+                      min={0.01}
+                      max={100}
+                      suffix="%"
+                      value={current?.sizing.percent ?? 25}
+                      onChange={(value) => patch({ sizing: { ...(current as StrategySpec).sizing, percent: value ?? 1 } })}
+                    />
+                  )}
+                </Field>
+              </Fields>
+              <Advanced label="Lot size and slippage">
+                <Fields $min={128}>
+                  <Field>
+                    <span>Lot size</span>
+                    <InputNumber
+                      size="small"
+                      min={1}
+                      value={current?.sizing.lotSize ?? 1}
+                      onChange={(value) => patch({ sizing: { ...(current as StrategySpec).sizing, lotSize: value ?? 1 } })}
+                    />
+                  </Field>
+                  <Field>
+                    <span>Slippage</span>
+                    <InputNumber
+                      size="small"
+                      suffix={current?.execution.slippageType === 'BPS' ? 'bps' : 'pts'}
+                      min={0}
+                      value={current?.execution.slippage ?? 0}
+                      onChange={(value) => patch({ execution: { ...(current as StrategySpec).execution, slippage: value ?? 0 } })}
+                    />
+                  </Field>
+                </Fields>
+              </Advanced>
             </Col>
 
             <Col span={24}>
               <Divider style={{ margin: '6px 0' }} />
-              <Space wrap>
+              <Space wrap size={8}>
                 <DatePicker.RangePicker
+                  size="small"
                   onChange={(values) => setRange([values?.[0]?.format('YYYY-MM-DD') ?? null, values?.[1]?.format('YYYY-MM-DD') ?? null])}
                 />
                 <Space size={6}>
-                  <Switch checked={walkForward} onChange={setWalkForward} />
-                  <span>Walk-forward</span>
+                  <Switch size="small" checked={walkForward} onChange={setWalkForward} />
+                  <Muted>Walk-forward</Muted>
                 </Space>
               </Space>
             </Col>
             <Col span={24}>
-              <Button type="primary" block icon={<PlayCircleOutlined />} loading={run.isPending} onClick={execute}>
+              <Button size="small" type="primary" block icon={<PlayCircleOutlined />} loading={run.isPending} onClick={execute}>
                 Run the backtest
               </Button>
             </Col>
@@ -353,6 +369,7 @@ export function BacktestTab() {
           <Card size="small" title="Stored runs" style={{ marginTop: 16 }}>
             <Table
               size="small"
+              scroll={{ x: 'max-content' }}
               pagination={{ pageSize: 8, hideOnSinglePage: true }}
               rowKey="id"
               dataSource={stored.data}
@@ -648,27 +665,31 @@ function OperandEditor({ value, onChange }: { value: Operand; onChange: (value: 
 
 function ExitRuleInput({ label, value, onChange }: { label: string; value: StrategySpec['stopLoss']; onChange: (value: StrategySpec['stopLoss']) => void }) {
   return (
-    <Space.Compact style={{ width: '100%' }}>
-      <InputNumber
-        style={{ width: '58%' }}
-        addonBefore={label}
-        placeholder="None"
-        min={0.01}
-        value={value?.value}
-        onChange={(next) => onChange(next === null ? null : { type: value?.type ?? 'PERCENT', value: next })}
-      />
-      <Select
-        style={{ width: '42%' }}
-        value={value?.type ?? 'PERCENT'}
-        disabled={!value}
-        onChange={(type) => onChange(value ? { ...value, type } : null)}
-        options={[
-          { value: 'PERCENT', label: '%' },
-          { value: 'POINTS', label: 'pts' },
-          { value: 'ATR', label: 'ATR' },
-        ]}
-      />
-    </Space.Compact>
+    <Field>
+      <span>{label}</span>
+      <Space.Compact style={{ width: '100%' }}>
+        <InputNumber
+          size="small"
+          style={{ width: '58%' }}
+          placeholder="None"
+          min={0.01}
+          value={value?.value}
+          onChange={(next) => onChange(next === null ? null : { type: value?.type ?? 'PERCENT', value: next })}
+        />
+        <Select
+          size="small"
+          style={{ width: '42%' }}
+          value={value?.type ?? 'PERCENT'}
+          disabled={!value}
+          onChange={(type) => onChange(value ? { ...value, type } : null)}
+          options={[
+            { value: 'PERCENT', label: '%' },
+            { value: 'POINTS', label: 'pts' },
+            { value: 'ATR', label: 'ATR' },
+          ]}
+        />
+      </Space.Compact>
+    </Field>
   );
 }
 

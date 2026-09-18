@@ -2,7 +2,7 @@
 
 import { Flask } from '@phosphor-icons/react';
 import { Tooltip } from 'antd';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import styled from 'styled-components';
 import { NoticeStrip } from '../notice-strip';
 import { NoteMarker } from './notes-drawer';
@@ -110,3 +110,86 @@ export const EXIT_REASON_LABELS: Record<string, string> = {
   SQUARE_OFF: 'Square-off',
   END_OF_DATA: 'Data ran out',
 };
+
+/*
+ * Form furniture for the lab.
+ *
+ * Every lab form is a wall of three-to-six character numbers. Laid out in antd's 24-column
+ * thirds each one gets a whole row to itself and the left column runs twice as tall as the
+ * results beside it. So instead: a grid that packs as many fields per row as the column can
+ * hold, with a 10px mono label above each input rather than an addon stealing half the width.
+ */
+export const Fields = styled.div<{ $min?: number }>`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(${({ $min = 118 }) => $min}px, 1fr));
+  gap: 8px;
+  margin-top: 6px;
+  min-width: 0;
+`;
+
+export const Field = styled.label`
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+
+  > span {
+    font-family: ${({ theme }) => theme.typography.fontFamilyMono};
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: ${({ theme }) => theme.colors.textMuted};
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* antd sizes its own controls; this just stops any of them overflowing the cell. */
+  .ant-input-number,
+  .ant-picker,
+  .ant-select {
+    width: 100%;
+  }
+`;
+
+const Disclosure = styled.div`
+  margin-top: 10px;
+
+  > button {
+    all: unset;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: ${({ theme }) => theme.typography.fontFamilyMono};
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: ${({ theme }) => theme.colors.textMuted};
+    border-bottom: 1px dotted ${({ theme }) => theme.colors.border};
+  }
+  > button:hover,
+  > button:focus-visible {
+    color: ${({ theme }) => theme.colors.textPrimary};
+  }
+`;
+
+/** Inputs nobody changes twice a year (rates, slippage, lot size) folded away behind one line. */
+export function Advanced({ label = 'Advanced', children }: { label?: string; children: ReactNode }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Disclosure>
+      <button type="button" onClick={() => setOpen(!open)} aria-expanded={open}>
+        {open ? '−' : '+'} {label}
+      </button>
+      {open ? children : null}
+    </Disclosure>
+  );
+}
+
+/** A form column that stays beside its results instead of stretching the page. */
+export const FormScroll = styled.div<{ $max?: number }>`
+  max-height: ${({ $max = 420 }) => $max}px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 2px;
+`;

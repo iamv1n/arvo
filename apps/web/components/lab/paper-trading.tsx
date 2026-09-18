@@ -9,7 +9,7 @@ import { useBarSeries, useLabMutation, usePaperAccount, usePaperAccounts, type P
 import { useMoney } from '../../lib/use-money';
 import { Eyebrow } from '../planning';
 import { ResultStrip } from '../result-strip';
-import { LabNote, Muted, Signed, num } from './shared';
+import { Field, Fields, LabNote, Muted, Signed, num } from './shared';
 
 /*
  * Paper trading.
@@ -264,10 +264,11 @@ function OrderTicket({ accountId, symbols }: { accountId: string; symbols: { sym
 
   return (
     <Card size="small" title="Place a simulated order">
-      <Row gutter={[8, 8]}>
-        <Col span={14}>
+      <Fields $min={116} style={{ marginTop: 0 }}>
+        <Field>
+          <span>Instrument</span>
           <Select
-            style={{ width: '100%' }}
+            size="small"
             value={`${form.symbol}|${form.timeframe}`}
             onChange={(value) => {
               const [symbol, timeframe] = value.split('|');
@@ -275,10 +276,11 @@ function OrderTicket({ accountId, symbols }: { accountId: string; symbols: { sym
             }}
             options={symbols.map((item) => ({ value: `${item.symbol}|${item.timeframe}`, label: `${item.symbol} · ${item.timeframe === 'DAY' ? 'daily' : 'minute'}` }))}
           />
-        </Col>
-        <Col span={10}>
+        </Field>
+        <Field>
+          <span>Side</span>
           <Select
-            style={{ width: '100%' }}
+            size="small"
             value={form.side}
             onChange={(value) => setForm({ ...form, side: value })}
             options={[
@@ -286,13 +288,15 @@ function OrderTicket({ accountId, symbols }: { accountId: string; symbols: { sym
               { value: 'SELL', label: 'Sell' },
             ]}
           />
-        </Col>
-        <Col span={12}>
-          <InputNumber style={{ width: '100%' }} addonBefore="Qty" min={1} value={form.quantity} onChange={(value) => setForm({ ...form, quantity: value ?? 1 })} />
-        </Col>
-        <Col span={12}>
+        </Field>
+        <Field>
+          <span>Qty</span>
+          <InputNumber size="small" min={1} value={form.quantity} onChange={(value) => setForm({ ...form, quantity: value ?? 1 })} />
+        </Field>
+        <Field>
+          <span>Type</span>
           <Select
-            style={{ width: '100%' }}
+            size="small"
             value={form.orderType}
             onChange={(value) => setForm({ ...form, orderType: value })}
             options={[
@@ -300,31 +304,32 @@ function OrderTicket({ accountId, symbols }: { accountId: string; symbols: { sym
               { value: 'LIMIT', label: 'Limit' },
             ]}
           />
-        </Col>
+        </Field>
         {form.orderType === 'LIMIT' && (
-          <Col span={24}>
-            <Input addonBefore="Limit" value={form.limitPrice} onChange={(event) => setForm({ ...form, limitPrice: event.target.value })} inputMode="decimal" />
-          </Col>
+          <Field>
+            <span>Limit</span>
+            <Input size="small" value={form.limitPrice} onChange={(event) => setForm({ ...form, limitPrice: event.target.value })} inputMode="decimal" />
+          </Field>
         )}
-        <Col span={form.timeframe === 'MINUTE' ? 14 : 24}>
+        <Field>
+          <span>Date</span>
           <DatePicker
-            style={{ width: '100%' }}
+            size="small"
             allowClear={false}
             value={dayjs(form.placedDate)}
             onChange={(value) => setForm({ ...form, placedDate: (value ?? dayjs()).format('YYYY-MM-DD') })}
           />
-        </Col>
+        </Field>
         {form.timeframe === 'MINUTE' && (
-          <Col span={10}>
-            <Input placeholder="09:20" value={form.placedTime} onChange={(event) => setForm({ ...form, placedTime: event.target.value })} />
-          </Col>
+          <Field>
+            <span>Time</span>
+            <Input size="small" placeholder="09:20" value={form.placedTime} onChange={(event) => setForm({ ...form, placedTime: event.target.value })} />
+          </Field>
         )}
-        <Col span={24}>
-          <Button type="primary" block loading={place.isPending} onClick={submit}>
-            Place the order
-          </Button>
-        </Col>
-      </Row>
+      </Fields>
+      <Button size="small" type="primary" block style={{ marginTop: 10 }} loading={place.isPending} onClick={submit}>
+        Place the order
+      </Button>
       <div style={{ marginTop: 10 }}>
         <Eyebrow>How it fills</Eyebrow>
         <div>
@@ -356,8 +361,14 @@ function NewAccountModal({ open, onClose, onCreate }: { open: boolean; onClose: 
       }}
     >
       <Space direction="vertical" style={{ width: '100%' }}>
-        <Input addonBefore="Name" value={name} onChange={(event) => setName(event.target.value)} />
-        <Input addonBefore="Starting capital" value={capital} onChange={(event) => setCapital(event.target.value)} inputMode="decimal" />
+        <Field>
+          <span>Name</span>
+          <Input value={name} onChange={(event) => setName(event.target.value)} />
+        </Field>
+        <Field>
+          <span>Starting capital</span>
+          <Input value={capital} onChange={(event) => setCapital(event.target.value)} inputMode="decimal" />
+        </Field>
         <Muted>Virtual money. This account has no connection to any broker and can never place a live order.</Muted>
       </Space>
     </Modal>

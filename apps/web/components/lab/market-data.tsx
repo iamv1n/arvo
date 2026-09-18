@@ -58,6 +58,7 @@ export function MarketDataWizard() {
       <Col xs={24} lg={9}>
         <Card size="small" title="Import price data">
           <Input
+            size="small"
             placeholder="Symbol (optional — read from the file otherwise)"
             value={symbol}
             onChange={(event) => setSymbol(event.target.value.toUpperCase())}
@@ -82,6 +83,7 @@ export function MarketDataWizard() {
             <Table
               size="small"
               pagination={false}
+              scroll={{ x: 'max-content' }}
               rowKey={(row) => `${row.symbol}|${row.timeframe}`}
               dataSource={series.data}
               columns={[
@@ -196,6 +198,7 @@ export function MarketDataWizard() {
             <Table
               size="small"
               rowKey="id"
+              scroll={{ x: 'max-content' }}
               pagination={{ pageSize: 6, hideOnSinglePage: true }}
               dataSource={imports.data}
               onRow={(row) => ({ onClick: () => setActiveId(row.id), style: { cursor: 'pointer' } })}

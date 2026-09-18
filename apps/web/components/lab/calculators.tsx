@@ -8,7 +8,7 @@ import { useCompute, type FuturesCalculation, type RiskOfRuinResult, type Sizing
 import { useMoney } from '../../lib/use-money';
 import { Eyebrow, Figure } from '../planning';
 import { ResultStrip } from '../result-strip';
-import { LabNote, Muted, Signed, num } from './shared';
+import { Advanced, Field, Fields, LabNote, Muted, Signed, num } from './shared';
 
 /*
  * The two calculators nobody builds properly: what a futures position actually costs to hold
@@ -64,13 +64,15 @@ export function FuturesCalculator() {
     <Row gutter={[16, 16]}>
       <Col xs={24} lg={9}>
         <Card title="Futures position" size="small">
-          <Row gutter={[8, 8]}>
-            <Col span={12}>
-              <Input addonBefore="Symbol" value={form.underlying} onChange={(event) => setForm({ ...form, underlying: event.target.value.toUpperCase() })} />
-            </Col>
-            <Col span={12}>
+          <Fields $min={112}>
+            <Field>
+              <span>Symbol</span>
+              <Input size="small" value={form.underlying} onChange={(event) => setForm({ ...form, underlying: event.target.value.toUpperCase() })} />
+            </Field>
+            <Field>
+              <span>Side</span>
               <Select
-                style={{ width: '100%' }}
+                size="small"
                 value={form.side}
                 onChange={(value) => setForm({ ...form, side: value })}
                 options={[
@@ -78,72 +80,91 @@ export function FuturesCalculator() {
                   { value: 'SELL', label: 'Short' },
                 ]}
               />
-            </Col>
-            <Col span={12}>
-              <InputNumber style={{ width: '100%' }} addonBefore="Lots" min={1} value={form.lots} onChange={(value) => setForm({ ...form, lots: value ?? 1 })} />
-            </Col>
-            <Col span={12}>
-              <InputNumber style={{ width: '100%' }} addonBefore="Lot size" min={1} value={form.lotSize} onChange={(value) => setForm({ ...form, lotSize: value ?? 1 })} />
-            </Col>
-            <Col span={12}>
-              <Input addonBefore="Future" value={form.futuresPrice} onChange={(event) => setForm({ ...form, futuresPrice: event.target.value })} inputMode="decimal" />
-            </Col>
-            <Col span={12}>
-              <Input addonBefore="Spot" value={form.spot} onChange={(event) => setForm({ ...form, spot: event.target.value })} inputMode="decimal" />
-            </Col>
-            <Col span={12}>
-              <DatePicker style={{ width: '100%' }} allowClear={false} value={dayjs(form.date)} onChange={(value) => setForm({ ...form, date: (value ?? dayjs()).format('YYYY-MM-DD') })} />
-            </Col>
-            <Col span={12}>
+            </Field>
+            <Field>
+              <span>Lots</span>
+              <InputNumber size="small" min={1} value={form.lots} onChange={(value) => setForm({ ...form, lots: value ?? 1 })} />
+            </Field>
+            <Field>
+              <span>Lot size</span>
+              <InputNumber size="small" min={1} value={form.lotSize} onChange={(value) => setForm({ ...form, lotSize: value ?? 1 })} />
+            </Field>
+            <Field>
+              <span>Future</span>
+              <Input size="small" value={form.futuresPrice} onChange={(event) => setForm({ ...form, futuresPrice: event.target.value })} inputMode="decimal" />
+            </Field>
+            <Field>
+              <span>Spot</span>
+              <Input size="small" value={form.spot} onChange={(event) => setForm({ ...form, spot: event.target.value })} inputMode="decimal" />
+            </Field>
+            <Field>
+              <span>Trade date</span>
+              <DatePicker size="small" allowClear={false} value={dayjs(form.date)} onChange={(value) => setForm({ ...form, date: (value ?? dayjs()).format('YYYY-MM-DD') })} />
+            </Field>
+            <Field>
+              <span>Expiry</span>
               <DatePicker
-                style={{ width: '100%' }}
+                size="small"
                 allowClear={false}
-                placeholder="Expiry"
                 value={dayjs(form.expiry)}
                 onChange={(value) => setForm({ ...form, expiry: (value ?? dayjs()).format('YYYY-MM-DD') })}
               />
-            </Col>
-            <Col span={12}>
-              <Input addonBefore="Mark" placeholder="Optional" value={form.markPrice} onChange={(event) => setForm({ ...form, markPrice: event.target.value })} inputMode="decimal" />
-            </Col>
-            <Col span={12}>
-              <Input addonBefore="Margin %" value={form.marginPercentOfNotional} onChange={(event) => setForm({ ...form, marginPercentOfNotional: event.target.value })} inputMode="decimal" />
-            </Col>
-            <Col span={12}>
-              <Select
-                style={{ width: '100%' }}
-                value={form.segment}
-                onChange={(value) => setForm({ ...form, segment: value, exchange: value === 'COMMODITY_FUTURES' ? 'MCX' : value === 'CURRENCY_FUTURES' ? 'CDS' : 'NFO' })}
-                options={[
-                  { value: 'INDEX_FUTURES', label: 'Index futures' },
-                  { value: 'EQUITY_FUTURES', label: 'Stock futures' },
-                  { value: 'CURRENCY_FUTURES', label: 'Currency futures' },
-                  { value: 'COMMODITY_FUTURES', label: 'Commodity futures' },
-                ]}
-              />
-            </Col>
-            <Col span={24}>
-              <Space>
-                <Switch checked={form.rolling} onChange={(checked) => setForm({ ...form, rolling: checked })} />
-                <span>Work out a rollover</span>
-              </Space>
-            </Col>
-            {form.rolling && (
-              <>
-                <Col span={12}>
-                  <Input addonBefore="Near" value={form.nearPrice} onChange={(event) => setForm({ ...form, nearPrice: event.target.value })} inputMode="decimal" />
-                </Col>
-                <Col span={12}>
-                  <Input addonBefore="Far" value={form.farPrice} onChange={(event) => setForm({ ...form, farPrice: event.target.value })} inputMode="decimal" />
-                </Col>
-              </>
-            )}
-            <Col span={24}>
-              <Button type="primary" block loading={compute.isPending} onClick={run} icon={<Coins size={16} weight="duotone" />}>
-                Calculate
-              </Button>
-            </Col>
-          </Row>
+            </Field>
+          </Fields>
+
+          <Advanced label="Segment, mark and margin">
+            <Fields $min={112}>
+              <Field>
+                <span>Segment</span>
+                <Select
+                  size="small"
+                  value={form.segment}
+                  onChange={(value) => setForm({ ...form, segment: value, exchange: value === 'COMMODITY_FUTURES' ? 'MCX' : value === 'CURRENCY_FUTURES' ? 'CDS' : 'NFO' })}
+                  options={[
+                    { value: 'INDEX_FUTURES', label: 'Index futures' },
+                    { value: 'EQUITY_FUTURES', label: 'Stock futures' },
+                    { value: 'CURRENCY_FUTURES', label: 'Currency futures' },
+                    { value: 'COMMODITY_FUTURES', label: 'Commodity futures' },
+                  ]}
+                />
+              </Field>
+              <Field>
+                <span>Mark</span>
+                <Input size="small" placeholder="Optional" value={form.markPrice} onChange={(event) => setForm({ ...form, markPrice: event.target.value })} inputMode="decimal" />
+              </Field>
+              <Field>
+                <span>Margin</span>
+                <Input
+                  size="small"
+                  suffix="%"
+                  value={form.marginPercentOfNotional}
+                  onChange={(event) => setForm({ ...form, marginPercentOfNotional: event.target.value })}
+                  inputMode="decimal"
+                />
+              </Field>
+            </Fields>
+          </Advanced>
+
+          <Space size={8} style={{ marginTop: 10 }}>
+            <Switch size="small" checked={form.rolling} onChange={(checked) => setForm({ ...form, rolling: checked })} />
+            <Muted>Work out a rollover</Muted>
+          </Space>
+          {form.rolling && (
+            <Fields $min={112}>
+              <Field>
+                <span>Near</span>
+                <Input size="small" value={form.nearPrice} onChange={(event) => setForm({ ...form, nearPrice: event.target.value })} inputMode="decimal" />
+              </Field>
+              <Field>
+                <span>Far</span>
+                <Input size="small" value={form.farPrice} onChange={(event) => setForm({ ...form, farPrice: event.target.value })} inputMode="decimal" />
+              </Field>
+            </Fields>
+          )}
+
+          <Button size="small" type="primary" block style={{ marginTop: 10 }} loading={compute.isPending} onClick={run} icon={<Coins size={14} weight="duotone" />}>
+            Calculate
+          </Button>
         </Card>
       </Col>
 
@@ -271,56 +292,60 @@ export function SizingCalculator() {
     <Row gutter={[16, 16]}>
       <Col xs={24} lg={10}>
         <Card title="How big should the position be?" size="small">
-          <Row gutter={[8, 8]}>
-            <Col span={12}>
-              <Input addonBefore="Capital" value={form.capital} onChange={(event) => setForm({ ...form, capital: event.target.value })} inputMode="decimal" />
-            </Col>
-            <Col span={12}>
-              <InputNumber style={{ width: '100%' }} addonBefore="Lot size" min={1} value={form.lotSize} onChange={(value) => setForm({ ...form, lotSize: value ?? 1 })} />
-            </Col>
-            <Col span={24}>
-              <Space>
-                <Switch checked={form.useFlatRisk} onChange={(checked) => setForm({ ...form, useFlatRisk: checked })} />
-                <span>{form.useFlatRisk ? 'A flat rupee risk per trade' : 'A percentage of capital'}</span>
-              </Space>
-            </Col>
-            <Col span={12}>
+          <Fields $min={112}>
+            <Field>
+              <span>Capital</span>
+              <Input size="small" value={form.capital} onChange={(event) => setForm({ ...form, capital: event.target.value })} inputMode="decimal" />
+            </Field>
+            <Field>
+              <span>Lot size</span>
+              <InputNumber size="small" min={1} value={form.lotSize} onChange={(value) => setForm({ ...form, lotSize: value ?? 1 })} />
+            </Field>
+            <Field>
+              <span>{form.useFlatRisk ? 'Risk' : 'Risk %'}</span>
               {form.useFlatRisk ? (
-                <Input addonBefore="Risk" value={form.riskAmount} onChange={(event) => setForm({ ...form, riskAmount: event.target.value })} inputMode="decimal" />
+                <Input size="small" value={form.riskAmount} onChange={(event) => setForm({ ...form, riskAmount: event.target.value })} inputMode="decimal" />
               ) : (
-                <Input addonBefore="Risk %" value={form.riskPercent} onChange={(event) => setForm({ ...form, riskPercent: event.target.value })} inputMode="decimal" />
+                <Input size="small" suffix="%" value={form.riskPercent} onChange={(event) => setForm({ ...form, riskPercent: event.target.value })} inputMode="decimal" />
               )}
-            </Col>
-            <Col span={12}>
-              <Input addonBefore="Entry" value={form.entryPrice} onChange={(event) => setForm({ ...form, entryPrice: event.target.value })} inputMode="decimal" />
-            </Col>
-            <Col span={12}>
-              <Input addonBefore="Stop" value={form.stopPrice} onChange={(event) => setForm({ ...form, stopPrice: event.target.value })} inputMode="decimal" />
-            </Col>
-            <Col span={12}>
-              <Input addonBefore="Target" placeholder="Optional" value={form.targetPrice} onChange={(event) => setForm({ ...form, targetPrice: event.target.value })} inputMode="decimal" />
-            </Col>
-            <Col span={24}>
-              <Button
-                type="primary"
-                block
-                loading={size.isPending}
-                onClick={() =>
-                  size.mutate({
-                    capital: form.capital,
-                    riskPercent: form.riskPercent,
-                    riskAmount: form.useFlatRisk ? form.riskAmount : null,
-                    entryPrice: form.entryPrice,
-                    stopPrice: form.stopPrice,
-                    targetPrice: form.targetPrice || null,
-                    lotSize: form.lotSize,
-                  })
-                }
-              >
-                Work out the size
-              </Button>
-            </Col>
-          </Row>
+            </Field>
+            <Field>
+              <span>Entry</span>
+              <Input size="small" value={form.entryPrice} onChange={(event) => setForm({ ...form, entryPrice: event.target.value })} inputMode="decimal" />
+            </Field>
+            <Field>
+              <span>Stop</span>
+              <Input size="small" value={form.stopPrice} onChange={(event) => setForm({ ...form, stopPrice: event.target.value })} inputMode="decimal" />
+            </Field>
+            <Field>
+              <span>Target</span>
+              <Input size="small" placeholder="Optional" value={form.targetPrice} onChange={(event) => setForm({ ...form, targetPrice: event.target.value })} inputMode="decimal" />
+            </Field>
+          </Fields>
+          <Space size={8} style={{ marginTop: 10 }}>
+            <Switch size="small" checked={form.useFlatRisk} onChange={(checked) => setForm({ ...form, useFlatRisk: checked })} />
+            <Muted>{form.useFlatRisk ? 'A flat rupee risk per trade' : 'A percentage of capital'}</Muted>
+          </Space>
+          <Button
+            size="small"
+            type="primary"
+            block
+            style={{ marginTop: 10 }}
+            loading={size.isPending}
+            onClick={() =>
+              size.mutate({
+                capital: form.capital,
+                riskPercent: form.riskPercent,
+                riskAmount: form.useFlatRisk ? form.riskAmount : null,
+                entryPrice: form.entryPrice,
+                stopPrice: form.stopPrice,
+                targetPrice: form.targetPrice || null,
+                lotSize: form.lotSize,
+              })
+            }
+          >
+            Work out the size
+          </Button>
 
           {size.data && (
             <div style={{ marginTop: 16 }}>
@@ -354,25 +379,27 @@ export function SizingCalculator() {
 
       <Col xs={24} lg={14}>
         <Card title="Risk of ruin" size="small" style={{ position: 'relative' }}>
-          <Row gutter={[8, 8]}>
-            <Col xs={12} xl={6}>
-              <Input addonBefore="Win %" value={ruin.winRatePercent} onChange={(event) => setRuin({ ...ruin, winRatePercent: event.target.value })} inputMode="decimal" />
-            </Col>
-            <Col xs={12} xl={6}>
-              <Input addonBefore="Payoff" value={ruin.payoffRatio} onChange={(event) => setRuin({ ...ruin, payoffRatio: event.target.value })} inputMode="decimal" />
-            </Col>
-            <Col xs={12} xl={6}>
-              <Input addonBefore="Risk %" value={ruin.riskPercent} onChange={(event) => setRuin({ ...ruin, riskPercent: event.target.value })} inputMode="decimal" />
-            </Col>
-            <Col xs={12} xl={6}>
-              <Input addonBefore="Ruin %" value={ruin.ruinDrawdownPercent} onChange={(event) => setRuin({ ...ruin, ruinDrawdownPercent: event.target.value })} inputMode="decimal" />
-            </Col>
-            <Col span={24}>
-              <Button block loading={risk.isPending} onClick={() => risk.mutate(ruin)}>
-                Work out the risk of ruin
-              </Button>
-            </Col>
-          </Row>
+          <Fields $min={104}>
+            <Field>
+              <span>Win %</span>
+              <Input size="small" suffix="%" value={ruin.winRatePercent} onChange={(event) => setRuin({ ...ruin, winRatePercent: event.target.value })} inputMode="decimal" />
+            </Field>
+            <Field>
+              <span>Payoff</span>
+              <Input size="small" value={ruin.payoffRatio} onChange={(event) => setRuin({ ...ruin, payoffRatio: event.target.value })} inputMode="decimal" />
+            </Field>
+            <Field>
+              <span>Risk %</span>
+              <Input size="small" suffix="%" value={ruin.riskPercent} onChange={(event) => setRuin({ ...ruin, riskPercent: event.target.value })} inputMode="decimal" />
+            </Field>
+            <Field>
+              <span>Ruin %</span>
+              <Input size="small" suffix="%" value={ruin.ruinDrawdownPercent} onChange={(event) => setRuin({ ...ruin, ruinDrawdownPercent: event.target.value })} inputMode="decimal" />
+            </Field>
+          </Fields>
+          <Button size="small" block style={{ marginTop: 10 }} loading={risk.isPending} onClick={() => risk.mutate(ruin)}>
+            Work out the risk of ruin
+          </Button>
 
           {risk.data && (
             <div style={{ marginTop: 16 }}>

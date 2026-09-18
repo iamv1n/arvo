@@ -20,7 +20,7 @@ import { Eyebrow, Figure, Stamp } from '../planning';
 import { Panel } from '../panel';
 import { PayoffChart } from './payoff-chart';
 import { ResultStrip } from '../result-strip';
-import { Extreme, LEG_KIND_LABELS, LabNote, Muted, OUTLOOK_LABELS, Signed, num } from './shared';
+import { Advanced, Extreme, Field, Fields, FormScroll, LEG_KIND_LABELS, LabNote, Muted, OUTLOOK_LABELS, Signed, num } from './shared';
 
 /*
  * The payoff builder.
@@ -47,29 +47,6 @@ const emptyLeg = (over: Partial<StrategyLeg> = {}): StrategyLeg => ({
   label: null,
   ...over,
 });
-
-/* Form fields inside the narrow left column: each keeps a readable minimum width and wraps
-   instead of squeezing an addon and a value into 60px. */
-const Fields = styled.div<{ $min?: number }>`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(${({ $min = 132 }) => $min}px, 1fr));
-  gap: 8px;
-  margin-top: 8px;
-`;
-
-const Field = styled.label`
-  display: grid;
-  gap: 3px;
-  min-width: 0;
-
-  > span {
-    font-family: ${({ theme }) => theme.typography.fontFamilyMono};
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: ${({ theme }) => theme.colors.textMuted};
-  }
-`;
 
 const LegHead = styled.div`
   display: grid;
@@ -149,6 +126,7 @@ export function PayoffBuilder() {
     <Row gutter={[16, 16]}>
       <Col xs={24} lg={10} xxl={9}>
         <Card
+          size="small"
           title="The structure"
           extra={
             <Button size="small" icon={<PlusOutlined />} onClick={() => setLegs((current) => [...current, emptyLeg({ lotSize })])} disabled={legs.length >= 12}>
@@ -157,9 +135,10 @@ export function PayoffBuilder() {
           }
         >
           <Eyebrow>Start from a template</Eyebrow>
-          <Space wrap style={{ marginTop: 8, marginBottom: 4 }}>
+          <Space wrap size={6} style={{ marginTop: 6, marginBottom: 2 }}>
             <Select
-              style={{ minWidth: 200 }}
+              size="small"
+              style={{ minWidth: 170 }}
               placeholder="Pick a structure"
               loading={templates.isPending}
               onChange={applyTemplate}
@@ -170,19 +149,20 @@ export function PayoffBuilder() {
               }))}
             />
             <Tooltip title="Distance between adjacent strikes: 50 for NIFTY, 100 for BANKNIFTY.">
-              <InputNumber value={strikeStep} min={1} onChange={(value) => setStrikeStep(value ?? 50)} addonBefore="Step" style={{ width: 130 }} />
+              <InputNumber size="small" value={strikeStep} min={1} onChange={(value) => setStrikeStep(value ?? 50)} addonBefore="Step" style={{ width: 112 }} />
             </Tooltip>
             <Tooltip title="Contract multiplier.">
-              <InputNumber value={lotSize} min={1} onChange={(value) => setLotSize(value ?? 1)} addonBefore="Lot" style={{ width: 130 }} />
+              <InputNumber size="small" value={lotSize} min={1} onChange={(value) => setLotSize(value ?? 1)} addonBefore="Lot" style={{ width: 112 }} />
             </Tooltip>
           </Space>
           <Muted>Template premiums are model prices, not quotes. Replace them with the real bid and ask.</Muted>
 
-          <Divider style={{ margin: '14px 0' }} />
+          <Divider style={{ margin: '10px 0' }} />
 
-          <Space direction="vertical" size={10} style={{ width: '100%' }}>
+          <FormScroll $max={340}>
+          <Space direction="vertical" size={8} style={{ width: '100%' }}>
             {legs.map((leg, index) => (
-              <Card key={index} size="small" styles={{ body: { padding: 10 } }}>
+              <Card key={index} size="small" styles={{ body: { padding: 8 } }}>
                 <LegHead>
                   <Select
                     size="small"
@@ -255,10 +235,11 @@ export function PayoffBuilder() {
             ))}
             {legs.length === 0 && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No legs yet" />}
           </Space>
+          </FormScroll>
 
-          <Divider style={{ margin: '14px 0' }} />
+          <Divider style={{ margin: '10px 0' }} />
           <Eyebrow>Market assumptions</Eyebrow>
-          <Fields>
+          <Fields $min={112}>
             <Field>
               <span>Spot</span>
               <Input size="small" value={assumptions.spot} onChange={(event) => setAssumptions({ ...assumptions, spot: event.target.value })} inputMode="decimal" />
@@ -282,25 +263,29 @@ export function PayoffBuilder() {
                 inputMode="decimal"
               />
             </Field>
-            <Field>
-              <span>Risk-free %</span>
-              <Input
-                size="small"
-                value={assumptions.riskFreeRatePercent}
-                onChange={(event) => setAssumptions({ ...assumptions, riskFreeRatePercent: event.target.value })}
-                inputMode="decimal"
-              />
-            </Field>
-            <Field>
-              <span>Dividend %</span>
-              <Input
-                size="small"
-                value={assumptions.dividendYieldPercent}
-                onChange={(event) => setAssumptions({ ...assumptions, dividendYieldPercent: event.target.value })}
-                inputMode="decimal"
-              />
-            </Field>
           </Fields>
+          <Advanced label="Rates">
+            <Fields $min={112}>
+              <Field>
+                <span>Risk-free %</span>
+                <Input
+                  size="small"
+                  value={assumptions.riskFreeRatePercent}
+                  onChange={(event) => setAssumptions({ ...assumptions, riskFreeRatePercent: event.target.value })}
+                  inputMode="decimal"
+                />
+              </Field>
+              <Field>
+                <span>Dividend %</span>
+                <Input
+                  size="small"
+                  value={assumptions.dividendYieldPercent}
+                  onChange={(event) => setAssumptions({ ...assumptions, dividendYieldPercent: event.target.value })}
+                  inputMode="decimal"
+                />
+              </Field>
+            </Fields>
+          </Advanced>
           <div style={{ marginTop: 8 }}>
             <Muted>Black&#8211;Scholes, European, ACT/365. IV, the risk-free rate and the dividend yield are your assumptions, not observations.</Muted>
           </div>
@@ -458,17 +443,19 @@ function ImpliedVolatilitySolver({ assumptions }: { assumptions: MarketAssumptio
 
   return (
     <Card title="Implied volatility from a quote" size="small">
-      <Row gutter={[8, 8]}>
-        <Col span={12}>
-          <Input size="small" addonBefore="Strike" value={form.strike} onChange={(event) => setForm({ ...form, strike: event.target.value })} inputMode="decimal" />
-        </Col>
-        <Col span={12}>
-          <Input size="small" addonBefore="Premium" value={form.premium} onChange={(event) => setForm({ ...form, premium: event.target.value })} inputMode="decimal" />
-        </Col>
-        <Col span={12}>
+      <Fields $min={110}>
+        <Field>
+          <span>Strike</span>
+          <Input size="small" value={form.strike} onChange={(event) => setForm({ ...form, strike: event.target.value })} inputMode="decimal" />
+        </Field>
+        <Field>
+          <span>Premium</span>
+          <Input size="small" value={form.premium} onChange={(event) => setForm({ ...form, premium: event.target.value })} inputMode="decimal" />
+        </Field>
+        <Field>
+          <span>Right</span>
           <Select
             size="small"
-            style={{ width: '100%' }}
             value={form.right}
             onChange={(value) => setForm({ ...form, right: value })}
             options={[
@@ -476,38 +463,37 @@ function ImpliedVolatilitySolver({ assumptions }: { assumptions: MarketAssumptio
               { value: 'PE', label: 'Put' },
             ]}
           />
-        </Col>
-        <Col span={12}>
+        </Field>
+        <Field>
+          <span>Expiry</span>
           <DatePicker
             size="small"
-            style={{ width: '100%' }}
             allowClear={false}
             value={dayjs(form.expiry)}
             onChange={(value) => setForm({ ...form, expiry: (value ?? dayjs()).format('YYYY-MM-DD') })}
           />
-        </Col>
-        <Col span={24}>
-          <Button
-            size="small"
-            block
-            loading={solve.isPending}
-            onClick={() =>
-              solve.mutate({
-                spot: assumptions.spot,
-                strike: form.strike,
-                premium: form.premium,
-                right: form.right,
-                expiry: form.expiry,
-                asOf: assumptions.asOf,
-                riskFreeRatePercent: assumptions.riskFreeRatePercent,
-                dividendYieldPercent: assumptions.dividendYieldPercent,
-              })
-            }
-          >
-            Solve
-          </Button>
-        </Col>
-      </Row>
+        </Field>
+      </Fields>
+      <Button
+        size="small"
+        block
+        style={{ marginTop: 8 }}
+        loading={solve.isPending}
+        onClick={() =>
+          solve.mutate({
+            spot: assumptions.spot,
+            strike: form.strike,
+            premium: form.premium,
+            right: form.right,
+            expiry: form.expiry,
+            asOf: assumptions.asOf,
+            riskFreeRatePercent: assumptions.riskFreeRatePercent,
+            dividendYieldPercent: assumptions.dividendYieldPercent,
+          })
+        }
+      >
+        Solve
+      </Button>
       {result && (
         <div style={{ marginTop: 12 }}>
           {result.impliedVolatilityPercent !== null ? (
