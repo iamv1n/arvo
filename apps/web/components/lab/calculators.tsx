@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { useCompute, type FuturesCalculation, type RiskOfRuinResult, type SizingResult } from '../../lib/lab';
 import { useMoney } from '../../lib/use-money';
 import { Eyebrow, Figure } from '../planning';
-import { ResultStrip } from './result-strip';
+import { ResultStrip } from '../result-strip';
 import { LabNote, Muted, Signed, num } from './shared';
 
 /*

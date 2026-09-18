@@ -8,7 +8,7 @@ import { api, errorMessage } from '../../lib/api';
 import { useBarSeries, useLabMutation, usePaperAccount, usePaperAccounts, type PaperOrder } from '../../lib/lab';
 import { useMoney } from '../../lib/use-money';
 import { Eyebrow } from '../planning';
-import { ResultStrip } from './result-strip';
+import { ResultStrip } from '../result-strip';
 import { LabNote, Muted, Signed, num } from './shared';
 
 /*

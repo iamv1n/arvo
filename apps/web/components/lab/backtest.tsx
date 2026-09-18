@@ -22,7 +22,7 @@ import { useMoney } from '../../lib/use-money';
 import { Eyebrow } from '../planning';
 import { Panel } from '../panel';
 import { EquityAndDrawdown } from './payoff-chart';
-import { ResultStrip } from './result-strip';
+import { ResultStrip } from '../result-strip';
 import { EXIT_REASON_LABELS, LabNote, Muted, Signed, num } from './shared';
 
 /*

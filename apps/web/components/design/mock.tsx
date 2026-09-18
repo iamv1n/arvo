@@ -19,7 +19,7 @@ import {
 import { Area, AreaChart, CartesianGrid, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import styled, { useTheme } from 'styled-components';
 import { MonoLabel } from '../mono-label';
-import { ResultStrip, type ResultItem } from '../lab/result-strip';
+import { ResultStrip, type ResultItem } from '../result-strip';
 
 /*
  * Shared fixtures for the layout studio.

@@ -19,7 +19,7 @@ import { useMoney } from '../../lib/use-money';
 import { Eyebrow, Figure, Stamp } from '../planning';
 import { Panel } from '../panel';
 import { PayoffChart } from './payoff-chart';
-import { ResultStrip } from './result-strip';
+import { ResultStrip } from '../result-strip';
 import { Extreme, LEG_KIND_LABELS, LabNote, Muted, OUTLOOK_LABELS, Signed, num } from './shared';
 
 /*
