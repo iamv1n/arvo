@@ -315,11 +315,11 @@ export function PayoffBuilder() {
       <Col xs={24} lg={14} xxl={15}>
         {error && <Alert type="error" showIcon message="That structure cannot be priced" description={error} style={{ marginBottom: 16 }} />}
 
-        <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+        <Row gutter={[16, 16]} align="stretch" style={{ marginBottom: 16 }}>
           <Col xs={12} xl={6}>
             <StatCard
-              variant="hero"
               label={num(report?.netCashflow) >= 0 ? 'Net credit' : 'Net debit'}
+              iconTone="brand"
               icon={<Calculator size={16} weight="duotone" />}
               value={report ? money(Math.abs(num(report.netCashflow)), currency) : '—'}
               hint={num(report?.netCashflow) >= 0 ? 'Received to open' : 'Paid to open'}
@@ -331,7 +331,7 @@ export function PayoffBuilder() {
               icon={<Target size={17} weight="duotone" />}
               iconTone="positive"
               value={report ? <Extreme {...report.maxProfit} format={(value) => money(value, currency)} /> : '—'}
-              hint="At the nearest expiry"
+              hint="At nearest expiry"
             />
           </Col>
           <Col xs={12} xl={6}>
@@ -340,7 +340,7 @@ export function PayoffBuilder() {
               icon={<Scales size={17} weight="duotone" />}
               iconTone="negative"
               value={report ? <Extreme {...report.maxLoss} format={(value) => money(value, currency)} /> : '—'}
-              hint="Bounded below at a spot of zero"
+              hint="Floor at spot zero"
             />
           </Col>
           <Col xs={12} xl={6}>
@@ -349,7 +349,7 @@ export function PayoffBuilder() {
               icon={<ChartLine size={17} weight="duotone" />}
               iconTone="info"
               value={report && report.breakevens.length > 0 ? report.breakevens.map((value) => Number(value).toFixed(0)).join(' · ') : '—'}
-              hint={report?.probabilityOfProfit ? `${report.probabilityOfProfit.percent}% chance of profit (estimate)` : 'No crossing'}
+              hint={report?.probabilityOfProfit ? `${report.probabilityOfProfit.percent}% chance of profit · estimate` : 'No crossing'}
             />
           </Col>
         </Row>

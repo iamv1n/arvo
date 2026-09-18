@@ -32,7 +32,9 @@ const Badge = styled.span<{ $tone: StatTone }>`
 const Value = styled.div<{ $tone?: 'positive' | 'negative' }>`
   margin-top: ${({ theme }) => theme.space[3]}px;
   font-family: ${({ theme }) => theme.typography.fontFamilySerif};
-  font-size: 30px;
+  /* Long figures (₹11,250.00, two breakevens) must shrink rather than clip the card. */
+  font-size: clamp(20px, 2.1vw, 30px);
+  overflow-wrap: anywhere;
   font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
   font-variant-numeric: lining-nums tabular-nums;
   letter-spacing: -0.02em;
@@ -65,7 +67,8 @@ const Hero = styled.div`
   .value {
     margin-top: ${({ theme }) => theme.space[3]}px;
     font-family: ${({ theme }) => theme.typography.fontFamilySerif};
-    font-size: 38px;
+    font-size: clamp(24px, 2.6vw, 36px);
+    overflow-wrap: anywhere;
     font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
     font-variant-numeric: lining-nums tabular-nums;
     letter-spacing: -0.02em;
@@ -111,7 +114,7 @@ export function StatCard({
     );
   }
   return (
-    <Card style={{ height: '100%' }}>
+    <Card style={{ height: '100%' }} styles={{ body: { display: 'flex', flexDirection: 'column', height: '100%' } }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         {icon && <Badge $tone={iconTone ?? (tone === 'positive' ? 'positive' : tone === 'negative' ? 'negative' : 'brand')}>{icon}</Badge>}
         <Typography.Text type="secondary" style={{ fontWeight: 500 }}>
@@ -120,7 +123,7 @@ export function StatCard({
       </div>
       {loading ? <Skeleton.Input active size="small" style={{ marginTop: 16 }} /> : <Value $tone={tone}>{value}</Value>}
       {hint && (
-        <Typography.Text type="secondary" style={{ display: 'block', marginTop: 4, fontSize: 12 }}>
+        <Typography.Text type="secondary" style={{ display: 'block', marginTop: 'auto', paddingTop: 6, fontSize: 12, lineHeight: 1.4 }}>
           {hint}
         </Typography.Text>
       )}
