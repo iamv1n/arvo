@@ -129,7 +129,13 @@ export function PositionsTable({ asOf, filters }: { asOf: string; filters: Trade
           </Space>
           {columns.settings}
         </TableToolbar>
-        <DataTable<TradePosition> rowKey="id" dataSource={rows} columns={columns.columns} pagination={{ pageSize: 25, showSizeChanger: true }} />
+        <DataTable<TradePosition>
+          rowKey="id"
+          dataSource={rows}
+          columns={columns.columns}
+          scroll={{ x: 'max-content' }}
+          pagination={{ pageSize: 25, showSizeChanger: true }}
+        />
       </Card>
     </>
   );

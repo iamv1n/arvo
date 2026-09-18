@@ -77,6 +77,7 @@ export function RealityCheckView({ asOf }: { asOf: string }) {
           dataSource={data.years}
           pagination={false}
           size="small"
+          scroll={{ x: 'max-content' }}
           columns={[
             { key: 'fy', title: 'Financial year', render: (_, row) => row.financialYear },
             { key: 'trades', title: 'Positions', align: 'right', render: (_, row) => row.trades },

@@ -76,29 +76,33 @@ export function CostsView({ asOf, filters }: { asOf: string; filters: TradeFilte
 
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={10}>
-          <Panel height={270} title="The breakdown" extra={<Eyebrow>Every component</Eyebrow>}>
+          <Panel height={300} scroll={false} title="The breakdown" extra={<Eyebrow>Every component</Eyebrow>}>
+            {/* One ruled line per component: the share sits beside the label, so eight rows and the
+                total fit the panel instead of scrolling inside it. */}
             {CHARGE_LABELS.map(([key, label]) => {
               const value = totals[key];
               const share = num(totals.total) === 0 ? 0 : Math.round((value / num(totals.total)) * 100);
               return (
-                <div key={key} style={{ padding: '7px 0', borderBottom: '1px solid rgba(128,128,128,0.12)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>{label}</span>
-                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>{money(value, currency)}</span>
-                  </div>
-                  <Muted>{share}% of what you paid</Muted>
+                <div
+                  key={key}
+                  style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, padding: '5px 0', borderBottom: '1px solid rgba(128,128,128,0.12)' }}
+                >
+                  <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {label} <Muted>{share}%</Muted>
+                  </span>
+                  <span style={{ fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{money(value, currency)}</span>
                 </div>
               );
             })}
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', fontWeight: 600 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '8px 0', fontWeight: 600 }}>
               <span>Total</span>
-              <span style={{ fontVariantNumeric: 'tabular-nums' }}>{money(totals.total, currency)}</span>
+              <span style={{ fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{money(totals.total, currency)}</span>
             </div>
           </Panel>
         </Col>
         <Col xs={24} lg={14}>
-          <Panel scroll={false} height={270} title="Where the charges land" extra={<Eyebrow>Net of charges, by segment</Eyebrow>}>
-            <EdgeBars rows={data.bySegment} currency={currency} height={246} />
+          <Panel scroll={false} height={300} title="Where the charges land" extra={<Eyebrow>Net of charges, by segment</Eyebrow>}>
+            <EdgeBars rows={data.bySegment} currency={currency} height={300} />
           </Panel>
         </Col>
 
@@ -109,6 +113,7 @@ export function CostsView({ asOf, filters }: { asOf: string; filters: TradeFilte
               dataSource={bySegment(rows)}
               pagination={false}
               size="small"
+              scroll={{ x: 'max-content' }}
               columns={[
                 { key: 'segment', title: 'Segment', render: (_, row) => SEGMENT_LABELS[row.segment as keyof typeof SEGMENT_LABELS] ?? row.segment },
                 { key: 'trades', title: 'Positions', align: 'right', render: (_, row) => row.trades },

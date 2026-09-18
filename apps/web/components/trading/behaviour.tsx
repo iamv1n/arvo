@@ -1,12 +1,13 @@
 'use client';
 
 import { ArrowsClockwise, CalendarX, ChartBar, Repeat, TrendUp } from '@phosphor-icons/react';
-import { Alert, Card, Col, Empty, Row, Skeleton, Space, Tag } from 'antd';
+import { Card, Col, Empty, Row, Skeleton, Space, Tag } from 'antd';
 import Link from 'next/link';
 import { formatDate } from '../../lib/format';
 import { useTradingBehaviour, type TradeFilters } from '../../lib/queries';
 import type { BehaviourFlagKind } from '../../lib/types';
 import { useMoney } from '../../lib/use-money';
+import { NoticeStrip } from '../notice-strip';
 import { Eyebrow, SectionTitle } from '../planning';
 import { StatCard } from '../stat-card';
 import { Muted, NotAdvice, Pnl, num } from './shared';
@@ -86,14 +87,16 @@ export function BehaviourView({ asOf, filters }: { asOf: string; filters: TradeF
             {data.flags.slice(0, 40).map((flag, index) => (
               <Col xs={24} lg={12} key={`${flag.kind}-${flag.date ?? index}-${flag.subject ?? index}`}>
                 <Card>
-                  <Space align="start" size={12}>
-                    <span style={{ opacity: 0.8 }}>{ICONS[flag.kind]}</span>
-                    <div style={{ minWidth: 0 }}>
+                  {/* A flex row rather than antd Space: the text column can shrink, so a long rule
+                      line wraps instead of pushing the card past its column. */}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                    <span style={{ opacity: 0.8, flex: 'none', marginTop: 2 }}>{ICONS[flag.kind]}</span>
+                    <div style={{ minWidth: 0, flex: 1 }}>
                       <Eyebrow>
                         {flag.title}
                         {flag.date ? ` · ${formatDate(flag.date)}` : ''}
                       </Eyebrow>
-                      <p style={{ margin: '6px 0' }}>{flag.explanation}</p>
+                      <p style={{ margin: '6px 0', overflowWrap: 'anywhere' }}>{flag.explanation}</p>
                       <Muted>Rule: {flag.rule}</Muted>
                       <div style={{ marginTop: 10 }}>
                         <Space wrap size={6}>
@@ -111,7 +114,7 @@ export function BehaviourView({ asOf, filters }: { asOf: string; filters: TradeF
                         </Space>
                       </div>
                     </div>
-                  </Space>
+                  </div>
                 </Card>
               </Col>
             ))}
@@ -119,14 +122,14 @@ export function BehaviourView({ asOf, filters }: { asOf: string; filters: TradeF
         </>
       )}
 
-      <Alert
-        type="info"
-        showIcon
-        style={{ marginTop: 16 }}
-        message="These are descriptions, not verdicts"
-        description="Some of these patterns are a deliberate strategy for some people — scaling into a planned position looks exactly like averaging down. The flags say what happened and how often; what to make of it is yours."
-      />
-      <NotAdvice text={data.disclaimer} style={{ marginTop: 16 }} />
+      <div style={{ marginTop: 16 }}>
+        <NoticeStrip
+          storageKey="arvo.trading.behaviour.notice"
+          headline="These are descriptions, not verdicts."
+          detail="Some of these patterns are a deliberate strategy for some people — scaling into a planned position looks exactly like averaging down. The flags say what happened and how often; what to make of it is yours."
+        />
+      </div>
+      <NotAdvice text={data.disclaimer} />
     </>
   );
 }

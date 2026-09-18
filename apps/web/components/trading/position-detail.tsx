@@ -10,9 +10,10 @@ import { usePosition, useTradingMutation, useTradingSettings } from '../../lib/q
 import type { JournalEntry, PositionLeg } from '../../lib/types';
 import { useMoney } from '../../lib/use-money';
 import { DataTable } from '../data-table';
-import { Eyebrow, Figure, SectionTitle, Stamp } from '../planning';
+import { Eyebrow, SectionTitle, Stamp } from '../planning';
+import { ResultStrip } from '../result-strip';
 import { Panel } from '../panel';
-import { CHARGE_LABELS, ChargesSourceTag, DIRECTION_TONES, NotAdvice, SEGMENT_LABELS, SIDE_TONES, STYLE_LABELS, Muted, Pnl, num } from './shared';
+import { CHARGE_LABELS, ChargesSourceTag, DIRECTION_TONES, NotAdvice, SEGMENT_LABELS, SIDE_TONES, STYLE_LABELS, Muted, num } from './shared';
 
 /**
  * One round trip, end to end: every fill that went into it, where the money went in charges,
@@ -63,38 +64,31 @@ export function PositionDetail({ id, asOf }: { id: string; asOf: string }) {
                 {position.symbol} · {position.broker} · {position.exchange}
               </Eyebrow>
             </SectionTitle>
-            <Row gutter={[16, 16]}>
-              <Col xs={12} md={6}>
-                <Eyebrow>Net P&amp;L</Eyebrow>
-                <div>
-                  <Figure>
-                    <Pnl $value={num(position.netPnl)}>{money(position.netPnl, currency)}</Pnl>
-                  </Figure>
-                </div>
-              </Col>
-              <Col xs={12} md={6}>
-                <Eyebrow>Gross</Eyebrow>
-                <div>
-                  <Figure $size={20}>
-                    <Pnl $value={num(position.grossPnl)}>{money(position.grossPnl, currency)}</Pnl>
-                  </Figure>
-                </div>
-              </Col>
-              <Col xs={12} md={6}>
-                <Eyebrow>Charges</Eyebrow>
-                <div>
-                  <Figure $size={20}>{money(position.charges.total, currency)}</Figure>
-                </div>
-                <Muted>{position.chargesPercentOfGross === null ? 'no gross profit to compare' : `${position.chargesPercentOfGross}% of gross profit`}</Muted>
-              </Col>
-              <Col xs={12} md={6}>
-                <Eyebrow>R-multiple</Eyebrow>
-                <div>
-                  <Figure $size={20}>{rMultiple(position.averageEntryPrice, position.quantity, position.netPnl, journal?.stopPrice ?? null)}</Figure>
-                </div>
-                <Muted>{journal?.stopPrice ? `stop ${money(journal.stopPrice, currency)}` : 'record a stop below'}</Muted>
-              </Col>
-            </Row>
+            {/* Four long, signed figures: a ruled ribbon of mono cells, so nothing clips the card. */}
+            <ResultStrip
+              items={[
+                {
+                  label: 'Net P&L',
+                  value: money(position.netPnl, currency),
+                  tone: num(position.netPnl) > 0 ? 'positive' : num(position.netPnl) < 0 ? 'negative' : 'neutral',
+                },
+                {
+                  label: 'Gross',
+                  value: money(position.grossPnl, currency),
+                  tone: num(position.grossPnl) > 0 ? 'positive' : num(position.grossPnl) < 0 ? 'negative' : 'neutral',
+                },
+                {
+                  label: 'Charges',
+                  value: money(position.charges.total, currency),
+                  caveat: position.chargesPercentOfGross === null ? 'no gross profit to compare' : `${position.chargesPercentOfGross}% of gross profit`,
+                },
+                {
+                  label: 'R-multiple',
+                  value: rMultiple(position.averageEntryPrice, position.quantity, position.netPnl, journal?.stopPrice ?? null),
+                  caveat: journal?.stopPrice ? `stop ${money(journal.stopPrice, currency)}` : 'record a stop below',
+                },
+              ]}
+            />
 
             <Descriptions size="small" column={{ xs: 1, sm: 2, md: 3 }} style={{ marginTop: 20 }}>
               <Descriptions.Item label="Opened">{formatDate(position.openedAt)}{position.openedTime ? ` ${position.openedTime}` : ''}</Descriptions.Item>
@@ -119,14 +113,14 @@ export function PositionDetail({ id, asOf }: { id: string; asOf: string }) {
         </Col>
 
         <Col xs={24} lg={8}>
-          <Panel height={290} title="Where the charges went" extra={<ChargesSourceTag source={position.charges.source} />}>
+          <Panel height={300} scroll={false} title="Where the charges went" extra={<ChargesSourceTag source={position.charges.source} />}>
             {CHARGE_LABELS.map(([key, label]) => (
-              <div key={key} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(128,128,128,0.12)' }}>
-                <span>{label}</span>
-                <span style={{ fontVariantNumeric: 'tabular-nums' }}>{money(position.charges[key] as string, currency)}</span>
+              <div key={key} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '5px 0', borderBottom: '1px solid rgba(128,128,128,0.12)' }}>
+                <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+                <span style={{ fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{money(position.charges[key] as string, currency)}</span>
               </div>
             ))}
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', fontWeight: 600 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '8px 0', fontWeight: 600 }}>
               <span>Total</span>
               <span style={{ fontVariantNumeric: 'tabular-nums' }}>{money(position.charges.total, currency)}</span>
             </div>
@@ -138,6 +132,7 @@ export function PositionDetail({ id, asOf }: { id: string; asOf: string }) {
             <DataTable<PositionLeg>
               rowKey={(row) => `${row.tradeId}-${row.date}-${row.quantity}-${row.side}`}
               dataSource={legs}
+              scroll={{ x: 'max-content' }}
               pagination={false}
               columns={[
                 {

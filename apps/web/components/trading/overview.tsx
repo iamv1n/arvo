@@ -2,8 +2,9 @@
 
 import { ChartLineDown, Coins, Scales, Target } from '@phosphor-icons/react';
 import { Card, Col, Empty, Row, Skeleton, Tooltip } from 'antd';
+import styled from 'styled-components';
 import { DataTable, useTableColumns } from '../data-table';
-import { Eyebrow, Figure } from '../planning';
+import { Eyebrow } from '../planning';
 import { Panel } from '../panel';
 import { StatCard } from '../stat-card';
 import { useTradingMetrics, type TradeFilters } from '../../lib/queries';
@@ -103,68 +104,54 @@ export function TradingOverview({ asOf, filters }: { asOf: string; filters: Trad
 
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={16}>
-          <Panel scroll={false} height={260} title="Realised equity curve" extra={<Eyebrow>Cumulative net P&amp;L by close date</Eyebrow>}>
+          <Panel scroll={false} height={236} title="Realised equity curve" extra={<Eyebrow>Cumulative net P&amp;L by close date</Eyebrow>}>
             <EquityCurve data={data.equityCurve} currency={currency} height={236} />
           </Panel>
         </Col>
         <Col xs={24} lg={8}>
-          <Panel height={260} title="The shape of it">
-            <Row gutter={[12, 12]}>
-              <Col span={12}>
-                <Stat label="Average win" value={money(data.averageWin, currency)} tone={1} />
-              </Col>
-              <Col span={12}>
-                <Stat label="Average loss" value={money(data.averageLoss, currency)} tone={-1} />
-              </Col>
-              <Col span={12}>
-                <Stat label="Profit factor" value={data.profitFactor === null ? '—' : data.profitFactor.toFixed(2)} tone={0} />
-              </Col>
-              <Col span={12}>
-                <Stat label="Charges of gross profit" value={data.chargesPercentOfGross === null ? '—' : `${data.chargesPercentOfGross}%`} tone={0} />
-              </Col>
-              <Col span={12}>
-                <Stat label="Longest losing streak" value={`${data.longestLosingStreak}`} tone={0} />
-              </Col>
-              <Col span={12}>
-                <Stat label="Average R" value={data.averageR === null ? 'No stops recorded' : `${data.averageR}R`} tone={0} />
-              </Col>
-              <Col span={24}>
-                <Eyebrow>Holding time</Eyebrow>
-                <div style={{ marginTop: 6 }}>
-                  {data.holdingTime
-                    .filter((row) => row.trades > 0)
-                    .map((row) => (
-                      <div key={row.style} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
-                        <span>{STYLE_LABELS[row.style]}</span>
-                        <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-                          {row.trades} · <Pnl $value={num(row.netPnl)}>{money(row.netPnl, currency, { compact: true })}</Pnl>
-                        </span>
-                      </div>
-                    ))}
-                </div>
-              </Col>
-            </Row>
+          <Panel height={236} title="The shape of it">
+            <Figures>
+              <Stat label="Average win" value={money(data.averageWin, currency)} tone={1} />
+              <Stat label="Average loss" value={money(data.averageLoss, currency)} tone={-1} />
+              <Stat label="Profit factor" value={data.profitFactor === null ? '—' : data.profitFactor.toFixed(2)} tone={0} />
+              <Stat label="Charges of gross" value={data.chargesPercentOfGross === null ? '—' : `${data.chargesPercentOfGross}%`} tone={0} />
+              <Stat label="Longest losing streak" value={`${data.longestLosingStreak}`} tone={0} />
+              <Stat label="Average R" value={data.averageR === null ? 'No stops' : `${data.averageR}R`} tone={0} />
+            </Figures>
+            <Eyebrow style={{ display: 'block', marginTop: 12 }}>Holding time</Eyebrow>
+            <div style={{ marginTop: 4 }}>
+              {data.holdingTime
+                .filter((row) => row.trades > 0)
+                .map((row) => (
+                  <div key={row.style} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '4px 0' }}>
+                    <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{STYLE_LABELS[row.style]}</span>
+                    <span style={{ fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
+                      {row.trades} · <Pnl $value={num(row.netPnl)}>{money(row.netPnl, currency, { compact: true })}</Pnl>
+                    </span>
+                  </div>
+                ))}
+            </div>
           </Panel>
         </Col>
 
         <Col xs={24} lg={12}>
-          <Panel scroll={false} height={216} title="Edge by segment" extra={<Eyebrow>Net of charges</Eyebrow>}>
-            <EdgeBars rows={data.bySegment} currency={currency} height={240} />
+          <Panel scroll={false} height={212} title="Edge by segment" extra={<Eyebrow>Net of charges</Eyebrow>}>
+            <EdgeBars rows={data.bySegment} currency={currency} height={212} />
           </Panel>
         </Col>
         <Col xs={24} lg={12}>
-          <Panel scroll={false} height={216} title="Edge by time of day" extra={<Eyebrow>By entry hour</Eyebrow>}>
-            <EdgeBars rows={data.byTimeOfDay} currency={currency} height={240} />
+          <Panel scroll={false} height={212} title="Edge by time of day" extra={<Eyebrow>By entry hour</Eyebrow>}>
+            <EdgeBars rows={data.byTimeOfDay} currency={currency} height={212} />
           </Panel>
         </Col>
         <Col xs={24} lg={12}>
-          <Panel scroll={false} height={216} title="Edge by weekday">
-            <EdgeBars rows={data.byWeekday} currency={currency} height={240} />
+          <Panel scroll={false} height={212} title="Edge by weekday">
+            <EdgeBars rows={data.byWeekday} currency={currency} height={212} />
           </Panel>
         </Col>
         <Col xs={24} lg={12}>
-          <Panel scroll={false} height={216} title="Edge by setup tag" extra={<Eyebrow>From your journal</Eyebrow>}>
-            <EdgeBars rows={data.bySetup} currency={currency} height={240} />
+          <Panel scroll={false} height={212} title="Edge by setup tag" extra={<Eyebrow>From your journal</Eyebrow>}>
+            <EdgeBars rows={data.bySetup} currency={currency} height={212} />
           </Panel>
         </Col>
 
@@ -174,6 +161,7 @@ export function TradingOverview({ asOf, filters }: { asOf: string; filters: Trad
               rowKey="key"
               dataSource={[...data.byInstrument].sort((a, b) => num(b.netPnl) - num(a.netPnl))}
               columns={edgeColumns.columns}
+              scroll={{ x: 'max-content' }}
               pagination={false}
             />
           </Card>
@@ -186,14 +174,31 @@ export function TradingOverview({ asOf, filters }: { asOf: string; filters: Trad
   );
 }
 
+/*
+ * Six label-and-number pairs in a responsive auto-fit grid: at 375px they stack to one column,
+ * and each figure shrinks and wraps rather than pushing the panel sideways.
+ */
+const Figures = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px 12px;
+`;
+
+const StatValue = styled.div`
+  margin-top: 2px;
+  font-family: ${({ theme }) => theme.typography.fontFamilySerif};
+  font-size: clamp(17px, 1.5vw, 20px);
+  font-variant-numeric: lining-nums tabular-nums;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+`;
+
 /** A label-and-number pair in the editorial figure face. tone colours it by sign. */
 function Stat({ label, value, tone }: { label: string; value: string; tone: number }) {
   return (
-    <div>
+    <div style={{ minWidth: 0 }}>
       <Eyebrow>{label}</Eyebrow>
-      <div style={{ marginTop: 2 }}>
-        <Figure $size={20}>{tone === 0 ? value : <Pnl $value={tone}>{value}</Pnl>}</Figure>
-      </div>
+      <StatValue>{tone === 0 ? value : <Pnl $value={tone}>{value}</Pnl>}</StatValue>
     </div>
   );
 }

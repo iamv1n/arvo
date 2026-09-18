@@ -98,7 +98,7 @@ export function TaxView({ asOf, financialYear, onYearChange }: { asOf: string; f
       <Row gutter={[16, 16]}>
         {buckets.map((bucket) => (
           <Col xs={24} md={12} key={bucket.key}>
-            <Panel height={250} title={bucket.label}>
+            <Panel height={286} title={bucket.label}>
               <Eyebrow>Net after charges</Eyebrow>
               <div>
                 <Figure>
@@ -123,6 +123,7 @@ export function TaxView({ asOf, financialYear, onYearChange }: { asOf: string; f
               dataSource={data.capitalGains.buckets}
               pagination={false}
               size="small"
+              scroll={{ x: 'max-content' }}
               columns={[
                 { key: 'term', title: 'Term', render: (_, row) => (row.term === 'SHORT' ? 'Short term (under 12 months)' : 'Long term (over 12 months)') },
                 { key: 'trades', title: 'Positions', align: 'right', render: (_, row) => row.trades },

@@ -29,7 +29,10 @@ interface ApiToken {
 
 const Code = styled.pre`
   margin: 0;
-  padding: ${({ theme }) => theme.space[3]}px ${({ theme }) => theme.space[4]}px;
+  /* Room on the right for the copy button that sits over the block. */
+  padding: ${({ theme }) => theme.space[3]}px ${({ theme }) => theme.space[10]}px ${({ theme }) => theme.space[3]}px ${({ theme }) => theme.space[4]}px;
+  max-width: 100%;
+  overflow-x: auto;
   border-radius: ${({ theme }) => theme.radii.md}px;
   background: ${({ theme }) => theme.colors.bgMuted};
   border: 1px solid ${({ theme }) => theme.colors.border};
@@ -171,9 +174,18 @@ export function AiConnections() {
       ) : (
         <Flex vertical gap={8}>
           {connections.data?.map((c) => (
-            <Flex key={c.clientId} justify="space-between" align="center" gap={12} wrap style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--ant-color-border-secondary)' }}>
+            <Flex
+              key={c.clientId}
+              justify="space-between"
+              align="center"
+              gap={12}
+              wrap
+              style={{ padding: '10px 12px', borderRadius: 6, border: '1px solid var(--ant-color-border-secondary)' }}
+            >
               <div style={{ minWidth: 0 }}>
-                <Typography.Text strong>{c.name}</Typography.Text>
+                <Typography.Text strong ellipsis style={{ display: 'block' }}>
+                  {c.name}
+                </Typography.Text>
                 <Typography.Text type="secondary" style={{ display: 'block', fontSize: 12 }}>
                   Connected {formatDate(c.connectedAt)} · {c.lastUsedAt ? `last used ${formatDate(c.lastUsedAt)}` : 'not used yet'}
                 </Typography.Text>
@@ -216,13 +228,15 @@ export function AiConnections() {
               align="center"
               gap={12}
               wrap
-              style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--ant-color-border-secondary)' }}
+              style={{ padding: '10px 12px', borderRadius: 6, border: '1px solid var(--ant-color-border-secondary)' }}
             >
-              <Flex align="center" gap={10} style={{ minWidth: 0 }}>
+              <Flex align="center" gap={10} style={{ minWidth: 0, flex: 1 }}>
                 <KeyOutlined />
                 <div style={{ minWidth: 0 }}>
-                  <Typography.Text strong>{t.name}</Typography.Text>
-                  <Typography.Text type="secondary" style={{ display: 'block', fontSize: 12 }}>
+                  <Typography.Text strong ellipsis style={{ display: 'block' }}>
+                    {t.name}
+                  </Typography.Text>
+                  <Typography.Text type="secondary" style={{ display: 'block', fontSize: 12, overflowWrap: 'anywhere' }}>
                     <code>{t.tokenPrefix}…</code> · created {formatDate(t.createdAt)} ·{' '}
                     {t.lastUsedAt ? `last used ${formatDate(t.lastUsedAt)}` : 'never used'}
                     {t.expiresAt && ` · expires ${formatDate(t.expiresAt)}`}
@@ -280,7 +294,10 @@ export function AiConnections() {
               ))}
             </Flex>
             <Typography.Text strong>Or set it up manually</Typography.Text>
-            <Tabs items={setupSnippets(created).map((s) => ({ key: s.key, label: s.label, children: <CopyableCode text={s.text} /> }))} />
+            <Tabs
+              more={{ trigger: 'click' }}
+              items={setupSnippets(created).map((s) => ({ key: s.key, label: s.label, children: <CopyableCode text={s.text} /> }))}
+            />
           </Flex>
         )}
       </Modal>

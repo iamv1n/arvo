@@ -3,6 +3,7 @@
 import { InboxOutlined } from '@ant-design/icons';
 import { Alert, App, Button, Card, Col, Empty, Input, Row, Select, Skeleton, Space, Table, Typography, Upload } from 'antd';
 import { useState } from 'react';
+import styled from 'styled-components';
 import { api, apiUpload, errorMessage } from '../../lib/api';
 import { formatDate } from '../../lib/format';
 import { useTradeImport, useTradeImports, useTradingMutation } from '../../lib/queries';
@@ -10,6 +11,16 @@ import type { TradeImportRow, TradeImportSource, TradeImportSummary } from '../.
 import { useMoney } from '../../lib/use-money';
 import { Eyebrow, Stamp, type StampTone } from '../planning';
 import { SEGMENT_LABELS, SIDE_TONES, Muted } from './shared';
+
+const Fields = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+
+  > div {
+    min-width: 0;
+  }
+`;
 
 const SOURCE_LABELS: Record<TradeImportSource, string> = {
   TRADEBOOK_CSV: 'Tradebook CSV',
@@ -90,28 +101,31 @@ export function TradeImportWizard() {
               </p>
             </Upload.Dragger>
 
-            <div>
-              <Eyebrow>File type</Eyebrow>
-              <Select
-                allowClear
-                value={source}
-                onChange={setSource}
-                placeholder="Detect from the file"
-                style={{ width: '100%', marginTop: 6 }}
-                options={Object.entries(SOURCE_LABELS).map(([value, label]) => ({ value, label }))}
-              />
-            </div>
-            <div>
-              <Eyebrow>Broker name</Eyebrow>
-              <Input
-                value={broker}
-                onChange={(event) => setBroker(event.target.value)}
-                placeholder="Recognised from the layout"
-                style={{ marginTop: 6 }}
-                maxLength={60}
-              />
-              <Muted>Only needed when the layout is not one Arvo knows. It sets which brokerage plan is applied.</Muted>
-            </div>
+            {/* Two fields in an auto-fit grid: side by side when the card is wide, stacked at 375px. */}
+            <Fields>
+              <div>
+                <Eyebrow>File type</Eyebrow>
+                <Select
+                  allowClear
+                  value={source}
+                  onChange={setSource}
+                  placeholder="Detect from the file"
+                  style={{ width: '100%', marginTop: 6 }}
+                  options={Object.entries(SOURCE_LABELS).map(([value, label]) => ({ value, label }))}
+                />
+              </div>
+              <div>
+                <Eyebrow>Broker name</Eyebrow>
+                <Input
+                  value={broker}
+                  onChange={(event) => setBroker(event.target.value)}
+                  placeholder="Recognised from the layout"
+                  style={{ marginTop: 6 }}
+                  maxLength={60}
+                />
+              </div>
+            </Fields>
+            <Muted>Only needed when the layout is not one Arvo knows. It sets which brokerage plan is applied.</Muted>
           </Space>
         </Card>
 
@@ -136,7 +150,7 @@ export function TradeImportWizard() {
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-                  <Typography.Text ellipsis style={{ maxWidth: 220 }}>
+                  <Typography.Text ellipsis style={{ minWidth: 0 }}>
                     {batch.filename}
                   </Typography.Text>
                   <Stamp $tone={batch.status === 'COMMITTED' ? 'positive' : batch.status === 'FAILED' ? 'negative' : 'warning'}>{batch.status}</Stamp>
@@ -209,6 +223,7 @@ export function TradeImportWizard() {
               rowKey="id"
               size="small"
               dataSource={summary.rows}
+              scroll={{ x: 'max-content' }}
               pagination={{ pageSize: 20, showSizeChanger: false }}
               columns={[
                 { key: 'date', title: 'Date', render: (_, row) => `${formatDate(row.parsed.date)}${row.parsed.time ? ` ${row.parsed.time}` : ''}` },

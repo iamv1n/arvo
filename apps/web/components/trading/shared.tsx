@@ -1,9 +1,10 @@
 'use client';
 
 import { Info } from '@phosphor-icons/react';
-import { Alert, Tooltip } from 'antd';
+import { Tooltip } from 'antd';
 import styled from 'styled-components';
 import type { ChargeBreakdown, ChargesSource, TradeSegment, TradeStyle } from '../../lib/types';
+import { NoticeStrip } from '../notice-strip';
 import { Stamp, type StampTone } from '../planning';
 
 export const SEGMENT_LABELS: Record<TradeSegment, string> = {
@@ -81,9 +82,22 @@ export function ChargesSourceTag({ source }: { source: ChargesSource }) {
 /**
  * The advice-level banner. Everything in /trading is level 0–1: analysis of trades already
  * made, plus education. It appears wherever a figure could be mistaken for a suggestion.
+ *
+ * Printed as an alert block it cost every tab a hundred pixels of paragraph below the last
+ * figure, so it is now the hairline NoticeStrip: the headline always shows, the full wording
+ * is one click away, and hiding it is remembered for the whole trading area.
  */
 export function NotAdvice({ text, style }: { text: string; style?: React.CSSProperties }) {
-  return <Alert type="info" showIcon icon={<Info size={18} weight="duotone" />} message="Analysis, not advice" description={text} style={style} />;
+  return (
+    <div style={style}>
+      <NoticeStrip
+        storageKey="arvo.trading.notice"
+        icon={<Info size={13} weight="duotone" style={{ flex: 'none', marginTop: 2 }} />}
+        headline="Analysis, not advice."
+        detail={text}
+      />
+    </div>
+  );
 }
 
 /** Fixed-height wrapper for charts, so the grid never jumps as data loads. */

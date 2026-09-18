@@ -1,33 +1,34 @@
 'use client';
 
 import { CloudArrowUp, HardDrives, Sparkle } from '@phosphor-icons/react';
-import { Alert, Typography } from 'antd';
+import { Typography } from 'antd';
 import styled from 'styled-components';
 import type { AdvisorStatus } from '../../lib/advisor';
+import { NoticeStrip } from '../notice-strip';
 import { Eyebrow } from '../planning';
 
-/** Always-visible notice about where questions and data go. */
+/**
+ * Where questions and data go. A standing notice, so it reads as one ruled line above the chat
+ * rather than a paragraph block that pushes the conversation off the first screen.
+ */
 export function ProviderNotice({ status }: { status: AdvisorStatus | undefined }) {
   if (!status?.enabled) return null;
   if (status.cloud) {
     return (
-      <Alert
-        type="warning"
-        showIcon
-        icon={<CloudArrowUp size={18} weight="duotone" />}
-        style={{ marginBottom: 16 }}
-        title={`Your financial data is sent to ${status.providerLabel} to answer.`}
-        description={`Questions and the figures the advisor looks up go to ${status.providerLabel} (${status.model}). Nothing is saved without your approval. Switch to a local model in Settings → Preferences.`}
+      <NoticeStrip
+        storageKey="arvo.advisor.notice"
+        icon={<CloudArrowUp size={13} weight="duotone" style={{ flex: 'none', marginTop: 2 }} />}
+        headline={`Your financial data is sent to ${status.providerLabel} to answer.`}
+        detail={`Questions and the figures the advisor looks up go to ${status.providerLabel} (${status.model}). Nothing is saved without your approval. Switch to a local model in Settings \u2192 Preferences.`}
       />
     );
   }
   return (
-    <Alert
-      type="info"
-      showIcon
-      icon={<HardDrives size={18} weight="duotone" />}
-      style={{ marginBottom: 16 }}
-      title={`Answers run on ${status.providerLabel} (${status.model}). Your data stays on this machine.`}
+    <NoticeStrip
+      storageKey="arvo.advisor.notice"
+      icon={<HardDrives size={13} weight="duotone" style={{ flex: 'none', marginTop: 2 }} />}
+      headline={`Answers run on ${status.providerLabel} (${status.model}).`}
+      detail="Your data stays on this machine; nothing is sent to a provider."
     />
   );
 }
