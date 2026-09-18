@@ -119,7 +119,7 @@ export function PositionDetail({ id, asOf }: { id: string; asOf: string }) {
         </Col>
 
         <Col xs={24} lg={8}>
-          <Panel height={360} title="Where the charges went" extra={<ChargesSourceTag source={position.charges.source} />}>
+          <Panel height={290} title="Where the charges went" extra={<ChargesSourceTag source={position.charges.source} />}>
             {CHARGE_LABELS.map(([key, label]) => (
               <div key={key} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(128,128,128,0.12)' }}>
                 <span>{label}</span>

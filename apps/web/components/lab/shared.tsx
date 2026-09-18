@@ -1,8 +1,8 @@
 'use client';
 
 import { Flask, Info, Warning } from '@phosphor-icons/react';
-import { Alert, Tooltip } from 'antd';
-import type { ReactNode } from 'react';
+import { Alert, Button, Tooltip } from 'antd';
+import { useEffect, useState, type ReactNode } from 'react';
 import styled from 'styled-components';
 
 /*
@@ -13,14 +13,54 @@ import styled from 'styled-components';
  * forecast. So the banner is not a footnote — it sits above the tabs, on every tab.
  */
 
+const STORAGE_KEY = 'arvo.lab.banner';
+
+/**
+ * The standing disclaimer. It must be impossible to miss the first time, so it opens expanded;
+ * after that the reader can fold it to a single line and the choice sticks in this browser.
+ */
 export function LabBanner() {
+  const [open, setOpen] = useState(true);
+
+  useEffect(() => {
+    try {
+      setOpen(localStorage.getItem(STORAGE_KEY) !== 'collapsed');
+    } catch {
+      // Storage unavailable; keep it expanded.
+    }
+  }, []);
+
+  const toggle = () => {
+    setOpen((current) => {
+      const next = !current;
+      try {
+        localStorage.setItem(STORAGE_KEY, next ? 'open' : 'collapsed');
+      } catch {
+        // Storage unavailable; the choice lasts for this view only.
+      }
+      return next;
+    });
+  };
+
   return (
     <Alert
       type="info"
       showIcon
       icon={<Flask size={18} weight="duotone" />}
       message="Educational simulation — not investment advice. No live orders."
-      description="Every figure here comes from a model applied to inputs you chose, or from replaying price data you imported. Nothing is a forecast, nothing is a recommendation, and Arvo has no connection to any broker."
+      description={
+        open ? (
+          <span>
+            Every figure here comes from a model applied to inputs you chose, or from replaying price data you imported. Nothing is a
+            forecast, nothing is a recommendation, and Arvo has no connection to any broker.
+          </span>
+        ) : undefined
+      }
+      action={
+        <Button type="text" size="small" onClick={toggle} aria-expanded={open}>
+          {open ? 'Hide' : 'Details'}
+        </Button>
+      }
       style={{ marginBottom: 16 }}
     />
   );

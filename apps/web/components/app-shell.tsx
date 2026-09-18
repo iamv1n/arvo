@@ -148,7 +148,14 @@ export function AppShell({ children }: { children: ReactNode }) {
           collapsed={collapsed}
           trigger={null}
           theme="light"
-          style={{ position: 'sticky', top: 0, height: '100dvh', borderInlineEnd: `1px solid ${theme.colors.borderSubtle}` }}
+          style={{
+            position: 'sticky',
+            top: 0,
+            alignSelf: 'flex-start',
+            height: '100dvh',
+            overflow: 'hidden',
+            borderInlineEnd: `1px solid ${theme.colors.borderSubtle}`,
+          }}
         >
           <Brand href="/dashboard" style={collapsed ? { justifyContent: 'center', padding: 0 } : undefined} aria-label="Arvo home">
             <span style={{ color: theme.colors.textPrimary, ['--arvo-logo-accent' as string]: theme.colors.brand }}>
@@ -156,7 +163,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             </span>
             {!collapsed && 'Arvo'}
           </Brand>
-          {menu}
+          {/* The nav itself scrolls; the rail stays put beside the page. */}
+          <div style={{ height: 'calc(100dvh - 72px)', overflowY: 'auto', overflowX: 'hidden' }}>{menu}</div>
         </Layout.Sider>
       )}
       <Drawer open={isMobile && drawerOpen} onClose={() => setDrawerOpen(false)} placement="left" size={260} title="Arvo">

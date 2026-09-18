@@ -414,7 +414,7 @@ function BacktestResultView({ result }: { result: BacktestResult }) {
         </Col>
       </Row>
 
-      <Panel height={320} title="Equity and drawdown" extra={<Eyebrow>{`${stats.bars} bars · ${result.elapsedMs} ms`}</Eyebrow>}>
+      <Panel height={260} title="Equity and drawdown" extra={<Eyebrow>{`${stats.bars} bars · ${result.elapsedMs} ms`}</Eyebrow>}>
         <EquityAndDrawdown data={result.equityCurve} height={280} />
       </Panel>
 

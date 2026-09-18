@@ -1,7 +1,6 @@
 'use client';
 
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
-import { Calculator, ChartLine, Scales, Target } from '@phosphor-icons/react';
 import { Alert, Button, Card, Col, DatePicker, Divider, Empty, Input, InputNumber, Row, Select, Space, Table, Tooltip, Typography } from 'antd';
 import dayjs from 'dayjs';
 import styled from 'styled-components';
@@ -19,8 +18,8 @@ import {
 import { useMoney } from '../../lib/use-money';
 import { Eyebrow, Figure, Stamp } from '../planning';
 import { Panel } from '../panel';
-import { StatCard } from '../stat-card';
 import { PayoffChart } from './payoff-chart';
+import { ResultStrip } from './result-strip';
 import { Extreme, LEG_KIND_LABELS, LabNote, Muted, OUTLOOK_LABELS, Signed, num } from './shared';
 
 /*
@@ -315,47 +314,36 @@ export function PayoffBuilder() {
       <Col xs={24} lg={14} xxl={15}>
         {error && <Alert type="error" showIcon message="That structure cannot be priced" description={error} style={{ marginBottom: 16 }} />}
 
-        <Row gutter={[16, 16]} align="stretch" style={{ marginBottom: 16 }}>
-          <Col xs={12} xl={6}>
-            <StatCard
-              label={num(report?.netCashflow) >= 0 ? 'Net credit' : 'Net debit'}
-              iconTone="brand"
-              icon={<Calculator size={16} weight="duotone" />}
-              value={report ? money(Math.abs(num(report.netCashflow)), currency) : '—'}
-              hint={num(report?.netCashflow) >= 0 ? 'Received to open' : 'Paid to open'}
-            />
-          </Col>
-          <Col xs={12} xl={6}>
-            <StatCard
-              label="Max profit"
-              icon={<Target size={17} weight="duotone" />}
-              iconTone="positive"
-              value={report ? <Extreme {...report.maxProfit} format={(value) => money(value, currency)} /> : '—'}
-              hint="At nearest expiry"
-            />
-          </Col>
-          <Col xs={12} xl={6}>
-            <StatCard
-              label="Max loss"
-              icon={<Scales size={17} weight="duotone" />}
-              iconTone="negative"
-              value={report ? <Extreme {...report.maxLoss} format={(value) => money(value, currency)} /> : '—'}
-              hint="Floor at spot zero"
-            />
-          </Col>
-          <Col xs={12} xl={6}>
-            <StatCard
-              label="Breakevens"
-              icon={<ChartLine size={17} weight="duotone" />}
-              iconTone="info"
-              value={report && report.breakevens.length > 0 ? report.breakevens.map((value) => Number(value).toFixed(0)).join(' · ') : '—'}
-              hint={report?.probabilityOfProfit ? `${report.probabilityOfProfit.percent}% chance of profit · estimate` : 'No crossing'}
-            />
-          </Col>
-        </Row>
+        <ResultStrip
+          className="payoff-results"
+          items={[
+            {
+              label: num(report?.netCashflow) >= 0 ? 'Net credit' : 'Net debit',
+              value: report ? money(Math.abs(num(report.netCashflow)), currency) : '—',
+              caveat: num(report?.netCashflow) >= 0 ? 'Received to open' : 'Paid to open',
+            },
+            {
+              label: 'Max profit',
+              tone: 'positive',
+              value: report ? <Extreme {...report.maxProfit} format={(value) => money(value, currency)} /> : '—',
+              caveat: 'At nearest expiry',
+            },
+            {
+              label: 'Max loss',
+              tone: 'negative',
+              value: report ? <Extreme {...report.maxLoss} format={(value) => money(value, currency)} /> : '—',
+              caveat: 'Floor at spot zero',
+            },
+            {
+              label: 'Breakevens',
+              value: report && report.breakevens.length > 0 ? report.breakevens.map((value) => Number(value).toFixed(0)).join(' · ') : '—',
+              caveat: report?.probabilityOfProfit ? `${report.probabilityOfProfit.percent}% chance of profit · estimate` : 'No crossing',
+            },
+          ]}
+        />
 
-        <Panel height={340} title="Payoff" extra={<Eyebrow>Solid: at expiry &nbsp;·&nbsp; dashed: today</Eyebrow>}>
-          <PayoffChart series={report?.series ?? []} spot={assumptions.spot} breakevens={report?.breakevens ?? []} height={300} currency={currency} />
+        <Panel height={270} style={{ marginTop: 16 }} title="Payoff" extra={<Eyebrow>Solid: at expiry &nbsp;·&nbsp; dashed: today</Eyebrow>}>
+          <PayoffChart series={report?.series ?? []} spot={assumptions.spot} breakevens={report?.breakevens ?? []} height={240} currency={currency} />
         </Panel>
 
         <Row gutter={[16, 16]} style={{ marginTop: 16 }}>

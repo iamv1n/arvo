@@ -148,12 +148,12 @@ export default function InsightsPage() {
       </Section>
       <Row gutter={[16, 16]}>
         <Col xs={24} xl={14}>
-          <Panel height={320} title="Spending burn-up" extra={<Typography.Text type="secondary">Cumulative by day</Typography.Text>}>
+          <Panel height={260} title="Spending burn-up" extra={<Typography.Text type="secondary">Cumulative by day</Typography.Text>}>
             {patterns.isPending ? <Skeleton active /> : <BurnUpChart data={p?.burnUp ?? []} currency={currency} height={290} />}
           </Panel>
         </Col>
         <Col xs={24} xl={10}>
-          <Panel height={320} title="Where the money went" extra={<Typography.Text type="secondary">Income → left over</Typography.Text>}>
+          <Panel height={260} title="Where the money went" extra={<Typography.Text type="secondary">Income → left over</Typography.Text>}>
             {patterns.isPending ? <Skeleton active /> : <MonthWaterfall steps={p?.waterfall ?? []} currency={currency} height={290} />}
           </Panel>
         </Col>
@@ -165,17 +165,17 @@ export default function InsightsPage() {
       </Section>
       <Row gutter={[16, 16]}>
         <Col xs={24} xl={9}>
-          <Panel height={320} title="Purchase sizes" extra={<Typography.Text type="secondary">12 weeks</Typography.Text>}>
+          <Panel height={260} title="Purchase sizes" extra={<Typography.Text type="secondary">12 weeks</Typography.Text>}>
             {patterns.isPending ? <Skeleton active /> : <SizeBands bands={p?.sizeBands ?? []} currency={currency} />}
           </Panel>
         </Col>
         <Col xs={24} xl={15}>
-          <Panel height={320} title="Merchant map" extra={<Typography.Text type="secondary">Last 3 months</Typography.Text>}>
+          <Panel height={260} title="Merchant map" extra={<Typography.Text type="secondary">Last 3 months</Typography.Text>}>
             {merchants.isPending ? <Skeleton active /> : <MerchantTreemap merchants={merchants.data ?? []} currency={currency} height={290} />}
           </Panel>
         </Col>
         <Col span={24}>
-          <Panel height={300} title="Coming up" extra={<Typography.Text type="secondary">Recurring charges, next 30 days</Typography.Text>}>
+          <Panel height={240} title="Coming up" extra={<Typography.Text type="secondary">Recurring charges, next 30 days</Typography.Text>}>
             {patterns.isPending ? <Skeleton active /> : <UpcomingCharges items={p?.upcoming ?? []} currency={currency} asOf={p?.asOf ?? ''} />}
           </Panel>
         </Col>

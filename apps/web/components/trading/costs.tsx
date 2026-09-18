@@ -76,7 +76,7 @@ export function CostsView({ asOf, filters }: { asOf: string; filters: TradeFilte
 
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={10}>
-          <Panel height={340} title="The breakdown" extra={<Eyebrow>Every component</Eyebrow>}>
+          <Panel height={270} title="The breakdown" extra={<Eyebrow>Every component</Eyebrow>}>
             {CHARGE_LABELS.map(([key, label]) => {
               const value = totals[key];
               const share = num(totals.total) === 0 ? 0 : Math.round((value / num(totals.total)) * 100);
@@ -97,7 +97,7 @@ export function CostsView({ asOf, filters }: { asOf: string; filters: TradeFilte
           </Panel>
         </Col>
         <Col xs={24} lg={14}>
-          <Panel height={340} title="Where the charges land" extra={<Eyebrow>Net of charges, by segment</Eyebrow>}>
+          <Panel height={270} title="Where the charges land" extra={<Eyebrow>Net of charges, by segment</Eyebrow>}>
             <EdgeBars rows={data.bySegment} currency={currency} height={280} />
           </Panel>
         </Col>

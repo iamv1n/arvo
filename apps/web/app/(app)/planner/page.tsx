@@ -183,7 +183,7 @@ function Affordability() {
                 values={{ without: r.series.map((p) => p.without), with: r.series.map((p) => p.with) }}
                 buffer={r.bufferTarget}
                 currency={currency}
-                height={300}
+                height={240}
               />
               <Baseline baseline={r.baseline} currency={currency} />
             </>
