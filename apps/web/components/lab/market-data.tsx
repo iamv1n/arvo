@@ -1,7 +1,7 @@
 'use client';
 
 import { DeleteOutlined, InboxOutlined } from '@ant-design/icons';
-import { Alert, App, Button, Card, Col, Empty, Input, Modal, Row, Skeleton, Space, Table, Tag, Typography, Upload } from 'antd';
+import { App, Button, Card, Col, Empty, Input, Modal, Row, Skeleton, Space, Table, Tag, Typography, Upload } from 'antd';
 import { useState } from 'react';
 import { api, apiUpload, errorMessage } from '../../lib/api';
 import { useBarImport, useBarImports, useBarSeries, useLabMutation, type BarImportBatch } from '../../lib/lab';
@@ -133,19 +133,23 @@ export function MarketDataWizard() {
               </Space>
 
               {active.data.batch.warnings.length > 0 && (
-                <Alert
-                  type="warning"
-                  showIcon
-                  style={{ marginBottom: 12 }}
-                  message={`${active.data.batch.warnings.length} thing${active.data.batch.warnings.length === 1 ? '' : 's'} to know about this file`}
-                  description={
-                    <ul style={{ margin: 0, paddingLeft: 18 }}>
-                      {active.data.batch.warnings.slice(0, 8).map((warning) => (
-                        <li key={warning}>{warning}</li>
-                      ))}
-                    </ul>
-                  }
-                />
+                <div style={{ position: 'relative' }}>
+                  <LabNote
+                    type="warning"
+                    text={
+                      <>
+                        <b>
+                          {active.data.batch.warnings.length} thing{active.data.batch.warnings.length === 1 ? '' : 's'} to know about this file.
+                        </b>
+                        <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>
+                          {active.data.batch.warnings.slice(0, 8).map((warning) => (
+                            <li key={warning}>{warning}</li>
+                          ))}
+                        </ul>
+                      </>
+                    }
+                  />
+                </div>
               )}
 
               <Row gutter={[16, 16]}>

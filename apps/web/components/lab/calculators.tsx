@@ -1,7 +1,7 @@
 'use client';
 
 import { Coins } from '@phosphor-icons/react';
-import { Alert, Button, Card, Col, DatePicker, Divider, Input, InputNumber, Row, Select, Space, Switch, Table, Typography } from 'antd';
+import { Alert, Button, Card, Col, DatePicker, Divider, Input, InputNumber, Row, Select, Space, Switch, Table } from 'antd';
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { useCompute, type FuturesCalculation, type RiskOfRuinResult, type SizingResult } from '../../lib/lab';
@@ -353,7 +353,7 @@ export function SizingCalculator() {
       </Col>
 
       <Col xs={24} lg={14}>
-        <Card title="Risk of ruin" size="small">
+        <Card title="Risk of ruin" size="small" style={{ position: 'relative' }}>
           <Row gutter={[8, 8]}>
             <Col xs={12} xl={6}>
               <Input addonBefore="Win %" value={ruin.winRatePercent} onChange={(event) => setRuin({ ...ruin, winRatePercent: event.target.value })} inputMode="decimal" />
@@ -406,12 +406,15 @@ export function SizingCalculator() {
                   />
                 </Col>
                 <Col span={24}>
-                  <Alert type="warning" showIcon message="Kelly is an explainer, not a size to trade" description={risk.data.kelly.warning} />
-                </Col>
-                <Col span={24}>
-                  <Typography.Paragraph type="secondary" style={{ marginBottom: 0 }}>
-                    {risk.data.disclaimer}
-                  </Typography.Paragraph>
+                  <LabNote
+                    type="warning"
+                    text={
+                      <>
+                        <b>Kelly is an explainer, not a size to trade.</b> {risk.data.kelly.warning}
+                      </>
+                    }
+                  />
+                  <LabNote text={risk.data.disclaimer} />
                 </Col>
               </Row>
             </div>

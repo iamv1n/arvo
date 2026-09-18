@@ -385,7 +385,18 @@ function BacktestResultView({ result }: { result: BacktestResult }) {
 
   return (
     <>
-      {result.overfittingWarning && <Alert type="warning" showIcon message="Read this before the equity curve" description={result.overfittingWarning} style={{ marginBottom: 16 }} />}
+      {result.overfittingWarning && (
+        <div style={{ position: 'relative' }}>
+          <LabNote
+            type="warning"
+            text={
+              <>
+                <b>Read this before the equity curve.</b> {result.overfittingWarning}
+              </>
+            }
+          />
+        </div>
+      )}
 
       <ResultStrip
         items={[
@@ -440,8 +451,8 @@ function BacktestResultView({ result }: { result: BacktestResult }) {
 
         {result.walkForward && (
           <Col span={24}>
-            <Card size="small" title={`Walk-forward split at ${result.walkForward.splitDate}`}>
-              <Alert type={num(result.walkForward.outOfSample.netPnl) > 0 ? 'info' : 'warning'} showIcon message={result.walkForward.verdict} style={{ marginBottom: 12 }} />
+            <Card size="small" style={{ position: 'relative' }} title={`Walk-forward split at ${result.walkForward.splitDate}`}>
+              <LabNote type={num(result.walkForward.outOfSample.netPnl) > 0 ? 'info' : 'warning'} text={result.walkForward.verdict} />
               <Table
                 size="small"
                 pagination={false}

@@ -1,7 +1,7 @@
 'use client';
 
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
-import { Alert, Button, Card, Col, DatePicker, Divider, Empty, Input, InputNumber, Row, Select, Space, Table, Tooltip, Typography } from 'antd';
+import { Alert, Button, Card, Col, DatePicker, Divider, Empty, Input, InputNumber, Row, Select, Space, Table, Tooltip } from 'antd';
 import dayjs from 'dayjs';
 import styled from 'styled-components';
 import { useEffect, useMemo, useState } from 'react';
@@ -385,19 +385,16 @@ export function PayoffBuilder() {
           </Col>
           {report?.probabilityOfProfit && (
             <Col span={24}>
-              <Alert
-                type="info"
-                showIcon
-                message={`Estimated ${report.probabilityOfProfit.percent}% chance of finishing above zero`}
-                description={
-                  <>
-                    <div>{report.probabilityOfProfit.method}</div>
-                    <div style={{ marginTop: 6 }}>
-                      <Typography.Text type="secondary">{report.probabilityOfProfit.caveat}</Typography.Text>
-                    </div>
-                  </>
-                }
-              />
+              <Card size="small" style={{ position: 'relative' }}>
+                <LabNote
+                  text={
+                    <>
+                      <b>Estimated {report.probabilityOfProfit.percent}% chance of finishing above zero.</b> {report.probabilityOfProfit.method}{' '}
+                      {report.probabilityOfProfit.caveat}
+                    </>
+                  }
+                />
+              </Card>
             </Col>
           )}
         </Row>
