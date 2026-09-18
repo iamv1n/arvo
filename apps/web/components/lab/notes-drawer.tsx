@@ -3,7 +3,7 @@
 
 import { Drawer, Empty, Tooltip } from 'antd';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import styled, { keyframes } from 'styled-components';
+import styled from 'styled-components';
 
 /*
  * Caveats, collected.
@@ -31,54 +31,44 @@ interface NotesContextValue {
 
 const NotesContext = createContext<NotesContextValue | null>(null);
 
-const breathe = keyframes`
-  0%, 100% { opacity: 0.45; }
-  50% { opacity: 1; }
-`;
-
-/* A margin rule down the left of the content: it breathes while there are unread conditions,
-   so the page says "there is something to check" without spending a line of text on it. */
-const Rail = styled.button<{ $count: number; $seen: boolean }>`
+/* The way in: a small disc in the bottom-right corner, the size of a scroll indicator. It carries
+   the count and nothing else, and it never sits in the reading column. */
+const Opener = styled.button<{ $count: number }>`
   all: unset;
-  position: sticky;
-  top: 120px;
-  float: left;
-  margin-left: -22px;
-  z-index: 5;
-  display: ${({ $count }) => ($count === 0 ? 'none' : 'flex')};
-  flex-direction: column;
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 20;
+  display: ${({ $count }) => ($count === 0 ? 'none' : 'inline-flex')};
   align-items: center;
   gap: 6px;
-  width: 14px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
   cursor: pointer;
+  background: ${({ theme }) => theme.colors.bgSurfaceRaised};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  box-shadow: ${({ theme }) => theme.shadows.sm};
+  font-family: ${({ theme }) => theme.typography.fontFamilyMono};
+  font-size: 11px;
+  color: ${({ theme }) => theme.colors.textSecondary};
+  opacity: 0.75;
+  transition:
+    opacity 200ms,
+    border-color 200ms;
 
-  .bar {
-    width: 3px;
-    height: 84px;
-    border-radius: 3px;
-    background: ${({ theme }) => theme.colors.brand};
-    animation: ${({ $seen }) => ($seen ? 'none' : breathe)} 2.4s ease-in-out infinite;
-    opacity: ${({ $seen }) => ($seen ? 0.35 : 1)};
-  }
-  .count {
-    font-family: ${({ theme }) => theme.typography.fontFamilyMono};
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: ${({ theme }) => theme.colors.brandText};
-    writing-mode: vertical-rl;
-  }
-
-  &:hover .bar,
-  &:focus-visible .bar {
+  &:hover,
+  &:focus-visible {
     opacity: 1;
-    height: 110px;
+    border-color: ${({ theme }) => theme.colors.brand};
+    color: ${({ theme }) => theme.colors.textPrimary};
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .bar {
-      animation: none;
-    }
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: ${({ theme }) => theme.colors.brand};
   }
 `;
 
@@ -131,10 +121,7 @@ export function LabNotesProvider({ children }: { children: ReactNode }) {
 
   const unregister = useCallback((id: string) => setNotes((current) => current.filter((item) => item.id !== id)), []);
 
-  const [seen, setSeen] = useState(false);
-
   const open = useCallback((id?: string) => {
-    setSeen(true);
     setOpenId(id ?? null);
     setIsOpen(true);
   }, []);
@@ -144,16 +131,16 @@ export function LabNotesProvider({ children }: { children: ReactNode }) {
   return (
     <NotesContext.Provider value={value}>
       {children}
-      <Tooltip title={`${notes.length} thing${notes.length === 1 ? '' : 's'} these numbers assume`} placement="right">
-        <Rail type="button" $count={notes.length} $seen={seen} onClick={() => open()} aria-label={`Show ${notes.length} notes`}>
-          <span className="bar" />
-          <span className="count">{notes.length} notes</span>
-        </Rail>
+      <Tooltip title={`What these numbers assume · ${notes.length} note${notes.length === 1 ? '' : 's'}`} placement="left">
+        <Opener type="button" $count={notes.length} onClick={() => open()} aria-label={`What these numbers assume, ${notes.length} notes`}>
+          <span className="dot" aria-hidden />
+          assumptions
+        </Opener>
       </Tooltip>
       <Drawer
         open={isOpen}
         onClose={() => setIsOpen(false)}
-        placement="left"
+        placement="right"
         width={440}
         title="What these numbers assume"
         styles={{ body: { padding: 0 } }}
