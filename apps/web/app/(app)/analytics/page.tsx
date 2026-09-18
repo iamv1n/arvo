@@ -55,7 +55,7 @@ export default function AnalyticsPage() {
         title="Analytics"
         subtitle="Where your money went, and what changed."
         extra={
-          <Flex align="center" gap={8}>
+          <Flex align="center" gap={8} wrap>
             <Button icon={<LeftOutlined />} onClick={() => setMonth((m) => m.subtract(1, 'month'))} aria-label="Previous month" />
             <Typography.Text strong style={{ minWidth: 110, textAlign: 'center' }}>
               {month.format('MMMM YYYY')}
@@ -96,7 +96,7 @@ export default function AnalyticsPage() {
 
         <Col span={24}>
           <Card title="Last 12 months">
-            {trend.isPending ? <Skeleton active /> : <IncomeExpenseChart data={trend.data ?? []} currency={currency} />}
+            {trend.isPending ? <Skeleton active /> : <IncomeExpenseChart data={trend.data ?? []} currency={currency} height={240} />}
           </Card>
         </Col>
 
@@ -107,6 +107,7 @@ export default function AnalyticsPage() {
               loading={comparison.isFetching}
               dataSource={c?.categoryChanges}
               pagination={false}
+              scroll={{ x: 'max-content' }}
               locale={{ emptyText: <Empty description="No spending in these months" image={Empty.PRESENTED_IMAGE_SIMPLE} /> }}
               columns={[
                 { title: 'Category', dataIndex: 'name', sorter: (a, b) => a.name.localeCompare(b.name) },
@@ -134,12 +135,13 @@ export default function AnalyticsPage() {
         </Col>
 
         <Col xs={24} xl={10}>
-          <Card title="Top merchants" style={{ height: '100%' }} styles={{ body: { padding: 0 } }}>
+          <Card title="Top merchants" styles={{ body: { padding: 0 } }}>
             <DataTable
               rowKey={(r) => r.merchantId ?? 'none'}
               loading={merchants.isFetching}
               dataSource={merchants.data?.slice(0, 10)}
               pagination={false}
+              scroll={{ x: 'max-content' }}
               columns={[
                 { title: 'Merchant', dataIndex: 'name', ellipsis: true },
                 { title: 'Txns', dataIndex: 'transactionCount', align: 'right', width: 80, sorter: (a, b) => a.transactionCount - b.transactionCount },
@@ -160,7 +162,7 @@ export default function AnalyticsPage() {
               loading={comparison.isFetching}
               dataSource={c?.largestExpenses.map((t, i) => ({ ...t, rank: i + 1 }))}
               pagination={false}
-              scroll={{ x: 680 }}
+              scroll={{ x: 'max-content' }}
               columns={[
                 { title: '#', dataIndex: 'rank', width: 56, sorter: (a, b) => a.rank - b.rank },
                 { title: 'Date', dataIndex: 'date', width: 130, render: formatDate, sorter: (a, b) => a.date.localeCompare(b.date) },

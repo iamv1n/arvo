@@ -81,7 +81,7 @@ const Legend = styled.div`
   }
 `;
 
-export function SpendingHeatmap({ days, currency }: { days: DailySpend[]; currency: string }) {
+export function SpendingHeatmap({ days, currency, cellSize = 14 }: { days: DailySpend[]; currency: string; cellSize?: number }) {
   const theme = useTheme();
   const money = useMoney();
   if (days.length === 0) return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />;
@@ -93,7 +93,7 @@ export function SpendingHeatmap({ days, currency }: { days: DailySpend[]; curren
   const shades = [theme.colors.bgMuted, `${theme.colors.brand}33`, `${theme.colors.brand}66`, `${theme.colors.brand}aa`, theme.colors.brand, theme.colors.brandActive];
   const shade = (v: number) => (v <= 0 ? shades[0] : shades[1 + thresholds.filter((t) => v > t).length]);
 
-  const cell = 14;
+  const cell = cellSize;
   const gap = 4;
   const firstWeekday = dayjs(days[0].date).day();
   const columns = Math.ceil((days.length + firstWeekday) / 7);
@@ -146,12 +146,12 @@ export function SpendingHeatmap({ days, currency }: { days: DailySpend[]; curren
 // ---------------------------------------------------------------------------------------------
 // Weekday rhythm: seven columns with serif initials.
 
-const Rhythm = styled.div`
+const Rhythm = styled.div<{ $height: number }>`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   align-items: end;
   gap: ${({ theme }) => theme.space[2]}px;
-  height: 220px;
+  height: ${({ $height }) => $height}px;
 `;
 
 const RhythmCol = styled.div`
@@ -181,7 +181,7 @@ const RhythmCol = styled.div`
   }
 `;
 
-export function WeekdayRhythm({ weekdays, currency }: { weekdays: WeekdaySpend[]; currency: string }) {
+export function WeekdayRhythm({ weekdays, currency, height = 220 }: { weekdays: WeekdaySpend[]; currency: string; height?: number }) {
   const theme = useTheme();
   const money = useMoney();
   // Start the week on Monday.
@@ -189,14 +189,14 @@ export function WeekdayRhythm({ weekdays, currency }: { weekdays: WeekdaySpend[]
   const max = Math.max(1, ...ordered.map((w) => Number(w.average)));
   const peak = ordered.reduce((best, w) => (Number(w.average) > Number(best.average) ? w : best), ordered[0]);
   return (
-    <Rhythm role="img" aria-label="Average spending per weekday">
+    <Rhythm $height={height} role="img" aria-label="Average spending per weekday">
       {ordered.map((w) => (
         <RhythmCol key={w.weekday}>
           <span className="value">{money(w.average, currency, { compact: true })}</span>
           <span
             className="bar"
             style={{
-              height: `${Math.max(3, (Number(w.average) / max) * 150)}px`,
+              height: `${Math.max(3, (Number(w.average) / max) * (height - 70))}px`,
               background: w.weekday === peak.weekday ? theme.colors.brand : theme.colors.textPrimary,
               opacity: w.weekday === peak.weekday ? 1 : 0.18 + 0.5 * (Number(w.average) / max),
             }}
@@ -213,7 +213,7 @@ export function WeekdayRhythm({ weekdays, currency }: { weekdays: WeekdaySpend[]
 
 const Bands = styled.div`
   display: grid;
-  gap: ${({ theme }) => theme.space[3]}px;
+  gap: ${({ theme }) => theme.space[2]}px;
 `;
 
 const BandRow = styled.div`

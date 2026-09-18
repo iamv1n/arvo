@@ -32,7 +32,9 @@ const Hero = styled.section`
 
   .big {
     font-family: ${({ theme }) => theme.typography.fontFamilySerif};
-    font-size: clamp(40px, 6vw, 64px);
+    /* Must not run off a 375px phone: the floor is small enough for ₹1,24,350.00/month. */
+    font-size: clamp(30px, 7vw, 60px);
+    overflow-wrap: anywhere;
     font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
     font-variant-numeric: lining-nums tabular-nums;
     letter-spacing: -0.03em;
@@ -56,9 +58,13 @@ const Hero = styled.section`
   }
   dl {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
     gap: ${({ theme }) => theme.space[4]}px;
     margin: 0;
+    min-width: 0;
+  }
+  dl > div {
+    min-width: 0;
   }
   dt {
     font-family: ${({ theme }) => theme.typography.fontFamilyMono};
@@ -70,7 +76,8 @@ const Hero = styled.section`
   dd {
     margin: 4px 0 0;
     font-family: ${({ theme }) => theme.typography.fontFamilySerif};
-    font-size: 24px;
+    font-size: clamp(19px, 2vw, 24px);
+    overflow-wrap: anywhere;
   }
 
   @media (max-width: 760px) {
@@ -81,7 +88,7 @@ const Hero = styled.section`
 
 const Item = styled.div<{ $muted?: boolean }>`
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) minmax(140px, auto) 40px;
+  grid-template-columns: 44px minmax(0, 1fr) minmax(0, auto) 40px;
   align-items: center;
   gap: ${({ theme }) => theme.space[4]}px;
   min-height: 84px;
@@ -97,11 +104,14 @@ const Item = styled.div<{ $muted?: boolean }>`
     color: ${({ theme }) => theme.colors.textMuted};
   }
   .right {
+    min-width: 0;
     text-align: right;
   }
 
   @media (max-width: 760px) {
-    grid-template-columns: 32px minmax(0, 1fr) auto;
+    grid-template-columns: 32px minmax(0, 1fr) minmax(0, auto);
+    gap: ${({ theme }) => theme.space[3]}px;
+    padding: ${({ theme }) => theme.space[4]}px;
     .go {
       display: none;
     }
@@ -123,7 +133,8 @@ export default function SavingsPage() {
 
   const rationale = (o: SavingsOpportunity): string => {
     const r = o.rationale;
-    const pct = r.changePercent !== null ? ` · ${r.changePercent > 0 ? '+' : ''}${r.changePercent}%` : '';
+    const pct =
+      r.changePercent !== null ? ` · ${r.changePercent > 0 ? '+' : ''}${r.changePercent}%` : '';
     switch (o.kind) {
       case 'category_creep':
       case 'merchant_creep':
@@ -170,7 +181,12 @@ export default function SavingsPage() {
         )}
       </div>
       <Tooltip title="See the transactions">
-        <Link className="go" href={evidenceHref(o)} aria-label={`Transactions for ${o.title}`} style={{ display: 'grid', placeItems: 'center' }}>
+        <Link
+          className="go"
+          href={evidenceHref(o)}
+          aria-label={`Transactions for ${o.title}`}
+          style={{ display: 'grid', placeItems: 'center' }}
+        >
           <ArrowRight size={20} />
         </Link>
       </Tooltip>
@@ -179,7 +195,10 @@ export default function SavingsPage() {
 
   return (
     <>
-      <PageHeader title="Save more" subtitle="Where your spending crept up, what got pricier and what fees cost you — every figure traced to transactions." />
+      <PageHeader
+        title="Save more"
+        subtitle="Where your spending crept up, what got pricier and what fees cost you — every figure traced to transactions."
+      />
 
       <Hero>
         <div>

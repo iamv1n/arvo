@@ -61,17 +61,29 @@ const Facts = styled.dl`
   div + div {
     border-left: 1px solid ${({ theme }) => theme.colors.border};
   }
+  @media (max-width: ${({ theme }) => theme.breakpoints.sm}px) {
+    grid-template-columns: 1fr 1fr;
+    div:nth-child(odd) {
+      border-left: none;
+    }
+    div:nth-child(n + 3) {
+      border-top: 1px solid ${({ theme }) => theme.colors.border};
+    }
+  }
   dt {
     font-family: ${({ theme }) => theme.typography.fontFamilyMono};
     font-size: 12px;
     letter-spacing: 0.05em;
     text-transform: uppercase;
+    overflow-wrap: anywhere;
     color: ${({ theme }) => theme.colors.textMuted};
   }
   dd {
     margin: 4px 0 0;
     font-family: ${({ theme }) => theme.typography.fontFamilySerif};
-    font-size: 26px;
+    /* Compact money still runs long ("12 Mar · ₹1.2L"); it wraps instead of widening the cell. */
+    font-size: clamp(20px, 2.2vw, 26px);
+    overflow-wrap: anywhere;
     letter-spacing: -0.01em;
   }
 `;
@@ -94,7 +106,7 @@ export default function InsightsPage() {
       <PageHeader
         title="Insights"
         subtitle="Patterns in how you spend, computed exactly from your transactions."
-        extra={<Segmented options={PERIOD_OPTIONS} value={period} onChange={setPeriod} />}
+        extra={<Segmented options={PERIOD_OPTIONS} value={period} onChange={setPeriod} style={{ maxWidth: '100%', overflowX: 'auto' }} />}
       />
 
       <OverviewStats period={range} currency={currency} />
@@ -131,13 +143,13 @@ export default function InsightsPage() {
       )}
       <Row gutter={[16, 16]}>
         <Col xs={24} xl={14}>
-          <Panel scroll={false} height={250} title="Spending calendar" extra={<Typography.Text type="secondary">Hover a day</Typography.Text>}>
-            {patterns.isPending ? <Skeleton active /> : <SpendingHeatmap days={p?.daily ?? []} currency={currency} />}
+          <Panel scroll={false} height={232} title="Spending calendar" extra={<Typography.Text type="secondary">Hover a day</Typography.Text>}>
+            {patterns.isPending ? <Skeleton active /> : <SpendingHeatmap days={p?.daily ?? []} currency={currency} cellSize={13} />}
           </Panel>
         </Col>
         <Col xs={24} xl={10}>
-          <Panel scroll={false} height={250} title="Weekly rhythm" extra={<Typography.Text type="secondary">Average per day</Typography.Text>}>
-            {patterns.isPending ? <Skeleton active /> : <WeekdayRhythm weekdays={p?.weekdays ?? []} currency={currency} />}
+          <Panel scroll={false} height={232} title="Weekly rhythm" extra={<Typography.Text type="secondary">Average per day</Typography.Text>}>
+            {patterns.isPending ? <Skeleton active /> : <WeekdayRhythm weekdays={p?.weekdays ?? []} currency={currency} height={184} />}
           </Panel>
         </Col>
       </Row>
@@ -148,13 +160,13 @@ export default function InsightsPage() {
       </Section>
       <Row gutter={[16, 16]}>
         <Col xs={24} xl={14}>
-          <Panel scroll={false} height={260} title="Spending burn-up" extra={<Typography.Text type="secondary">Cumulative by day</Typography.Text>}>
-            {patterns.isPending ? <Skeleton active /> : <BurnUpChart data={p?.burnUp ?? []} currency={currency} height={236} />}
+          <Panel scroll={false} height={268} title="Spending burn-up" extra={<Typography.Text type="secondary">Cumulative by day</Typography.Text>}>
+            {patterns.isPending ? <Skeleton active /> : <BurnUpChart data={p?.burnUp ?? []} currency={currency} height={220} />}
           </Panel>
         </Col>
         <Col xs={24} xl={10}>
-          <Panel scroll={false} height={260} title="Where the money went" extra={<Typography.Text type="secondary">Income → left over</Typography.Text>}>
-            {patterns.isPending ? <Skeleton active /> : <MonthWaterfall steps={p?.waterfall ?? []} currency={currency} height={236} />}
+          <Panel scroll={false} height={268} title="Where the money went" extra={<Typography.Text type="secondary">Income → left over</Typography.Text>}>
+            {patterns.isPending ? <Skeleton active /> : <MonthWaterfall steps={p?.waterfall ?? []} currency={currency} height={220} />}
           </Panel>
         </Col>
       </Row>
@@ -165,17 +177,17 @@ export default function InsightsPage() {
       </Section>
       <Row gutter={[16, 16]}>
         <Col xs={24} xl={9}>
-          <Panel scroll={false} height={260} title="Purchase sizes" extra={<Typography.Text type="secondary">12 weeks</Typography.Text>}>
+          <Panel height={268} title="Purchase sizes" extra={<Typography.Text type="secondary">12 weeks</Typography.Text>}>
             {patterns.isPending ? <Skeleton active /> : <SizeBands bands={p?.sizeBands ?? []} currency={currency} />}
           </Panel>
         </Col>
         <Col xs={24} xl={15}>
-          <Panel scroll={false} height={260} title="Merchant map" extra={<Typography.Text type="secondary">Last 3 months</Typography.Text>}>
-            {merchants.isPending ? <Skeleton active /> : <MerchantTreemap merchants={merchants.data ?? []} currency={currency} height={236} />}
+          <Panel scroll={false} height={268} title="Merchant map" extra={<Typography.Text type="secondary">Last 3 months</Typography.Text>}>
+            {merchants.isPending ? <Skeleton active /> : <MerchantTreemap merchants={merchants.data ?? []} currency={currency} height={220} />}
           </Panel>
         </Col>
         <Col span={24}>
-          <Panel scroll={false} height={240} title="Coming up" extra={<Typography.Text type="secondary">Recurring charges, next 30 days</Typography.Text>}>
+          <Panel height={248} title="Coming up" extra={<Typography.Text type="secondary">Recurring charges, next 30 days</Typography.Text>}>
             {patterns.isPending ? <Skeleton active /> : <UpcomingCharges items={p?.upcoming ?? []} currency={currency} asOf={p?.asOf ?? ''} />}
           </Panel>
         </Col>

@@ -110,7 +110,9 @@ const Label = styled.div`
 
 const Figure = styled.div`
   font-family: ${({ theme }) => theme.typography.fontFamilySerif};
-  font-size: 34px;
+  /* A long figure (₹1,24,350.00) must shrink and wrap inside the note, never run past it. */
+  font-size: clamp(24px, 3.2vw, 34px);
+  overflow-wrap: anywhere;
   font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
   font-variant-numeric: lining-nums tabular-nums;
   letter-spacing: -0.02em;

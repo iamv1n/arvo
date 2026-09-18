@@ -32,8 +32,12 @@ export const Stamp = styled.span<{ $tone: StampTone }>`
 
 /** Serif headline figure. */
 export const Figure = styled.span<{ $size?: number }>`
+  display: inline-block;
+  max-width: 100%;
+  /* Long money strings must shrink and wrap rather than push out of their cell. */
+  overflow-wrap: anywhere;
   font-family: ${({ theme }) => theme.typography.fontFamilySerif};
-  font-size: ${({ $size = 26 }) => $size}px;
+  font-size: ${({ $size = 26 }) => `clamp(${Math.round($size * 0.74)}px, ${($size / 6).toFixed(2)}vw, ${$size}px)`};
   font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
   font-variant-numeric: lining-nums tabular-nums;
   letter-spacing: -0.02em;
