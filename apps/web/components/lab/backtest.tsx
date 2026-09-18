@@ -1,7 +1,7 @@
 'use client';
 
 import { DeleteOutlined, PlayCircleOutlined } from '@ant-design/icons';
-import { ChartLineDown, Coins, Percent, Play } from '@phosphor-icons/react';
+import { Play } from '@phosphor-icons/react';
 import { Alert, App, Button, Card, Col, DatePicker, Divider, Empty, Input, InputNumber, Row, Select, Skeleton, Space, Switch, Table, Tabs, Tag, Typography } from 'antd';
 import { useState } from 'react';
 import { api, errorMessage } from '../../lib/api';

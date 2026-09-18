@@ -89,7 +89,7 @@ const Bar = styled(Layout.Header)`
 
 const Content = styled(Layout.Content)`
   width: 100%;
-  max-width: 1280px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: ${({ theme }) => theme.space[8]}px ${({ theme }) => theme.space[6]}px;
 

@@ -352,7 +352,9 @@ export function PayoffBuilder() {
           </Col>
           <Col xs={24} xxl={10}>
             <Card title="Greeks" size="small">
-              <GreeksTable legs={report?.legs ?? []} net={report?.netGreeks} />
+              <div style={{ overflowX: 'auto' }}>
+                <GreeksTable legs={report?.legs ?? []} net={report?.netGreeks} />
+              </div>
               <Muted>Position Greeks: per-unit sensitivity times quantity and direction. Theta is per calendar day; vega and rho per one point.</Muted>
             </Card>
           </Col>
@@ -423,6 +425,7 @@ function GreeksTable({ legs, net }: { legs: LegAnalysis[]; net?: PayoffReport['n
     <Table
       size="small"
       pagination={false}
+      scroll={{ x: 'max-content' }}
       dataSource={rows}
       rowClassName={(row) => (row.key === 'net' ? 'arvo-net-row' : '')}
       columns={[
