@@ -18,6 +18,11 @@ import type {
   HoldingTransactionRecord,
   PortfolioImportBatchRecord,
   PortfolioImportRowRecord,
+  JournalEntryRecord,
+  TradeImportBatchRecord,
+  TradeImportRowRecord,
+  TradeRecord,
+  TradingSettingsRecord,
 } from '@arvo/finance-core';
 import { formatMoney, formatUnits, parseMoney, parseUnits } from '@arvo/finance-core';
 import type {
@@ -38,6 +43,11 @@ import type {
   FundHoldingEntity,
   HoldingEntity,
   HoldingTransactionEntity,
+  TradeEntity,
+  TradeImportBatchEntity,
+  TradeImportRowEntity,
+  TradeJournalEntryEntity,
+  TradingSettingsEntity,
   PortfolioImportBatchEntity,
   PortfolioImportRowEntity,
 } from '../entities';
@@ -322,6 +332,102 @@ export const toPortfolioImportRow = (e: PortfolioImportRowEntity): PortfolioImpo
   status: e.status,
   message: e.message,
   holdingId: e.holdingId,
+  parsed: e.parsed,
+  createdAt: e.createdAt,
+});
+
+// ---- trading ----
+
+/** bigint comes back from pg as a string already; normalise away any stray formatting. */
+const canonicalQuantity = (value: string | number): string => BigInt(value).toString();
+
+export const toTrade = (e: TradeEntity): TradeRecord => ({
+  id: e.id,
+  userId: e.userId,
+  date: e.date,
+  time: e.time,
+  broker: e.broker,
+  exchange: e.exchange,
+  segment: e.segment,
+  kind: e.kind,
+  symbol: e.symbol,
+  underlying: e.underlying,
+  isin: e.isin,
+  expiry: e.expiry,
+  strike: e.strike === null ? null : canonicalMoney(e.strike),
+  right: e.right,
+  lotSize: e.lotSize,
+  side: e.side,
+  quantity: canonicalQuantity(e.quantity),
+  price: canonicalMoney(e.price),
+  amount: canonicalMoney(e.amount),
+  brokerage: canonicalMoney(e.brokerage),
+  stt: canonicalMoney(e.stt),
+  exchangeCharges: canonicalMoney(e.exchangeCharges),
+  sebiCharges: canonicalMoney(e.sebiCharges),
+  stampDuty: canonicalMoney(e.stampDuty),
+  gst: canonicalMoney(e.gst),
+  dpCharges: canonicalMoney(e.dpCharges),
+  otherCharges: canonicalMoney(e.otherCharges),
+  totalCharges: canonicalMoney(e.totalCharges),
+  chargesSource: e.chargesSource,
+  orderId: e.orderId,
+  tradeRef: e.tradeRef,
+  notes: e.notes,
+  externalRef: e.externalRef,
+  createdAt: e.createdAt,
+  updatedAt: e.updatedAt,
+});
+
+export const toJournalEntry = (e: TradeJournalEntryEntity): JournalEntryRecord => ({
+  id: e.id,
+  userId: e.userId,
+  positionId: e.positionId,
+  notes: e.notes,
+  setupTags: e.setupTags ?? [],
+  emotionTags: e.emotionTags ?? [],
+  mistakes: e.mistakes ?? [],
+  stopPrice: e.stopPrice === null ? null : canonicalMoney(e.stopPrice),
+  targetPrice: e.targetPrice === null ? null : canonicalMoney(e.targetPrice),
+  screenshots: e.screenshots ?? [],
+  createdAt: e.createdAt,
+  updatedAt: e.updatedAt,
+});
+
+export const toTradingSettings = (e: TradingSettingsEntity): TradingSettingsRecord => ({
+  userId: e.userId,
+  brokers: e.brokers ?? [],
+  revengeWindowMinutes: e.revengeWindowMinutes,
+  overTradingMultiple: canonicalMoney(e.overTradingMultiple),
+  assumedIndexReturnPercent: canonicalMoney(e.assumedIndexReturnPercent),
+  assumedFdRatePercent: canonicalMoney(e.assumedFdRatePercent),
+  benchmarkSeries: e.benchmarkSeries,
+  setupTags: e.setupTags ?? [],
+  emotionTags: e.emotionTags ?? [],
+  updatedAt: e.updatedAt,
+});
+
+export const toTradeImportBatch = (e: TradeImportBatchEntity): TradeImportBatchRecord => ({
+  id: e.id,
+  userId: e.userId,
+  filename: e.filename,
+  source: e.source,
+  profile: e.profile,
+  broker: e.broker,
+  status: e.status,
+  warnings: e.warnings ?? [],
+  error: e.error,
+  createdAt: e.createdAt,
+  updatedAt: e.updatedAt,
+});
+
+export const toTradeImportRow = (e: TradeImportRowEntity): TradeImportRowRecord => ({
+  id: e.id,
+  userId: e.userId,
+  batchId: e.batchId,
+  rowNumber: e.rowNumber,
+  status: e.status,
+  message: e.message,
   parsed: e.parsed,
   createdAt: e.createdAt,
 });

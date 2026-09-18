@@ -14,6 +14,13 @@ import {
   PortfolioImportBatchEntity,
   PortfolioImportRowEntity,
 } from './portfolio.entities';
+import {
+  TradeEntity,
+  TradeImportBatchEntity,
+  TradeImportRowEntity,
+  TradeJournalEntryEntity,
+  TradingSettingsEntity,
+} from './trading.entities';
 import { RuleEntity } from './rule.entity';
 import { CategoryEntity } from './category.entity';
 import { MerchantEntity } from './merchant.entity';
@@ -38,6 +45,11 @@ export {
   FundHoldingEntity,
   PortfolioImportBatchEntity,
   PortfolioImportRowEntity,
+  TradeEntity,
+  TradeJournalEntryEntity,
+  TradingSettingsEntity,
+  TradeImportBatchEntity,
+  TradeImportRowEntity,
   ApiTokenEntity,
   OAuthAuthorizationEntity,
   OAuthClientEntity,
@@ -90,4 +102,9 @@ export const ENTITIES = [
   FundHoldingEntity,
   PortfolioImportBatchEntity,
   PortfolioImportRowEntity,
+  TradeEntity,
+  TradeJournalEntryEntity,
+  TradingSettingsEntity,
+  TradeImportBatchEntity,
+  TradeImportRowEntity,
 ];

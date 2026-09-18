@@ -17,9 +17,15 @@ import type {
   HoldingTransactionRepository,
   PortfolioDataRepository,
   PortfolioImportRepository,
+  TradeRepository,
+  JournalRepository,
+  TradingSettingsRepository,
+  TradeImportRepository,
+  TradeFilter,
 } from '@arvo/finance-core';
+import { DEFAULT_TRADING_SETTINGS } from '@arvo/finance-core';
 import { ImportStatus, type TransactionType } from '@arvo/types';
-import { Between, In, IsNull, Not, type DataSource, type EntityManager, type EntityTarget, type ObjectLiteral } from 'typeorm';
+import { Between, In, IsNull, LessThanOrEqual, MoreThanOrEqual, Not, type DataSource, type EntityManager, type EntityTarget, type ObjectLiteral } from 'typeorm';
 import {
   BudgetEntity,
   GoalEntity,
@@ -41,6 +47,11 @@ import {
   HoldingTransactionEntity,
   PortfolioImportBatchEntity,
   PortfolioImportRowEntity,
+  TradeEntity,
+  TradeImportBatchEntity,
+  TradeImportRowEntity,
+  TradeJournalEntryEntity,
+  TradingSettingsEntity,
 } from '../entities';
 import {
   toAccount,
@@ -58,6 +69,11 @@ import {
   toTransfer,
   toBenchmarkPoint,
   toFundHolding,
+  toTrade,
+  toJournalEntry,
+  toTradingSettings,
+  toTradeImportBatch,
+  toTradeImportRow,
   toHolding,
   toHoldingTransaction,
   toPortfolioImportBatch,
@@ -607,6 +623,116 @@ export function createRepositories(manager: EntityManager): Repositories {
     updateRow: async (userId, id, patch) => toPortfolioImportRow(await updateOwned(PortfolioImportRowEntity, userId, id, patch)),
   };
 
+  /*
+   * Trading journal. Trades are read in fill order — date, then time, then id — because the
+   * FIFO reconstruction depends on that order and a tradebook import has no other guarantee.
+   * Fills with no time sort first within their day, which is the conservative reading.
+   */
+  const trades: TradeRepository = {
+    findAll: async (userId, filter: TradeFilter = {}) => {
+      const where: ObjectLiteral = { userId };
+      if (filter.from && filter.to) where.date = Between(filter.from, filter.to);
+      else if (filter.from) where.date = MoreThanOrEqual(filter.from);
+      else if (filter.to) where.date = LessThanOrEqual(filter.to);
+      if (filter.segment) where.segment = filter.segment;
+      if (filter.underlying) where.underlying = filter.underlying;
+      if (filter.symbol) where.symbol = filter.symbol;
+      if (filter.side) where.side = filter.side;
+      if (filter.broker) where.broker = filter.broker;
+      const rows = await manager.find(TradeEntity, { where: where as AnyPatch, order: { date: 'ASC', time: 'ASC', id: 'ASC' } });
+      return rows.map(toTrade);
+    },
+    findById: async (userId, id) => {
+      const row = await manager.findOneBy(TradeEntity, { id, userId });
+      return row ? toTrade(row) : null;
+    },
+    create: async (input) => toTrade(await manager.save(manager.create(TradeEntity, input as AnyPatch))),
+    createMany: async (inputs) => {
+      for (let i = 0; i < inputs.length; i += 500) await manager.insert(TradeEntity, inputs.slice(i, i + 500) as AnyPatch);
+      return inputs.length;
+    },
+    update: async (userId, id, patch) => toTrade(await updateOwned(TradeEntity, userId, id, patch)),
+    delete: async (userId, id) => void (await manager.delete(TradeEntity, { id, userId })),
+    findExistingRefs: async (userId, refs) => {
+      if (refs.length === 0) return [];
+      const found: string[] = [];
+      for (let i = 0; i < refs.length; i += 500) {
+        const rows = await manager.find(TradeEntity, { where: { userId, externalRef: In(refs.slice(i, i + 500)) }, select: { externalRef: true } });
+        found.push(...rows.map((r) => r.externalRef as string));
+      }
+      return found;
+    },
+    listBrokers: async (userId) => {
+      const rows = (await manager
+        .createQueryBuilder(TradeEntity, 't')
+        .select('DISTINCT t.broker', 'broker')
+        .where('t.user_id = :userId', { userId })
+        .orderBy('broker', 'ASC')
+        .getRawMany()) as { broker: string }[];
+      return rows.map((r) => r.broker);
+    },
+  };
+
+  const tradingJournal: JournalRepository = {
+    findAll: async (userId) => (await manager.find(TradeJournalEntryEntity, { where: { userId } })).map(toJournalEntry),
+    findByPosition: async (userId, positionId) => {
+      const row = await manager.findOneBy(TradeJournalEntryEntity, { userId, positionId });
+      return row ? toJournalEntry(row) : null;
+    },
+    upsert: async (userId, positionId, patch) => {
+      const existing = await manager.findOneBy(TradeJournalEntryEntity, { userId, positionId });
+      if (existing) {
+        await manager.update(TradeJournalEntryEntity, { id: existing.id, userId }, patch as AnyPatch);
+        return toJournalEntry((await manager.findOneByOrFail(TradeJournalEntryEntity, { id: existing.id, userId })) as TradeJournalEntryEntity);
+      }
+      const created = manager.create(TradeJournalEntryEntity, {
+        userId,
+        positionId,
+        notes: null,
+        setupTags: [],
+        emotionTags: [],
+        mistakes: [],
+        stopPrice: null,
+        targetPrice: null,
+        screenshots: [],
+        ...patch,
+      } as AnyPatch);
+      return toJournalEntry(await manager.save(created));
+    },
+    delete: async (userId, positionId) => void (await manager.delete(TradeJournalEntryEntity, { userId, positionId })),
+  };
+
+  const tradingSettings: TradingSettingsRepository = {
+    find: async (userId) => {
+      const row = await manager.findOneBy(TradingSettingsEntity, { userId });
+      return row ? toTradingSettings(row) : null;
+    },
+    save: async (userId, patch) => {
+      const existing = await manager.findOneBy(TradingSettingsEntity, { userId });
+      const merged = { userId, ...DEFAULT_TRADING_SETTINGS, ...(existing ? toTradingSettings(existing) : {}), ...patch };
+      const { updatedAt: _ignored, ...values } = merged as Record<string, unknown>;
+      await manager.upsert(TradingSettingsEntity, values as AnyPatch, ['userId']);
+      return toTradingSettings((await manager.findOneByOrFail(TradingSettingsEntity, { userId })) as TradingSettingsEntity);
+    },
+  };
+
+  const tradeImports: TradeImportRepository = {
+    listBatches: async (userId) => (await manager.find(TradeImportBatchEntity, { where: { userId }, order: { createdAt: 'DESC' } })).map(toTradeImportBatch),
+    findBatch: async (userId, id) => {
+      const row = await manager.findOneBy(TradeImportBatchEntity, { id, userId });
+      return row ? toTradeImportBatch(row) : null;
+    },
+    createBatch: async (input) => toTradeImportBatch(await manager.save(manager.create(TradeImportBatchEntity, input as AnyPatch))),
+    updateBatch: async (userId, id, patch) => toTradeImportBatch(await updateOwned(TradeImportBatchEntity, userId, id, patch)),
+    deleteBatch: async (userId, id) => void (await manager.delete(TradeImportBatchEntity, { id, userId })),
+    insertRows: async (rows) => {
+      for (let i = 0; i < rows.length; i += 500) await manager.insert(TradeImportRowEntity, rows.slice(i, i + 500) as AnyPatch);
+    },
+    findRows: async (userId, batchId) =>
+      (await manager.find(TradeImportRowEntity, { where: { userId, batchId }, order: { rowNumber: 'ASC' } })).map(toTradeImportRow),
+    updateRow: async (userId, id, patch) => toTradeImportRow(await updateOwned(TradeImportRowEntity, userId, id, patch)),
+  };
+
   return {
     accounts,
     categories,
@@ -623,6 +749,10 @@ export function createRepositories(manager: EntityManager): Repositories {
     holdingTransactions,
     portfolioData,
     portfolioImports,
+    trades,
+    tradingJournal,
+    tradingSettings,
+    tradeImports,
   };
 }
 
