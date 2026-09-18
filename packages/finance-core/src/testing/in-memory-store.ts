@@ -5,6 +5,14 @@ import { parseMoney, formatMoney } from '../money';
 import { descriptionPatternKey } from '../rules/categorizer';
 import type { RuleRecord } from '../rules/types';
 import type { BudgetRecord, GoalRecord, RecurringSeriesRecord, ScenarioRecord } from '../records';
+import type {
+  BenchmarkPointRecord,
+  FundHoldingRecord,
+  HoldingRecord,
+  HoldingTransactionRecord,
+  PortfolioImportBatchRecord,
+  PortfolioImportRowRecord,
+} from '../portfolio/types';
 import type { FinanceStore, Repositories } from '../ports';
 import type {
   AccountRecord,
@@ -30,6 +38,12 @@ interface State {
   budgets: Map<string, BudgetRecord>;
   goals: Map<string, GoalRecord>;
   scenarios: Map<string, ScenarioRecord>;
+  holdings: Map<string, HoldingRecord>;
+  holdingTransactions: Map<string, HoldingTransactionRecord>;
+  benchmarkPoints: BenchmarkPointRecord[];
+  fundHoldings: Map<string, FundHoldingRecord>;
+  portfolioBatches: Map<string, PortfolioImportBatchRecord>;
+  portfolioRows: Map<string, PortfolioImportRowRecord>;
 }
 
 const now = () => new Date('2026-01-01T00:00:00Z');
@@ -54,6 +68,12 @@ export class InMemoryStore implements FinanceStore {
     budgets: new Map(),
     goals: new Map(),
     scenarios: new Map(),
+    holdings: new Map(),
+    holdingTransactions: new Map(),
+    benchmarkPoints: [],
+    fundHoldings: new Map(),
+    portfolioBatches: new Map(),
+    portfolioRows: new Map(),
   };
 
   accounts: Repositories['accounts'] = {
@@ -332,6 +352,115 @@ export class InMemoryStore implements FinanceStore {
     delete: async (userId, id) => void deleteOwned(this.state.scenarios, userId, id),
   };
 
+  holdings: Repositories['holdings'] = {
+    findAll: async (userId) =>
+      [...this.state.holdings.values()].filter((h) => h.userId === userId).sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id)),
+    findById: async (userId, id) => owned(this.state.holdings.get(id), userId),
+    findByIdentity: async (userId, identity) => {
+      const mine = [...this.state.holdings.values()].filter((h) => h.userId === userId);
+      const sameFolio = (h: HoldingRecord) => !identity.folio || !h.folio || h.folio === identity.folio;
+      return (
+        (identity.isin ? mine.find((h) => h.isin === identity.isin && sameFolio(h)) : undefined) ??
+        (identity.schemeCode ? mine.find((h) => h.schemeCode === identity.schemeCode && sameFolio(h)) : undefined) ??
+        (identity.symbol ? mine.find((h) => h.symbol === identity.symbol) : undefined) ??
+        (identity.name ? mine.find((h) => h.name.toLowerCase() === identity.name!.toLowerCase() && sameFolio(h)) : undefined) ??
+        null
+      );
+    },
+    create: async (input) => insert(this.state.holdings, { ...input, id: randomUUID(), createdAt: now(), updatedAt: now() }),
+    update: async (userId, id, patch) => patchOwned(this.state.holdings, userId, id, patch),
+    delete: async (userId, id) => void deleteOwned(this.state.holdings, userId, id),
+    setPricesBySchemeCode: async (userId, prices) => {
+      const byCode = new Map(prices.map((p) => [p.schemeCode, p]));
+      let updated = 0;
+      for (const holding of this.state.holdings.values()) {
+        if (holding.userId !== userId || !holding.schemeCode) continue;
+        const price = byCode.get(holding.schemeCode);
+        if (!price) continue;
+        this.state.holdings.set(holding.id, { ...holding, latestPrice: price.price, latestPriceDate: price.date, updatedAt: now() });
+        updated++;
+      }
+      return updated;
+    },
+  };
+
+  holdingTransactions: Repositories['holdingTransactions'] = {
+    findAll: async (userId) => [...this.state.holdingTransactions.values()].filter((t) => t.userId === userId).sort(byDateThenId),
+    findByHolding: async (userId, holdingId) =>
+      [...this.state.holdingTransactions.values()].filter((t) => t.userId === userId && t.holdingId === holdingId).sort(byDateThenId),
+    findById: async (userId, id) => owned(this.state.holdingTransactions.get(id), userId),
+    create: async (input) => insert(this.state.holdingTransactions, { ...input, id: randomUUID(), createdAt: now(), updatedAt: now() }),
+    createMany: async (inputs) => {
+      for (const input of inputs) insert(this.state.holdingTransactions, { ...input, id: randomUUID(), createdAt: now(), updatedAt: now() });
+      return inputs.length;
+    },
+    update: async (userId, id, patch) => patchOwned(this.state.holdingTransactions, userId, id, patch),
+    delete: async (userId, id) => void deleteOwned(this.state.holdingTransactions, userId, id),
+    deleteByHolding: async (userId, holdingId) => {
+      for (const [id, row] of this.state.holdingTransactions) {
+        if (row.userId === userId && row.holdingId === holdingId) this.state.holdingTransactions.delete(id);
+      }
+    },
+    findExistingRefs: async (userId, refs) => {
+      const wanted = new Set(refs);
+      return [...this.state.holdingTransactions.values()]
+        .filter((t) => t.userId === userId && t.externalRef !== null && wanted.has(t.externalRef))
+        .map((t) => t.externalRef as string);
+    },
+  };
+
+  portfolioData: Repositories['portfolioData'] = {
+    listBenchmarkSeries: async (userId) => {
+      const groups = new Map<string, BenchmarkPointRecord[]>();
+      for (const point of this.state.benchmarkPoints) {
+        if (point.userId !== userId) continue;
+        const list = groups.get(point.series);
+        if (list) list.push(point);
+        else groups.set(point.series, [point]);
+      }
+      return [...groups.entries()].map(([series, points]) => {
+        const dates = points.map((p) => p.date).sort();
+        return { series, points: points.length, from: dates[0], to: dates[dates.length - 1] };
+      });
+    },
+    findBenchmarkPoints: async (userId, series) =>
+      this.state.benchmarkPoints.filter((p) => p.userId === userId && p.series === series).sort((a, b) => a.date.localeCompare(b.date)),
+    replaceBenchmark: async (userId, series, points) => {
+      this.state.benchmarkPoints = this.state.benchmarkPoints.filter((p) => !(p.userId === userId && p.series === series));
+      for (const point of points) this.state.benchmarkPoints.push({ userId, series, date: point.date, value: point.value });
+      return points.length;
+    },
+    findFundHoldings: async (userId, holdingId) =>
+      [...this.state.fundHoldings.values()].filter((r) => r.userId === userId && r.holdingId === holdingId),
+    replaceFundHoldings: async (userId, holdingId, rows) => {
+      for (const [id, row] of this.state.fundHoldings) {
+        if (row.userId === userId && row.holdingId === holdingId) this.state.fundHoldings.delete(id);
+      }
+      for (const row of rows) insert(this.state.fundHoldings, { ...row, id: randomUUID() });
+      return rows.length;
+    },
+  };
+
+  portfolioImports: Repositories['portfolioImports'] = {
+    listBatches: async (userId) =>
+      [...this.state.portfolioBatches.values()].filter((b) => b.userId === userId).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
+    findBatch: async (userId, id) => owned(this.state.portfolioBatches.get(id), userId),
+    createBatch: async (input) => insert(this.state.portfolioBatches, { ...input, id: randomUUID(), createdAt: now(), updatedAt: now() }),
+    updateBatch: async (userId, id, patch) => patchOwned(this.state.portfolioBatches, userId, id, patch),
+    deleteBatch: async (userId, id) => {
+      for (const [rowId, row] of this.state.portfolioRows) {
+        if (row.userId === userId && row.batchId === id) this.state.portfolioRows.delete(rowId);
+      }
+      deleteOwned(this.state.portfolioBatches, userId, id);
+    },
+    insertRows: async (rows) => {
+      for (const row of rows) insert(this.state.portfolioRows, { ...row, id: randomUUID(), createdAt: now() });
+    },
+    findRows: async (userId, batchId) =>
+      [...this.state.portfolioRows.values()].filter((r) => r.userId === userId && r.batchId === batchId).sort((a, b) => a.rowNumber - b.rowNumber),
+    updateRow: async (userId, id, patch) => patchOwned(this.state.portfolioRows, userId, id, patch),
+  };
+
   private inPeriod(userId: string, filter: { from: string; to: string; currency: string; accountId?: string }): TransactionRecord[] {
     return [...this.state.transactions.values()].filter(
       (t) =>
@@ -376,6 +505,9 @@ export class InMemoryStore implements FinanceStore {
     return this.state.transactions.size;
   }
 }
+
+const byDateThenId = (a: HoldingTransactionRecord, b: HoldingTransactionRecord) =>
+  a.date.localeCompare(b.date) || a.id.localeCompare(b.id);
 
 function insert<T extends { id: string }>(map: Map<string, T>, record: T): T {
   map.set(record.id, record);

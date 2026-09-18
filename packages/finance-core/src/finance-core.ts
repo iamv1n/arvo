@@ -7,6 +7,9 @@ import { BudgetService } from './planning/budget.service';
 import { GoalService } from './planning/goal.service';
 import { SavingsService } from './planning/savings.service';
 import { ScenarioService } from './planning/scenario.service';
+import { HoldingService } from './portfolio/holding.service';
+import { PortfolioService } from './portfolio/portfolio.service';
+import { PortfolioImportService, type PortfolioImportDependencies } from './portfolio/import.service';
 import { RuleService } from './rules/rule.service';
 import { AnalyticsService } from './services/analytics.service';
 import { AccountService } from './services/account.service';
@@ -34,9 +37,12 @@ export class FinanceCore {
   readonly goals: GoalService;
   readonly savings: SavingsService;
   readonly scenarios: ScenarioService;
+  readonly holdings: HoldingService;
+  readonly portfolio: PortfolioService;
+  private readonly portfolioImportService?: PortfolioImportService;
   private readonly importService?: ImportService;
 
-  constructor(store: FinanceStore, deps?: { imports?: ImportDependencies }) {
+  constructor(store: FinanceStore, deps?: { imports?: ImportDependencies; portfolioImports?: PortfolioImportDependencies }) {
     this.accounts = new AccountService(store);
     this.analytics = new AnalyticsService(store);
     this.insights = new InsightsService(store);
@@ -51,12 +57,21 @@ export class FinanceCore {
     this.goals = new GoalService(store);
     this.savings = new SavingsService(store);
     this.scenarios = new ScenarioService(store);
+    this.holdings = new HoldingService(store);
+    this.portfolio = new PortfolioService(store);
     if (deps?.imports) this.importService = new ImportService(store, deps.imports);
+    if (deps?.portfolioImports) this.portfolioImportService = new PortfolioImportService(store, deps.portfolioImports);
   }
 
   /** Statement imports; available when a parser and file store are provided. */
   get imports(): ImportService {
     if (!this.importService) throw new Error('FinanceCore was created without import dependencies');
     return this.importService;
+  }
+
+  /** Portfolio statement imports (CAS PDF, broker CSV, NAV and index files). */
+  get portfolioImports(): PortfolioImportService {
+    if (!this.portfolioImportService) throw new Error('FinanceCore was created without portfolio import dependencies');
+    return this.portfolioImportService;
   }
 }

@@ -33,6 +33,12 @@ import type {
 import type { TransactionType } from '@arvo/types';
 import type { ImportRepository } from './imports/types';
 import type { RuleRepository } from './rules/types';
+import type {
+  HoldingRepository,
+  HoldingTransactionRepository,
+  PortfolioDataRepository,
+  PortfolioImportRepository,
+} from './portfolio/types';
 
 /*
  * Persistence ports implemented by @arvo/database. Every user-owned lookup takes the
@@ -162,6 +168,10 @@ export interface Repositories {
   budgets: BudgetRepository;
   goals: GoalRepository;
   scenarios: ScenarioRepository;
+  holdings: HoldingRepository;
+  holdingTransactions: HoldingTransactionRepository;
+  portfolioData: PortfolioDataRepository;
+  portfolioImports: PortfolioImportRepository;
 }
 
 /** Storage entry point: plain repositories plus an atomic unit of work. */
