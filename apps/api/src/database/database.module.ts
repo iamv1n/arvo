@@ -1,6 +1,6 @@
 import { createFinanceStore, databaseOptions } from '@arvo/database';
 import { FinanceCore } from '@arvo/finance-core';
-import { ArvoPortfolioParser, ArvoStatementParser, LocalFileStore } from '@arvo/imports';
+import { ArvoPortfolioParser, ArvoStatementParser, LocalAttachmentStore, LocalFileStore, TradeFileParser } from '@arvo/imports';
 import { resolve } from 'node:path';
 import { Global, Inject, Module, type OnApplicationShutdown } from '@nestjs/common';
 import { DataSource } from 'typeorm';
@@ -26,6 +26,9 @@ import { APP_CONFIG, type AppConfig } from '../config/app-config';
             files: new LocalFileStore(resolve(__dirname, '../../../..', config.storagePath)),
           },
           portfolioImports: { parser: new ArvoPortfolioParser() },
+          tradeImports: { parser: new TradeFileParser() },
+          // Journal screenshots sit beside the statements, under the same local root.
+          trading: { attachments: new LocalAttachmentStore(resolve(__dirname, '../../../..', config.storagePath, 'trading')) },
         }),
     },
   ],

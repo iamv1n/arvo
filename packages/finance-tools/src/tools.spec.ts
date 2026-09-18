@@ -71,7 +71,7 @@ describe('finance tools', () => {
     const bad = await runTool(findTool('finance_run_what_if')!, { core: (await fixture()).core, userId: USER_A, currency: 'INR', today: '2026-08-20' }, { adjustments: [{ type: 'income', mode: 'x', value: '1' }] });
     expect(bad.ok).toBe(false);
     expect(await call('finance_run_what_if', { adjustments: [] }, USER_B)).toMatchObject({ yearlyImpact: '0.00', baseline: { liquid: '0.00' } });
-    expect(FINANCE_TOOLS).toHaveLength(23);
+    expect(FINANCE_TOOLS).toHaveLength(25);
   });
 
   it('report the portfolio, its allocation, its returns and its capital gains for the caller only', async () => {
@@ -108,6 +108,39 @@ describe('finance tools', () => {
     expect(gains.provenance.method).toBe('FIFO lots');
 
     expect(await call('finance_get_portfolio_summary', {}, USER_B)).toMatchObject({ holdingCount: 0, currentValue: '0.00' });
+  });
+
+  it('report trading metrics and the tax worksheet for the caller only', async () => {
+    const { core, call } = await fixture();
+    const fill = (date: string, time: string, side: 'BUY' | 'SELL', price: string, userId = USER_A) =>
+      core.trading.createTrade(userId, { date, time, symbol: 'INFY', segment: 'EQUITY_INTRADAY', side, quantity: '100', price });
+    await fill('2026-06-02', '09:30', 'BUY', '1500');
+    await fill('2026-06-02', '14:30', 'SELL', '1520');
+    await fill('2026-06-03', '09:30', 'BUY', '1520');
+    await fill('2026-06-03', '14:30', 'SELL', '1500');
+    // Someone else's trades must not show up in either tool.
+    await fill('2026-06-02', '09:30', 'BUY', '1000', USER_B);
+
+    const metrics = await call('finance_get_trading_metrics', {});
+    expect(metrics).toMatchObject({ closedTrades: 2, wins: 1, losses: 1, winRate: 50 });
+    expect(metrics.bySegment[0].key).toBe('EQUITY_INTRADAY');
+    expect(metrics.holdingTime.find((row: { style: string }) => row.style === 'INTRADAY').trades).toBe(2);
+    expect(metrics.disclaimer).toContain('not investment advice');
+    expect(metrics.provenance).toMatchObject({ as_of: '2026-08-20', closed_trades: 2 });
+
+    const filtered = await call('finance_get_trading_metrics', { segment: 'INDEX_OPTIONS' });
+    expect(filtered.closedTrades).toBe(0);
+
+    const tax = await call('finance_get_trading_tax_summary', {});
+    expect(tax).toMatchObject({ financialYear: '2026-27', from: '2026-04-01', to: '2027-03-31' });
+    expect(tax.speculative.trades).toBe(2);
+    expect(tax.nonSpeculative.trades).toBe(0);
+    expect(Number(tax.speculative.turnover)).toBeGreaterThan(0);
+    expect(tax.audit.aboveThreshold).toBe(false);
+    expect(tax.disclaimer).toContain('not tax advice');
+    expect(tax.availableYears).toEqual(['2026-27']);
+
+    expect((await call('finance_get_trading_metrics', {}, USER_B)).closedTrades).toBe(0);
   });
 
   it('have unique, provider-safe names and JSON-schema-convertible inputs', () => {

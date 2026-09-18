@@ -1,4 +1,4 @@
-import { DomainError, type FinanceCore, type TransactionRecord } from '@arvo/finance-core';
+import { DomainError, TRADING_DISCLAIMER, type FinanceCore, type TransactionRecord } from '@arvo/finance-core';
 import { TransactionType } from '@arvo/types';
 import { z } from 'zod';
 
@@ -47,6 +47,13 @@ function monthEnd(day: string): string {
 
 function period(ctx: ToolContext, input: { from?: string; to?: string }): { from: string; to: string } {
   return { from: input.from ?? monthStart(ctx.today), to: input.to ?? monthEnd(ctx.today) };
+}
+
+/** The Indian financial year a date falls in, e.g. "2025-26". */
+function indianFinancialYear(day: string): string {
+  const [year, month] = day.split('-').map(Number);
+  const start = month >= 4 ? year : year - 1;
+  return `${start}-${String((start + 1) % 100).padStart(2, '0')}`;
 }
 
 /** The period of equal length immediately before [from, to]. */
@@ -576,6 +583,78 @@ export const getCapitalGains = defineTool({
   },
 });
 
+export const getTradingMetrics = defineTool({
+  name: 'finance_get_trading_metrics',
+  title: 'Get trading metrics',
+  description:
+    "Performance of the user's own closed trades, rebuilt from their imported fills by FIFO matching: net P&L after every charge, win rate, average win and loss, expectancy, profit factor, max drawdown on the realised equity curve, longest losing streak, holding-time mix and the edge broken down by segment, instrument, weekday, time of day and setup tag. Use for \"how is my trading going?\", \"what are my charges costing me?\" or \"which setup works best for me?\". Read-only analysis of past trades; never a signal or a recommendation to trade.",
+  inputSchema: z.object({
+    as_of: date.optional().describe('Compute everything for this date, YYYY-MM-DD (default today)'),
+    from: date.optional().describe('Only round trips closed on or after this date'),
+    to: date.optional().describe('Only round trips opened on or before this date'),
+    segment: z
+      .enum([
+        'EQUITY_DELIVERY',
+        'EQUITY_INTRADAY',
+        'EQUITY_FUTURES',
+        'EQUITY_OPTIONS',
+        'INDEX_FUTURES',
+        'INDEX_OPTIONS',
+        'CURRENCY_FUTURES',
+        'CURRENCY_OPTIONS',
+        'COMMODITY_FUTURES',
+        'COMMODITY_OPTIONS',
+      ])
+      .optional(),
+    underlying: z.string().max(64).optional().describe('Scrip or index, e.g. NIFTY or INFY'),
+  }),
+  async run(ctx, input) {
+    const asOf = input.as_of ?? ctx.today;
+    const metrics = await ctx.core.trading.metrics(ctx.userId, asOf, {
+      from: input.from,
+      to: input.to,
+      segment: input.segment,
+      underlying: input.underlying,
+    });
+    return {
+      ...metrics,
+      disclaimer: TRADING_DISCLAIMER,
+      provenance: {
+        as_of: asOf,
+        closed_trades: metrics.closedTrades,
+        open_trades: metrics.openTrades,
+        method: 'FIFO round trips from imported fills, charges from the statutory rate table or the broker file',
+      },
+    };
+  },
+});
+
+export const getTradingTaxSummary = defineTool({
+  name: 'finance_get_trading_tax_summary',
+  title: 'Get trading tax summary',
+  description:
+    "Indian tax worksheet for one financial year of the user's own trades: speculative business income (intraday equity), non-speculative business income (F&O, currency, commodity) and capital gains on delivery, each with turnover on the absolute-profit basis, the charges breakdown and whether the tax-audit threshold is crossed. Use for \"what is my F&O turnover?\", \"do I need an audit?\" or \"how much did charges cost me this year?\". Read-only; a worksheet built from imported data, not tax advice.",
+  inputSchema: z.object({
+    financial_year: z.string().regex(/^\d{4}-\d{2}$/, 'Use YYYY-YY, e.g. 2025-26').optional().describe('Defaults to the latest year with closed trades'),
+    as_of: date.optional(),
+  }),
+  async run(ctx, input) {
+    const asOf = input.as_of ?? ctx.today;
+    const years = await ctx.core.trading.financialYears(ctx.userId, asOf);
+    const financialYear = input.financial_year ?? years[0] ?? indianFinancialYear(asOf);
+    const summary = await ctx.core.trading.tax(ctx.userId, asOf, financialYear);
+    return {
+      ...summary,
+      availableYears: years,
+      provenance: {
+        as_of: asOf,
+        financial_year: financialYear,
+        method: 'FIFO round trips; turnover by the absolute-profit method',
+      },
+    };
+  },
+});
+
 export const FINANCE_TOOLS: FinanceTool[] = [
   getAccounts,
   getAccountBalance,
@@ -600,7 +679,11 @@ export const FINANCE_TOOLS: FinanceTool[] = [
   getPortfolioAllocation,
   getPortfolioReturns,
   getCapitalGains,
+  getTradingMetrics,
+  getTradingTaxSummary,
 ] as unknown as FinanceTool[];
+
+
 
 export class ToolInputError extends Error {
   constructor(

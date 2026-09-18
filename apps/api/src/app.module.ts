@@ -20,6 +20,7 @@ import { ImportsController } from './imports/imports.controller';
 import { BudgetsController, GoalsController } from './planning/planning.controller';
 import { PlanningController, ScenariosController } from './planning/scenarios.controller';
 import { HoldingsController, PortfolioController, PortfolioImportsController } from './portfolio/portfolio.controller';
+import { PositionsController, TradeImportsController, TradesController, TradingController } from './trading/trading.controller';
 import { RulesController } from './rules/rules.controller';
 import { MerchantsController } from './merchants/merchants.controller';
 import { TransactionsController } from './transactions/transactions.controller';
@@ -69,6 +70,10 @@ class ConfigModule {}
     HoldingsController,
     PortfolioController,
     PortfolioImportsController,
+    TradesController,
+    TradeImportsController,
+    PositionsController,
+    TradingController,
   ],
 })
 export class AppModule implements NestModule {

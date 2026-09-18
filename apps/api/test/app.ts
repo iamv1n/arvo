@@ -61,6 +61,7 @@ export async function registerUser(app: INestApplication) {
     get: (url: string) => request(server).get(url).set(auth),
     post: (url: string, body?: object) => request(server).post(url).set(auth).send(body),
     patch: (url: string, body: object) => request(server).patch(url).set(auth).send(body),
+    put: (url: string, body: object) => request(server).put(url).set(auth).send(body),
     delete: (url: string) => request(server).delete(url).set(auth),
     upload: (url: string, fields: Record<string, string>, file: { name: string; content: string | Buffer }) => {
       const req = request(server).post(url).set(auth);

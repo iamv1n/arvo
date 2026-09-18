@@ -1,6 +1,7 @@
 export * from './amounts';
 export * from './csv';
 export * from './dates';
+export * from './local-attachment-store';
 export * from './local-file-store';
 export * from './mapping';
 export * from './normalize';
