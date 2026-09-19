@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import styled from 'styled-components';
 import { drawStroke, fadeUp, growX, play, popIn, useCountUp, useInView } from './motion';
+import { AlertsEvidence, JournalEvidence, PortfolioEvidence, StrategyEvidence } from './markets-evidence';
 import { Container, fonts, SectionHeading, SectionShell } from './primitives';
 
 /*
@@ -231,7 +232,7 @@ function PortfolioSheet({ on }: { on: boolean }) {
   return (
     <Sheet
       $on={on}
-      aria-label="Illustration: a portfolio sheet. Allocation runs 58% equity, 22% debt, 9% gold and 11% cash. XIRR reads 14.2% after costs, realised gains split into ₹18,400 short-term and ₹1,04,200 long-term, and equity sits 6.4 percentage points above its target band."
+      aria-label="Illustration: a portfolio sheet. Allocation runs 58% equity, 22% debt, 9% gold and 11% cash. XIRR reads 14.2% after costs, realised gains split into ₹18,400 short-term and ₹1,04,200 long-term, and equity sits 3 percentage points above its 55% target, ₹55,300 to trim."
     >
       <div className="top" aria-hidden>
         <span>Folio · all accounts</span>
@@ -265,7 +266,7 @@ function PortfolioSheet({ on }: { on: boolean }) {
       </Figures>
       <Drift $on={on} aria-hidden>
         <span>Equity vs target band</span>
-        <b>+6.4 pts · ₹42,000 to trim</b>
+        <b>+3.0 pts · ₹55,300 to trim</b>
       </Drift>
       <figcaption>computed from your own imports</figcaption>
     </Sheet>
@@ -297,6 +298,7 @@ export function PortfolioSection() {
             />
             <PortfolioSheet on={on} />
           </Split>
+          <PortfolioEvidence />
           <EducationalNote>
             Allocation bands and rebalancing amounts are arithmetic on targets you set yourself, not
             a suggestion to buy or sell anything.
@@ -471,6 +473,7 @@ export function JournalSection() {
             />
             <ContractNote on={on} />
           </Split>
+          <JournalEvidence />
           <EducationalNote>
             Charge and tax figures are computed for your own record-keeping. They are not tax advice
             or a filing service — check them with a qualified professional before you file.
@@ -628,6 +631,7 @@ export function StrategyLabSection() {
             />
             <StrategySheet on={on} />
           </Split>
+          <StrategyEvidence />
           <EducationalNote>
             Payoffs, Greeks and backtests are illustrations built on stated assumptions, and past
             results say nothing about future ones. Nothing here is a recommendation to enter a
@@ -827,6 +831,7 @@ export function AlertsSection() {
             />
             <AlertCard on={on} />
           </Split>
+          <AlertsEvidence />
           <EducationalNote>
             Alerts report conditions you defined. They are notifications about your own watchlist,
             not signals, tips or a recommendation to act.
