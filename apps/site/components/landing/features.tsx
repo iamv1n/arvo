@@ -4,6 +4,7 @@ import { useState, type ReactNode } from 'react';
 import styled, { css, keyframes, useTheme } from 'styled-components';
 import { AnalyticsShowcase } from './analytics-showcase';
 import { drawStroke, fadeIn, fadeUp, formatINR, growX, play, popIn, useCountUp, useInView } from './motion';
+import { CreepEvidence, PacingEvidence, SubscriptionEvidence } from './money-evidence';
 import { Container, fonts, Pill, Reveal, SectionHeading, SectionShell } from './primitives';
 
 /*
@@ -823,6 +824,12 @@ export function Features() {
         <div style={{ height: 112 }} />
 
         <TransfersFeature />
+        <CreepEvidence />
+        <SubscriptionEvidence />
+        <PacingEvidence />
+
+        <div style={{ height: 112 }} />
+
         <ScenarioFeature />
         <AskFeature />
       </Container>

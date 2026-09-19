@@ -1,6 +1,7 @@
 'use client';
 
 import styled, { css } from 'styled-components';
+import { ImportEvidence } from './money-evidence';
 import { fadeIn, fadeUp, growX, growY, play, popIn, useInView } from './motion';
 import { Container, fonts, SectionHeading, SectionShell } from './primitives';
 
@@ -373,6 +374,7 @@ export function HowItWorks() {
             );
           })}
         </Strip>
+        <ImportEvidence />
       </Container>
     </SectionShell>
   );

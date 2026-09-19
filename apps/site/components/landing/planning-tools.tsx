@@ -14,6 +14,7 @@ import {
   purchaseExample,
 } from '../../lib/finance-examples';
 import { drawStroke, fadeIn, fadeUp, formatINR, growX, growY, play, useInView } from './motion';
+import { GoalsEvidence, MoneyTally, RunwayEvidence, SavingsEvidence } from './money-evidence';
 import { Container, fonts, Pill, Reveal, SectionHeading, SectionShell } from './primitives';
 
 /*
@@ -1071,6 +1072,10 @@ export function PlanningToolsSection() {
         <Reveal>
           <ToolTabs />
         </Reveal>
+        <GoalsEvidence />
+        <SavingsEvidence />
+        <RunwayEvidence />
+        <MoneyTally />
       </Container>
     </SectionShell>
   );
