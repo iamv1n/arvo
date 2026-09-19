@@ -12,7 +12,7 @@ import { Hero } from './hero';
 import { McpSection } from './mcp-switchboard';
 import { PrivacySection } from './mcp-privacy';
 import { drawStroke, play, useInView } from './motion';
-import { Body, Container, fonts, Reveal, SectionHeading, SectionShell } from './primitives';
+import { Body, Container, fonts, Reveal, rhythm, SectionHeading, SectionShell } from './primitives';
 import { ProductsSection } from './products-section';
 
 export const LandingGlobals = createGlobalStyle`
@@ -486,11 +486,11 @@ export function Nav({ base = '' }: { base?: string }) {
 const Band = styled.section`
   background: ${({ theme }) => (theme.mode === 'dark' ? theme.colors.bgSurfaceRaised : theme.colors.textPrimary)};
   color: ${({ theme }) => (theme.mode === 'dark' ? theme.colors.textPrimary : theme.colors.bgCanvas)};
-  padding: ${({ theme }) => theme.space[16]}px 0;
+  padding: ${rhythm.section.sm}px 0;
   border-top: 1px solid ${({ theme }) => theme.colors.border};
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
-    padding: 96px 0;
+    padding: ${rhythm.section.lg}px 0;
   }
 `;
 
@@ -791,7 +791,10 @@ export function Faq() {
 /* ---------- Closing + footer ---------- */
 
 const Closing = styled.section<{ $on: boolean }>`
-  padding: ${({ theme }) => theme.space[10]}px 0 72px;
+  padding: ${rhythm.section.sm}px 0;
+  @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
+    padding: ${rhythm.section.lg}px 0;
+  }
   & h2 {
     margin: 0;
     max-width: 16ch;

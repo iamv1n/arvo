@@ -25,7 +25,7 @@ const Grid = styled.div`
 const Panel = styled.div<{ $on: boolean; $d: number }>`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.space[4]}px;
+  gap: ${({ theme }) => theme.space[3]}px;
   min-width: 0;
   padding: ${({ theme }) => theme.space[5]}px 0;
   border-top: 1px solid ${({ theme }) => theme.colors.border};
@@ -33,8 +33,8 @@ const Panel = styled.div<{ $on: boolean; $d: number }>`
   ${({ $on, $d }) => play($on, $d, '700ms')}
   @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
     border-top: none;
-    padding: ${({ theme }) => theme.space[8]}px ${({ theme }) => theme.space[8]}px
-      ${({ theme }) => theme.space[6]}px;
+    padding: ${({ theme }) => theme.space[6]}px ${({ theme }) => theme.space[8]}px
+      ${({ theme }) => theme.space[4]}px;
     border-left: 1px solid ${({ theme }) => theme.colors.border};
     &:first-child {
       padding-left: 0;
@@ -122,7 +122,7 @@ const Panel = styled.div<{ $on: boolean; $d: number }>`
 `;
 
 const Stage = styled.div`
-  height: 150px;
+  height: 132px;
   padding: 12px 14px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 6px;

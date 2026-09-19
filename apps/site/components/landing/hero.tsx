@@ -62,12 +62,13 @@ const HeroSection = styled.section`
 `;
 
 const Stick = styled.div`
-  padding: ${({ theme }) => theme.space[10]}px 0 ${({ theme }) => theme.space[12]}px;
+  padding: ${({ theme }) => theme.space[8]}px 0 ${({ theme }) => theme.space[10]}px;
   @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
-    min-height: max(660px, calc(100vh - 56px));
+    /* One screen, not much more: the sheet and the copy under it share the viewport. */
+    min-height: min(720px, calc(100svh - 56px));
     display: flex;
     align-items: center;
-    padding: 24px 0;
+    padding: ${({ theme }) => theme.space[6]}px 0 ${({ theme }) => theme.space[8]}px;
   }
 `;
 
@@ -79,7 +80,7 @@ const Center = styled(Container)`
 `;
 
 const H1 = styled.h1`
-  margin: 0 0 ${({ theme }) => theme.space[3]}px;
+  margin: 0 0 ${({ theme }) => theme.space[2]}px;
   max-width: 21ch;
   font-family: ${fonts.serif};
   font-weight: 450;
@@ -95,7 +96,7 @@ const H1 = styled.h1`
 `;
 
 const Kicker = styled.p`
-  margin: 0 0 ${({ theme }) => theme.space[8]}px;
+  margin: 0 0 ${({ theme }) => theme.space[5]}px;
   font-family: ${fonts.hand};
   font-size: 23px;
   line-height: 1.1;
@@ -104,10 +105,10 @@ const Kicker = styled.p`
 `;
 
 const Below = styled.div`
-  margin-top: ${({ theme }) => theme.space[8]}px;
+  margin-top: ${({ theme }) => theme.space[6]}px;
   display: grid;
   justify-items: center;
-  gap: 14px;
+  gap: 12px;
   & p {
     margin: 0;
     max-width: 58ch;
@@ -248,7 +249,9 @@ const Rule = styled.span<{ $on: boolean }>`
 
 const Col = styled.div<{ $on: boolean; $d: number }>`
   min-width: 0;
-  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  padding-top: 10px;
   animation-name: ${fadeUp};
   ${({ $on, $d }) => play($on, $d, '560ms')}
 `;
@@ -322,7 +325,9 @@ const Total = styled.p`
 `;
 
 const ChartSlot = styled.div`
-  margin-top: 12px;
+  /* Bottom-aligns the two charts, so the shorter one does not leave a hole in its column. */
+  margin-top: auto;
+  padding-top: 12px;
   & .note {
     margin: 6px 0 0;
     font-family: ${fonts.hand};
@@ -336,7 +341,7 @@ const ChartSlot = styled.div`
 
 const PaceTrack = styled.div`
   position: relative;
-  height: 14px;
+  height: 18px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   background: ${({ theme }) => theme.colors.bgMuted};
 `;
@@ -356,7 +361,7 @@ const PaceLegend = styled.p`
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  margin: 16px 0 0;
+  margin: 6px 0 0;
   font-family: ${fonts.mono};
   font-size: 10px;
   letter-spacing: 0.05em;
@@ -376,13 +381,13 @@ function EquityCurve({ on }: { on: boolean }) {
   const theme = useTheme();
   const pts = [58, 61, 57, 66, 72, 69, 78, 84, 81, 92, 99, 108];
   const w = 300;
-  const h = 78;
+  const h = 62;
   const x = (i: number) => 2 + (i * (w - 4)) / (pts.length - 1);
-  const y = (v: number) => h - 10 - ((v - 52) / 60) * (h - 20);
+  const y = (v: number) => h - 8 - ((v - 52) / 60) * (h - 14);
   const d = pts.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(' ');
   return (
     <svg viewBox={`0 0 ${w} ${h}`} width="100%" style={{ display: 'block' }} aria-hidden focusable="false">
-      <line x1={0} x2={w} y1={h - 6} y2={h - 6} stroke={theme.colors.borderSubtle} />
+      <line x1={0} x2={w} y1={h - 4} y2={h - 4} stroke={theme.colors.borderSubtle} />
       <Draw $on={on} $d={120} d={d} pathLength={1} fill="none" stroke={theme.colors.info} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
@@ -393,8 +398,8 @@ function EquityCurve({ on }: { on: boolean }) {
 const Join = styled.svg<{ $on: boolean }>`
   display: block;
   width: 100%;
-  height: 38px;
-  margin-top: 6px;
+  height: 26px;
+  margin-top: 2px;
   & path {
     fill: none;
     stroke-linecap: round;
@@ -529,9 +534,9 @@ function Sheet({ stage }: { stage: number }) {
         </Col>
       </Split>
 
-      <Join $on={at(STAGE.converge)} viewBox="0 0 600 38" preserveAspectRatio="none" aria-hidden focusable="false">
-        <path d="M150 0 C 150 26, 300 12, 300 36" pathLength={1} stroke={theme.colors.brand} strokeWidth={1.6} vectorEffect="non-scaling-stroke" />
-        <path d="M450 0 C 450 26, 300 12, 300 36" pathLength={1} stroke={theme.colors.info} strokeWidth={1.6} vectorEffect="non-scaling-stroke" />
+      <Join $on={at(STAGE.converge)} viewBox="0 0 600 26" preserveAspectRatio="none" aria-hidden focusable="false">
+        <path d="M150 0 C 150 18, 300 8, 300 25" pathLength={1} stroke={theme.colors.brand} strokeWidth={1.6} vectorEffect="non-scaling-stroke" />
+        <path d="M450 0 C 450 18, 300 8, 300 25" pathLength={1} stroke={theme.colors.info} strokeWidth={1.6} vectorEffect="non-scaling-stroke" />
       </Join>
 
       <Tally $on={at(STAGE.tally)} aria-hidden>

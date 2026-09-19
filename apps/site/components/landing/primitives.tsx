@@ -21,14 +21,25 @@ export const Container = styled.div`
   }
 `;
 
+/**
+ * One spacing scale for the whole site, so nothing is invented per section.
+ * `section` is the padding inside a SectionShell, `head` the gap from a heading to its content,
+ * `block` the gap between stacked blocks (evidence spreads, article blocks) inside a section.
+ */
+export const rhythm = {
+  section: { sm: 56, lg: 72 },
+  head: { sm: 24, lg: 32 },
+  block: { sm: 32, lg: 40 },
+} as const;
+
 export const SectionShell = styled.section<{ $muted?: boolean }>`
-  padding: ${({ theme }) => theme.space[16]}px 0;
+  padding: ${rhythm.section.sm}px 0;
   background: ${({ theme, $muted }) => ($muted ? theme.colors.bgSurface : 'transparent')};
   border-top: 1px solid ${({ theme, $muted }) => ($muted ? theme.colors.borderSubtle : 'transparent')};
   border-bottom: 1px solid ${({ theme, $muted }) => ($muted ? theme.colors.borderSubtle : 'transparent')};
   scroll-margin-top: 64px;
   @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
-    padding: 96px 0;
+    padding: ${rhythm.section.lg}px 0;
   }
 `;
 
@@ -69,7 +80,7 @@ export const H3 = styled.h3`
 `;
 
 export const Lead = styled.p`
-  margin: ${({ theme }) => theme.space[4]}px 0 0;
+  margin: ${({ theme }) => theme.space[3]}px 0 0;
   color: ${({ theme }) => theme.colors.textSecondary};
   font-size: ${({ theme }) => theme.typography.fontSize.lg}px;
   line-height: 1.65;
@@ -119,7 +130,10 @@ export function Reveal({ children, delay = 0, className }: { children: ReactNode
 }
 
 const HeadWrap = styled.div<{ $center?: boolean; $compact?: boolean; $split?: boolean }>`
-  margin-bottom: ${({ theme, $compact }) => ($compact ? theme.space[6] : theme.space[12])}px;
+  margin-bottom: ${rhythm.head.sm}px;
+  @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
+    margin-bottom: ${({ $compact }) => ($compact ? rhythm.head.sm : rhythm.head.lg)}px;
+  }
   text-align: ${({ $center }) => ($center ? 'center' : 'left')};
   ${({ $center }) => ($center ? '& p:last-child { margin-left: auto; margin-right: auto; }' : '')}
   & > :last-child {
@@ -128,12 +142,12 @@ const HeadWrap = styled.div<{ $center?: boolean; $compact?: boolean; $split?: bo
   ${({ $split, theme }) =>
     $split
       ? `
-    padding-top: ${theme.space[5]}px;
+    padding-top: ${theme.space[4]}px;
     border-top: 1px solid ${theme.colors.textPrimary};
     @media (min-width: ${theme.breakpoints.lg}px) {
       display: grid;
       grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-      gap: ${theme.space[16]}px;
+      gap: ${theme.space[10]}px;
       align-items: end;
       & > p:last-child { margin-top: 0; }
     }
