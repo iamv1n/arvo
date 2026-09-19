@@ -1,11 +1,12 @@
 'use client';
 
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
-import { App, Button, Card, Col, DatePicker, Empty, Form, Input, Modal, Popconfirm, Progress, Row, Select, Skeleton, Tooltip, Typography } from 'antd';
+import { App, Button, Card, Col, DatePicker, Empty, Form, Input, Modal, Popconfirm, Progress, Row, Select, Skeleton, Space, Tooltip, Typography } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { useEffect, useState } from 'react';
 import styled, { useTheme } from 'styled-components';
 import { PageHeader } from '../../../../components/page-header';
+import { WorkspaceLink } from '../../../../components/cross-workspace-link';
 import { Eyebrow, Figure, Stamp, type StampTone } from '../../../../components/planning';
 import { StatCard } from '../../../../components/stat-card';
 import { api, errorMessage } from '../../../../lib/api';
@@ -72,9 +73,15 @@ export default function GoalsPage() {
         title="Goals"
         subtitle="What you are saving for, and what it takes each month to get there on time."
         extra={
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setEditing('new')}>
-            New goal
-          </Button>
+          <Space wrap>
+            {/* Goals are funded from what you own; the holdings themselves live in Markets. */}
+            <WorkspaceLink to="markets" href="/portfolio">
+              Holdings backing these goals
+            </WorkspaceLink>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => setEditing('new')}>
+              New goal
+            </Button>
+          </Space>
         }
       />
 

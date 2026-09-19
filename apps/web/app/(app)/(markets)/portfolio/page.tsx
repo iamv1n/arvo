@@ -13,6 +13,7 @@ import { PortfolioImportWizard } from '../../../../components/portfolio/import-w
 import { PortfolioOverview } from '../../../../components/portfolio/overview';
 import { RebalanceTool } from '../../../../components/portfolio/rebalance-tool';
 import { PageHeader } from '../../../../components/page-header';
+import { WorkspaceLink } from '../../../../components/cross-workspace-link';
 
 /**
  * Everything you own, valued on one date. The date is the page's only global control: every
@@ -30,6 +31,10 @@ export default function PortfolioPage() {
         subtitle="What you own, what it has returned, and what it would cost to change it. Analysis and simulation only — never a recommendation to trade."
         extra={
           <Space wrap>
+            {/* What this portfolio is ultimately for is tracked on the Money side. */}
+            <WorkspaceLink to="money" href="/goals">
+              Goals this funds
+            </WorkspaceLink>
             <DatePicker value={asOf} onChange={(value) => setAsOf(value ?? dayjs())} allowClear={false} maxDate={dayjs()} />
             <Button type="primary" icon={<PlusOutlined />} onClick={() => setAdding(true)}>
               Add holding

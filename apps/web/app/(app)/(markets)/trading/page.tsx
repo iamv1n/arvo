@@ -6,6 +6,7 @@ import dayjs, { type Dayjs } from 'dayjs';
 import { useState } from 'react';
 import { CoolOffBanner } from '../../../../components/cool-off-banner';
 import { PageHeader } from '../../../../components/page-header';
+import { WorkspaceLink } from '../../../../components/cross-workspace-link';
 import { BehaviourView } from '../../../../components/trading/behaviour';
 import { CostsView } from '../../../../components/trading/costs';
 import { TradeImportWizard } from '../../../../components/trading/import-wizard';
@@ -39,6 +40,10 @@ export default function TradingPage() {
         subtitle="What your trades actually made once brokerage, STT, exchange charges, stamp duty and GST came out. Analysis and education only — never a recommendation to trade."
         extra={
           <Space wrap>
+            {/* Brokerage and charges land in the bank ledger, which lives in Money. */}
+            <WorkspaceLink to="money" href="/transactions?search=brokerage">
+              Charges in your ledger
+            </WorkspaceLink>
             <Select
               allowClear
               value={segment}

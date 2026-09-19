@@ -1,10 +1,11 @@
 'use client';
 
-import { Col, Grid, Row } from 'antd';
+import { Col, Grid, Row, Space } from 'antd';
 import { AdvisorChat } from '../../../../components/advisor/chat';
 import { ProviderNotice } from '../../../../components/advisor/ai-notice';
 import { BriefingCard } from '../../../../components/advisor/briefing-card';
 import { SuggestionsInbox } from '../../../../components/advisor/suggestions-inbox';
+import { WorkspaceLink } from '../../../../components/cross-workspace-link';
 import { PageHeader } from '../../../../components/page-header';
 import { Stamp } from '../../../../components/planning';
 import { useAdvisorStatus } from '../../../../lib/advisor';
@@ -29,7 +30,15 @@ export default function AdvisorPage() {
       <PageHeader
         title="Advisor"
         subtitle="Ask about your money. Numbers come from your ledger, drafts wait for your approval."
-        extra={data && <Stamp $tone={data.enabled ? 'positive' : 'neutral'}>{data.enabled ? `${data.providerLabel} · ${data.model}` : 'AI off'}</Stamp>}
+        extra={
+          <Space wrap>
+            {/* The advisor reads both products, so it links out to the other one explicitly. */}
+            <WorkspaceLink to="markets" href="/portfolio">
+              Your holdings
+            </WorkspaceLink>
+            {data && <Stamp $tone={data.enabled ? 'positive' : 'neutral'}>{data.enabled ? `${data.providerLabel} · ${data.model}` : 'AI off'}</Stamp>}
+          </Space>
+        }
       />
       <ProviderNotice status={data} />
       <Row gutter={[16, 16]} align="stretch">
