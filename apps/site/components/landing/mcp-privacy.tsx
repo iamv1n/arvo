@@ -323,7 +323,7 @@ export function PrivacySection() {
         <SectionHeading
           id="privacy-title"
           eyebrow="Local-first"
-          index="06"
+          index="03"
           title="Your finances never leave your machine unless you say so"
         />
         <div ref={ref}>

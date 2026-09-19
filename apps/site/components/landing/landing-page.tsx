@@ -6,16 +6,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import styled, { createGlobalStyle, keyframes } from 'styled-components';
 import { OpenAppLink } from '../beta-access';
 import { CONTACT_EMAIL } from '../../lib/legal';
+import { PRODUCTS } from '../../lib/products';
 import { ThemeToggle } from '../theme-toggle';
-import { AdvisorSection } from './advisor';
-import { Features } from './features';
 import { Hero } from './hero';
-import { HowItWorks } from './how-it-works';
 import { McpSection } from './mcp-switchboard';
 import { PrivacySection } from './mcp-privacy';
 import { drawStroke, play, useInView } from './motion';
 import { Body, Container, fonts, Reveal, SectionHeading, SectionShell } from './primitives';
-import { PlanningToolsSection } from './planning-tools';
+import { ProductsSection } from './products-section';
 
 export const LandingGlobals = createGlobalStyle`
   html { scroll-behavior: smooth; }
@@ -341,12 +339,12 @@ const Sheet = styled.div`
   }
 `;
 
-const navItems: { href: string; label: string }[] = [
-  { href: '#how-it-works', label: 'How it works' },
-  { href: '#features', label: 'Features' },
-  { href: '#planning-tools', label: 'Planning' },
-  { href: '#advisor', label: 'Advisor' },
-  { href: '#mcp', label: 'MCP' },
+/** `page: true` marks a route linked as-is; the rest are anchors on the home page. Products come
+ * first and are generated from lib/products.ts, so a new product appears in the nav on its own. */
+const navItems: { href: string; label: string; page?: boolean }[] = [
+  ...PRODUCTS.map((product) => ({ href: product.href, label: product.name, page: true })),
+  { href: '#mcp', label: 'AI assistants' },
+  { href: '#privacy', label: 'Privacy' },
   { href: '#faq', label: 'FAQ' },
 ];
 
@@ -422,7 +420,7 @@ export function Nav({ base = '' }: { base?: string }) {
         <NavLinks>
           {navItems.map((item, i) => (
             <li key={item.href}>
-              <a href={`${base}${item.href}`}>
+              <a href={item.page ? item.href : `${base}${item.href}`}>
                 <small>{String(i + 1).padStart(2, '0')}</small>
                 {item.label}
               </a>
@@ -461,7 +459,7 @@ export function Nav({ base = '' }: { base?: string }) {
           <ol>
             {navItems.map((item, i) => (
               <li key={item.href}>
-                <a href={`${base}${item.href}`} onClick={() => setOpen(false)}>
+                <a href={item.page ? item.href : `${base}${item.href}`} onClick={() => setOpen(false)}>
                   <small>{String(i + 1).padStart(2, '0')}</small>
                   {item.label}
                 </a>
@@ -539,7 +537,7 @@ const BandGrid = styled.div`
   }
 `;
 
-function PrivacyBand() {
+export function PrivacyBand() {
   return (
     <Band aria-labelledby="band-title">
       <Container>
@@ -746,7 +744,7 @@ const faqs = [
   },
 ];
 
-function Faq() {
+export function Faq() {
   return (
     <SectionShell id="faq" aria-labelledby="faq-title">
       <Container>
@@ -755,7 +753,7 @@ function Faq() {
             id="faq-title"
             compact
             eyebrow="Questions"
-            index="07"
+            index="04"
             title="Asked, and answered"
           />
           <Reveal>
@@ -852,7 +850,7 @@ const Closing = styled.section<{ $on: boolean }>`
   }
 `;
 
-function ClosingCta() {
+export function ClosingCta() {
   const [ref, on] = useInView<HTMLElement>(0.3);
   return (
     <Closing ref={ref} $on={on} aria-labelledby="cta-title">
@@ -920,10 +918,7 @@ export function LandingPage() {
       <Nav />
       <main id="main">
         <Hero />
-        <HowItWorks />
-        <Features />
-        <PlanningToolsSection />
-        <AdvisorSection />
+        <ProductsSection />
         <McpSection />
         <PrivacyBand />
         <PrivacySection />
@@ -935,10 +930,10 @@ export function LandingPage() {
   );
 }
 
-const footerLinks = [
-  { href: '#features', label: 'Features', anchor: true },
-  { href: '#planning-tools', label: 'Planning tools', anchor: true },
+const footerLinks: { href: string; label: string; anchor?: boolean }[] = [
+  ...PRODUCTS.map((product) => ({ href: product.href, label: product.name })),
   { href: '#mcp', label: 'AI assistants', anchor: true },
+  { href: '#privacy', label: 'Privacy & AI', anchor: true },
   { href: '#faq', label: 'FAQ', anchor: true },
   { href: '/privacy', label: 'Privacy' },
   { href: '/terms', label: 'Terms' },

@@ -300,7 +300,7 @@ export function McpSection() {
   return (
     <SectionShell id="mcp" aria-labelledby="mcp-title" $muted>
       <Container>
-        <SectionHeading id="mcp-title" eyebrow="MCP server" index="05" title="Connect the AI assistant you already use" />
+        <SectionHeading id="mcp-title" eyebrow="MCP server" index="02" title="Connect the AI assistant you already use" />
         <Fade $on={on} ref={ref}>
           <Board>
             <BoardBar>
