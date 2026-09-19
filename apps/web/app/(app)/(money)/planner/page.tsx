@@ -6,17 +6,17 @@ import { App, Button, Card, Checkbox, Col, DatePicker, Dropdown, Empty, Form, In
 import dayjs, { type Dayjs } from 'dayjs';
 import { useEffect, useMemo, useState } from 'react';
 import styled, { useTheme } from 'styled-components';
-import { CategorySelect } from '../../../components/category-select';
-import { PageHeader } from '../../../components/page-header';
-import { Eyebrow, Figure, SectionTitle, Stamp, type StampTone } from '../../../components/planning';
-import { ExpandableChart } from '../../../components/expandable-chart';
-import { ProjectionChart } from '../../../components/projection-chart';
-import { ResultStrip } from '../../../components/result-strip';
-import { api, errorMessage } from '../../../lib/api';
-import { useAuth } from '../../../lib/auth';
-import { keys, useScenarioComparison, useScenarios } from '../../../lib/queries';
-import type { AffordabilityResult, AffordabilityStatus, Scenario, ScenarioAdjustment, WhatIfResult } from '../../../lib/types';
-import { useMoney } from '../../../lib/use-money';
+import { CategorySelect } from '../../../../components/category-select';
+import { PageHeader } from '../../../../components/page-header';
+import { Eyebrow, Figure, SectionTitle, Stamp, type StampTone } from '../../../../components/planning';
+import { ExpandableChart } from '../../../../components/expandable-chart';
+import { ProjectionChart } from '../../../../components/projection-chart';
+import { ResultStrip } from '../../../../components/result-strip';
+import { api, errorMessage } from '../../../../lib/api';
+import { useAuth } from '../../../../lib/auth';
+import { keys, useScenarioComparison, useScenarios } from '../../../../lib/queries';
+import type { AffordabilityResult, AffordabilityStatus, Scenario, ScenarioAdjustment, WhatIfResult } from '../../../../lib/types';
+import { useMoney } from '../../../../lib/use-money';
 
 type Tab = 'afford' | 'what-if';
 

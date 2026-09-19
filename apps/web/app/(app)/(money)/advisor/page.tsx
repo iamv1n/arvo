@@ -1,13 +1,13 @@
 'use client';
 
 import { Col, Grid, Row } from 'antd';
-import { AdvisorChat } from '../../../components/advisor/chat';
-import { ProviderNotice } from '../../../components/advisor/ai-notice';
-import { BriefingCard } from '../../../components/advisor/briefing-card';
-import { SuggestionsInbox } from '../../../components/advisor/suggestions-inbox';
-import { PageHeader } from '../../../components/page-header';
-import { Stamp } from '../../../components/planning';
-import { useAdvisorStatus } from '../../../lib/advisor';
+import { AdvisorChat } from '../../../../components/advisor/chat';
+import { ProviderNotice } from '../../../../components/advisor/ai-notice';
+import { BriefingCard } from '../../../../components/advisor/briefing-card';
+import { SuggestionsInbox } from '../../../../components/advisor/suggestions-inbox';
+import { PageHeader } from '../../../../components/page-header';
+import { Stamp } from '../../../../components/planning';
+import { useAdvisorStatus } from '../../../../lib/advisor';
 
 /**
  * Fixed heights keep the chat and side panels aligned; content scrolls inside. On a phone the

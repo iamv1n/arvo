@@ -5,16 +5,16 @@ import { App, Button, Card, Col, Descriptions, Empty, Popconfirm, Row, Skeleton,
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { PageHeader } from '../../../../components/page-header';
-import { Eyebrow, Stamp } from '../../../../components/planning';
-import { HoldingFormModal, HoldingTransactionModal } from '../../../../components/portfolio/holding-form-modal';
-import { ASSET_CLASS_LABELS, KIND_LABELS, NotAdvice, ReturnPercent, TRANSACTION_LABELS } from '../../../../components/portfolio/shared';
-import { ResultStrip } from '../../../../components/result-strip';
-import { StatCard } from '../../../../components/stat-card';
-import { api, errorMessage } from '../../../../lib/api';
-import { formatDate } from '../../../../lib/format';
-import { useHolding, usePortfolioMutation } from '../../../../lib/queries';
-import { useMoney } from '../../../../lib/use-money';
+import { PageHeader } from '../../../../../components/page-header';
+import { Eyebrow, Stamp } from '../../../../../components/planning';
+import { HoldingFormModal, HoldingTransactionModal } from '../../../../../components/portfolio/holding-form-modal';
+import { ASSET_CLASS_LABELS, KIND_LABELS, NotAdvice, ReturnPercent, TRANSACTION_LABELS } from '../../../../../components/portfolio/shared';
+import { ResultStrip } from '../../../../../components/result-strip';
+import { StatCard } from '../../../../../components/stat-card';
+import { api, errorMessage } from '../../../../../lib/api';
+import { formatDate } from '../../../../../lib/format';
+import { useHolding, usePortfolioMutation } from '../../../../../lib/queries';
+import { useMoney } from '../../../../../lib/use-money';
 
 /** One holding: its position, every event, the open FIFO lots and what has been realised. */
 export default function HoldingPage() {

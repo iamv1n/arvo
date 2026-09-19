@@ -10,6 +10,7 @@ import { PreferencesProvider } from '../lib/preferences';
 import { createGlobalStyle, ThemeProvider } from 'styled-components';
 import { StyledComponentsRegistry } from '../lib/styled-registry';
 import { ThemeModeProvider, useThemeMode } from '../lib/theme-mode';
+import { WorkspaceProvider, useWorkspace } from '../lib/workspace';
 
 const GlobalStyle = createGlobalStyle`
   body {
@@ -119,6 +120,47 @@ const GlobalStyle = createGlobalStyle`
     max-height: calc(100vh - 180px);
   }
 
+  /* ---- Markets workspace: a denser, more instrument-like reading of the same system. ----
+     Money keeps the editorial warmth; Markets trades a little air for figures per screen. */
+  .arvo-workspace-markets {
+    .arvo-figure,
+    .ant-statistic-content-value,
+    .ant-statistic-content-prefix,
+    .ant-statistic-content-suffix {
+      font-family: ${({ theme }) => theme.typography.fontFamilyMono};
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.01em;
+    }
+
+    /* Figures read as a column: right-aligned wherever a cell holds only an amount. */
+    .ant-table-tbody > tr > td > .arvo-figure:only-child,
+    .ant-table-tbody > tr > td > span:only-child > .arvo-figure:only-child {
+      display: block;
+      text-align: right;
+    }
+
+    /* Subtle grid lines rather than open rows. */
+    .ant-table-wrapper .ant-table-thead > tr > th,
+    .ant-table-wrapper .ant-table-tbody > tr > td {
+      border-inline-end: 1px solid ${({ theme }) => theme.colors.borderSubtle};
+    }
+    .ant-table-wrapper .ant-table-thead > tr > th:last-child,
+    .ant-table-wrapper .ant-table-tbody > tr > td:last-child {
+      border-inline-end: none;
+    }
+    .ant-table-wrapper .ant-table-thead > tr > th {
+      font-family: ${({ theme }) => theme.typography.fontFamilyMono};
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* Card titles stay editorial, but the chrome tightens up. */
+    .ant-card-head {
+      min-height: 48px;
+    }
+  }
+
   /* Thin, theme-aware scrollbars. */
   * {
     scrollbar-width: thin;
@@ -128,8 +170,11 @@ const GlobalStyle = createGlobalStyle`
 
 function ThemedApp({ children }: { children: ReactNode }) {
   const { mode } = useThemeMode();
-  const antdTheme = useMemo(() => createAntdTheme(mode), [mode]);
-  const styledTheme = useMemo(() => createStyledTheme(mode), [mode]);
+  /* The active workspace layers its accent over the palette, so every antd and
+     styled-components surface below picks it up without knowing workspaces exist. */
+  const { workspace } = useWorkspace();
+  const antdTheme = useMemo(() => createAntdTheme(mode, undefined, workspace), [mode, workspace]);
+  const styledTheme = useMemo(() => createStyledTheme(mode, undefined, workspace), [mode, workspace]);
 
   return (
     <ConfigProvider theme={antdTheme}>
@@ -153,11 +198,13 @@ export function Providers({ children }: { children: ReactNode }) {
       <AntdRegistry>
         <ThemeModeProvider>
           <QueryClientProvider client={queryClient}>
-            <ThemedApp>
-              <PreferencesProvider>
-                <AuthProvider>{children}</AuthProvider>
-              </PreferencesProvider>
-            </ThemedApp>
+            <WorkspaceProvider>
+              <ThemedApp>
+                <PreferencesProvider>
+                  <AuthProvider>{children}</AuthProvider>
+                </PreferencesProvider>
+              </ThemedApp>
+            </WorkspaceProvider>
           </QueryClientProvider>
         </ThemeModeProvider>
       </AntdRegistry>

@@ -2,7 +2,7 @@
 
 import dayjs from 'dayjs';
 import { useParams, useSearchParams } from 'next/navigation';
-import { PositionDetail } from '../../../../components/trading/position-detail';
+import { PositionDetail } from '../../../../../components/trading/position-detail';
 
 /** One round trip, drilled into from the positions table. */
 export default function PositionPage() {

@@ -1,15 +1,15 @@
 'use client';
 
 import { Tabs } from 'antd';
-import { PageHeader } from '../../../components/page-header';
-import { BacktestTab } from '../../../components/lab/backtest';
-import { FuturesCalculator, SizingCalculator } from '../../../components/lab/calculators';
-import { StrategyLibrary } from '../../../components/lab/library';
-import { MarketDataWizard } from '../../../components/lab/market-data';
-import { PaperTrading } from '../../../components/lab/paper-trading';
-import { PayoffBuilder } from '../../../components/lab/payoff-builder';
-import { LabBanner } from '../../../components/lab/shared';
-import { LabNotesProvider } from '../../../components/lab/notes-drawer';
+import { PageHeader } from '../../../../components/page-header';
+import { BacktestTab } from '../../../../components/lab/backtest';
+import { FuturesCalculator, SizingCalculator } from '../../../../components/lab/calculators';
+import { StrategyLibrary } from '../../../../components/lab/library';
+import { MarketDataWizard } from '../../../../components/lab/market-data';
+import { PaperTrading } from '../../../../components/lab/paper-trading';
+import { PayoffBuilder } from '../../../../components/lab/payoff-builder';
+import { LabBanner } from '../../../../components/lab/shared';
+import { LabNotesProvider } from '../../../../components/lab/notes-drawer';
 
 /**
  * The Strategy Lab: payoffs, backtests and paper trading.

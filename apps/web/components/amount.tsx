@@ -6,7 +6,9 @@ import { useMoney } from '../lib/use-money';
 
 type Tone = 'income' | 'expense' | 'transfer' | 'neutral';
 
-const Value = styled.span<{ $tone: Tone; $size: 'sm' | 'md' | 'lg' }>`
+/* `arvo-figure` marks a rendered money figure, so a workspace can restyle every amount at once
+   (Markets sets them in mono) without each caller opting in. */
+const Value = styled.span.attrs({ className: 'arvo-figure' })<{ $tone: Tone; $size: 'sm' | 'md' | 'lg' }>`
   font-variant-numeric: tabular-nums;
   font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
   white-space: nowrap;

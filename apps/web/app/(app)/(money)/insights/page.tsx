@@ -4,8 +4,8 @@ import { Col, Row, Segmented, Skeleton, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { useMemo, useState } from 'react';
 import styled from 'styled-components';
-import { ExpandableChart } from '../../../components/expandable-chart';
-import { Highlights } from '../../../components/highlights';
+import { ExpandableChart } from '../../../../components/expandable-chart';
+import { Highlights } from '../../../../components/highlights';
 import {
   BurnUpChart,
   MerchantTreemap,
@@ -14,15 +14,15 @@ import {
   SpendingHeatmap,
   UpcomingCharges,
   WeekdayRhythm,
-} from '../../../components/insights-charts';
-import { OverviewStats } from '../../../components/overview-stats';
-import { PageHeader } from '../../../components/page-header';
-import { Panel } from '../../../components/panel';
-import { useAuth } from '../../../lib/auth';
-import { PERIOD_OPTIONS, periodRange, type PeriodKey } from '../../../lib/periods';
-import { usePreferences } from '../../../lib/preferences';
-import { useHighlights, useMerchantSpend, usePatterns } from '../../../lib/queries';
-import { useMoney } from '../../../lib/use-money';
+} from '../../../../components/insights-charts';
+import { OverviewStats } from '../../../../components/overview-stats';
+import { PageHeader } from '../../../../components/page-header';
+import { Panel } from '../../../../components/panel';
+import { useAuth } from '../../../../lib/auth';
+import { PERIOD_OPTIONS, periodRange, type PeriodKey } from '../../../../lib/periods';
+import { usePreferences } from '../../../../lib/preferences';
+import { useHighlights, useMerchantSpend, usePatterns } from '../../../../lib/queries';
+import { useMoney } from '../../../../lib/use-money';
 
 const Section = styled.h2`
   display: flex;

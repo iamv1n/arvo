@@ -3,13 +3,13 @@
 import { Tabs } from 'antd';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
-import { PageHeader } from '../../../components/page-header';
-import { Alerts } from '../../../components/markets/alerts';
-import { Calendar } from '../../../components/markets/calendar';
-import { MarketsBanner } from '../../../components/markets/shared';
-import { News } from '../../../components/markets/news';
-import { Notifications } from '../../../components/markets/notifications';
-import { Watchlists } from '../../../components/markets/watchlists';
+import { PageHeader } from '../../../../components/page-header';
+import { Alerts } from '../../../../components/markets/alerts';
+import { Calendar } from '../../../../components/markets/calendar';
+import { MarketsBanner } from '../../../../components/markets/shared';
+import { News } from '../../../../components/markets/news';
+import { Notifications } from '../../../../components/markets/notifications';
+import { Watchlists } from '../../../../components/markets/watchlists';
 
 /**
  * Markets & Alerts.

@@ -1,6 +1,7 @@
 'use client';
 
 import { LogoutOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons';
+import type { WorkspaceId } from '@arvo/ui';
 import { ArrowsClockwise, ArrowsLeftRight, Bank, Broadcast, ChartLineUp, ChartPieSlice, Compass, FileArrowUp, Flask, Gauge, GearSix, Lightbulb, PiggyBank, Receipt, Sparkle, SquaresFour, Strategy, Target } from '@phosphor-icons/react';
 import { Avatar, Button, Drawer, Dropdown, Grid, Layout, Menu, Spin } from 'antd';
 import { MenuFoldOutlined, MenuOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
@@ -10,6 +11,8 @@ import { useEffect, useState, type ReactNode } from 'react';
 import styled, { useTheme } from 'styled-components';
 import { useAuth } from '../lib/auth';
 import { usePreferences } from '../lib/preferences';
+import { useWorkspace, WORKSPACE_HOME } from '../lib/workspace';
+import { WorkspaceSwitcher } from './workspace-switcher';
 import { NotificationBell } from './notification-bell';
 import { PixelLogo } from './logo';
 import { ThemeToggle } from './theme-toggle';
@@ -17,26 +20,33 @@ import { VerifyEmailBanner } from './verify-email-banner';
 
 const navIcon = (Icon: typeof SquaresFour) => <Icon size={19} weight="duotone" aria-hidden />;
 
-const NAV = [
-  { key: '/dashboard', icon: navIcon(SquaresFour), label: 'Dashboard' },
-  { key: '/accounts', icon: navIcon(Bank), label: 'Accounts' },
-  { key: '/transactions', icon: navIcon(Receipt), label: 'Transactions' },
-  { key: '/transfers', icon: navIcon(ArrowsLeftRight), label: 'Transfers' },
-  { key: '/advisor', icon: navIcon(Sparkle), label: 'Advisor' },
-  { key: '/insights', icon: navIcon(Lightbulb), label: 'Insights' },
-  { key: '/analytics', icon: navIcon(ChartLineUp), label: 'Analytics' },
-  { key: '/portfolio', icon: navIcon(ChartPieSlice), label: 'Portfolio' },
-  { key: '/trading', icon: navIcon(Strategy), label: 'Trading' },
-  { key: '/lab', icon: navIcon(Flask), label: 'Strategy lab' },
-  { key: '/markets', icon: navIcon(Broadcast), label: 'Markets' },
-  { key: '/budgets', icon: navIcon(Gauge), label: 'Budgets' },
-  { key: '/goals', icon: navIcon(Target), label: 'Goals' },
-  { key: '/savings', icon: navIcon(PiggyBank), label: 'Save more' },
-  { key: '/planner', icon: navIcon(Compass), label: 'Planner' },
-  { key: '/recurring', icon: navIcon(ArrowsClockwise), label: 'Recurring' },
-  { key: '/imports', icon: navIcon(FileArrowUp), label: 'Imports' },
-  { key: '/settings', icon: navIcon(GearSix), label: 'Settings' },
-];
+/* Nav is per workspace: Money is the everyday banking product, Markets the investing one.
+   Settings is shared and sits at the foot of both. */
+const NAV: Record<WorkspaceId, { key: string; icon: ReactNode; label: string }[]> = {
+  money: [
+    { key: '/dashboard', icon: navIcon(SquaresFour), label: 'Dashboard' },
+    { key: '/accounts', icon: navIcon(Bank), label: 'Accounts' },
+    { key: '/transactions', icon: navIcon(Receipt), label: 'Transactions' },
+    { key: '/transfers', icon: navIcon(ArrowsLeftRight), label: 'Transfers' },
+    { key: '/insights', icon: navIcon(Lightbulb), label: 'Insights' },
+    { key: '/analytics', icon: navIcon(ChartLineUp), label: 'Analytics' },
+    { key: '/budgets', icon: navIcon(Gauge), label: 'Budgets' },
+    { key: '/goals', icon: navIcon(Target), label: 'Goals' },
+    { key: '/savings', icon: navIcon(PiggyBank), label: 'Save more' },
+    { key: '/planner', icon: navIcon(Compass), label: 'Planner' },
+    { key: '/recurring', icon: navIcon(ArrowsClockwise), label: 'Recurring' },
+    { key: '/imports', icon: navIcon(FileArrowUp), label: 'Imports' },
+    { key: '/advisor', icon: navIcon(Sparkle), label: 'Advisor' },
+  ],
+  markets: [
+    { key: '/portfolio', icon: navIcon(ChartPieSlice), label: 'Portfolio' },
+    { key: '/trading', icon: navIcon(Strategy), label: 'Trading' },
+    { key: '/lab', icon: navIcon(Flask), label: 'Strategy lab' },
+    { key: '/markets', icon: navIcon(Broadcast), label: 'Markets & alerts' },
+  ],
+};
+
+const SETTINGS_ITEM = { key: '/settings', icon: navIcon(GearSix), label: 'Settings' };
 
 const Brand = styled(Link)`
   display: flex;
@@ -114,6 +124,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const screens = Grid.useBreakpoint();
+  const { workspace } = useWorkspace();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const isMobile = !screens.lg;
 
@@ -129,14 +140,15 @@ export function AppShell({ children }: { children: ReactNode }) {
     );
   }
 
-  const selected = NAV.find((item) => pathname.startsWith(item.key))?.key ?? '/dashboard';
+  const items = [...NAV[workspace], SETTINGS_ITEM];
+  const selected = items.find((item) => pathname === item.key || pathname.startsWith(`${item.key}/`))?.key;
   const menu = (
     <Menu
       mode="inline"
-      selectedKeys={[selected]}
+      selectedKeys={selected ? [selected] : []}
       inlineCollapsed={!isMobile && collapsed}
       style={{ borderInlineEnd: 'none' }}
-      items={NAV.map((item) => ({ ...item, label: <Link href={item.key}>{item.label}</Link> }))}
+      items={items.map((item) => ({ ...item, label: <Link href={item.key}>{item.label}</Link> }))}
       onClick={() => setDrawerOpen(false)}
     />
   );
@@ -159,17 +171,21 @@ export function AppShell({ children }: { children: ReactNode }) {
             borderInlineEnd: `1px solid ${theme.colors.borderSubtle}`,
           }}
         >
-          <Brand href="/dashboard" style={collapsed ? { justifyContent: 'center', padding: 0 } : undefined} aria-label="Arvo home">
+          <Brand href={WORKSPACE_HOME[workspace]} style={collapsed ? { justifyContent: 'center', padding: 0 } : undefined} aria-label="Arvo home">
             <span style={{ color: theme.colors.textPrimary, ['--arvo-logo-accent' as string]: theme.colors.brand }}>
               <PixelLogo size={30} />
             </span>
             {!collapsed && 'Arvo'}
           </Brand>
           {/* The nav itself scrolls; the rail stays put beside the page. */}
-          <div style={{ height: 'calc(100dvh - 72px)', overflowY: 'auto', overflowX: 'hidden' }}>{menu}</div>
+          <div style={{ height: 'calc(100dvh - 72px)', overflowY: 'auto', overflowX: 'hidden' }}>
+            <WorkspaceSwitcher collapsed={collapsed} />
+            {menu}
+          </div>
         </Layout.Sider>
       )}
-      <Drawer open={isMobile && drawerOpen} onClose={() => setDrawerOpen(false)} placement="left" size={260} title="Arvo">
+      <Drawer open={isMobile && drawerOpen} onClose={() => setDrawerOpen(false)} placement="left" size={260} title="Arvo" styles={{ body: { paddingInline: 0 } }}>
+        <WorkspaceSwitcher />
         {menu}
       </Drawer>
       <Layout>
@@ -205,7 +221,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         </Bar>
         <Content>
           <VerifyEmailBanner />
-          <div className="arvo-page" key={pathname}>
+          {/* The workspace class carries its density rules; the accent already arrives via the theme. */}
+          <div className={`arvo-page arvo-workspace-${workspace}`} key={pathname}>
             {children}
           </div>
         </Content>

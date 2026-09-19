@@ -2,14 +2,14 @@
 
 import { EyeInvisibleOutlined, EyeOutlined, RiseOutlined } from '@ant-design/icons';
 import { App, Button, Card, Empty, Flex, Progress, Segmented, Tag, Tooltip, Typography } from 'antd';
-import { DataTable, useTableColumns, type DataColumn } from '../../../components/data-table';
+import { DataTable, useTableColumns, type DataColumn } from '../../../../components/data-table';
 import { useState } from 'react';
-import { PageHeader } from '../../../components/page-header';
-import { ResultStrip } from '../../../components/result-strip';
-import { api, errorMessage } from '../../../lib/api';
-import { formatDate, formatMoney, titleCase } from '../../../lib/format';
-import { useAccounts, useCategories, useLedgerMutation, useRecurring } from '../../../lib/queries';
-import type { RecurringSeries } from '../../../lib/types';
+import { PageHeader } from '../../../../components/page-header';
+import { ResultStrip } from '../../../../components/result-strip';
+import { api, errorMessage } from '../../../../lib/api';
+import { formatDate, formatMoney, titleCase } from '../../../../lib/format';
+import { useAccounts, useCategories, useLedgerMutation, useRecurring } from '../../../../lib/queries';
+import type { RecurringSeries } from '../../../../lib/types';
 
 type View = 'active' | 'stopped' | 'dismissed';
 

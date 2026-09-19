@@ -5,11 +5,11 @@ import { Card, Empty, Skeleton, Tooltip, Typography } from 'antd';
 import dayjs from 'dayjs';
 import Link from 'next/link';
 import styled from 'styled-components';
-import { PageHeader } from '../../../components/page-header';
-import { Eyebrow, Figure, SectionTitle, Stamp, type StampTone } from '../../../components/planning';
-import { useSavingsOpportunities } from '../../../lib/queries';
-import type { SavingsKind, SavingsOpportunity } from '../../../lib/types';
-import { useMoney } from '../../../lib/use-money';
+import { PageHeader } from '../../../../components/page-header';
+import { Eyebrow, Figure, SectionTitle, Stamp, type StampTone } from '../../../../components/planning';
+import { useSavingsOpportunities } from '../../../../lib/queries';
+import type { SavingsKind, SavingsOpportunity } from '../../../../lib/types';
+import { useMoney } from '../../../../lib/use-money';
 
 const KIND: Record<SavingsKind, { label: string; tone: StampTone }> = {
   category_creep: { label: 'Category creep', tone: 'warning' },

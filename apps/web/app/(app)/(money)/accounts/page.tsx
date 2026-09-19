@@ -6,14 +6,14 @@ import { Button, Card, Col, Empty, Flex, Row, Skeleton, Tag, Typography } from '
 import Link from 'next/link';
 import { useState } from 'react';
 import styled from 'styled-components';
-import { AccountFormModal } from '../../../components/account-form-modal';
-import { Amount } from '../../../components/amount';
-import { PageHeader } from '../../../components/page-header';
-import { ResultStrip } from '../../../components/result-strip';
-import { useAuth } from '../../../lib/auth';
-import { formatMoney, titleCase } from '../../../lib/format';
-import { useAccounts, useNetWorth } from '../../../lib/queries';
-import type { Account } from '../../../lib/types';
+import { AccountFormModal } from '../../../../components/account-form-modal';
+import { Amount } from '../../../../components/amount';
+import { PageHeader } from '../../../../components/page-header';
+import { ResultStrip } from '../../../../components/result-strip';
+import { useAuth } from '../../../../lib/auth';
+import { formatMoney, titleCase } from '../../../../lib/format';
+import { useAccounts, useNetWorth } from '../../../../lib/queries';
+import type { Account } from '../../../../lib/types';
 
 const ICONS: Partial<Record<AccountType, React.ReactNode>> = {
   BANK: <BankOutlined />,

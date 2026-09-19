@@ -4,15 +4,15 @@ import { PlusOutlined } from '@ant-design/icons';
 import { Button, DatePicker, Space, Tabs } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { useState } from 'react';
-import { AllocationView } from '../../../components/portfolio/allocation-view';
-import { CapitalGainsView } from '../../../components/portfolio/capital-gains-view';
-import { GoalsTab } from '../../../components/portfolio/goals-tab';
-import { HoldingFormModal } from '../../../components/portfolio/holding-form-modal';
-import { HoldingsTable } from '../../../components/portfolio/holdings-table';
-import { PortfolioImportWizard } from '../../../components/portfolio/import-wizard';
-import { PortfolioOverview } from '../../../components/portfolio/overview';
-import { RebalanceTool } from '../../../components/portfolio/rebalance-tool';
-import { PageHeader } from '../../../components/page-header';
+import { AllocationView } from '../../../../components/portfolio/allocation-view';
+import { CapitalGainsView } from '../../../../components/portfolio/capital-gains-view';
+import { GoalsTab } from '../../../../components/portfolio/goals-tab';
+import { HoldingFormModal } from '../../../../components/portfolio/holding-form-modal';
+import { HoldingsTable } from '../../../../components/portfolio/holdings-table';
+import { PortfolioImportWizard } from '../../../../components/portfolio/import-wizard';
+import { PortfolioOverview } from '../../../../components/portfolio/overview';
+import { RebalanceTool } from '../../../../components/portfolio/rebalance-tool';
+import { PageHeader } from '../../../../components/page-header';
 
 /**
  * Everything you own, valued on one date. The date is the page's only global control: every
