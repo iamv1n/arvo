@@ -12,7 +12,7 @@ import {
   SkipLink,
 } from './landing-page';
 import { fadeUp, play, useInView } from './motion';
-import { Container, fonts } from './primitives';
+import { Container, fonts, rhythm } from './primitives';
 import { ProductTheme } from './product-theme';
 
 /*
@@ -31,7 +31,7 @@ const Rail = styled.nav`
     gap: ${({ theme }) => theme.space[5]}px;
     list-style: none;
     margin: 0;
-    padding: 12px 0;
+    padding: 10px 0;
     overflow-x: auto;
     scrollbar-width: none;
   }
@@ -85,9 +85,12 @@ function SectionRail({ product }: { product: Product }) {
 
 const Handoff = styled.section`
   border-top: 1px solid ${({ theme }) => theme.colors.border};
-  padding: ${({ theme }) => theme.space[12]}px 0 ${({ theme }) => theme.space[4]}px;
+  padding: ${rhythm.section.sm}px 0 0;
+  @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
+    padding-top: ${rhythm.section.lg}px;
+  }
   & .label {
-    margin: 0 0 ${({ theme }) => theme.space[5]}px;
+    margin: 0 0 ${rhythm.head.sm}px;
     font-family: ${fonts.mono};
     font-size: 12px;
     letter-spacing: 0.06em;

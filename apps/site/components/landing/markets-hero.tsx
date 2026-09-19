@@ -13,7 +13,7 @@ import { Container, fonts } from './primitives';
 
 const Section = styled.section`
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  padding: ${({ theme }) => theme.space[10]}px 0 ${({ theme }) => theme.space[12]}px;
+  padding: ${({ theme }) => theme.space[8]}px 0 ${({ theme }) => theme.space[10]}px;
 `;
 
 const Head = styled(Container)`
@@ -89,7 +89,7 @@ const Head = styled(Container)`
 /* ---------- the blotter ---------- */
 
 const Blotter = styled.figure<{ $on: boolean }>`
-  margin: ${({ theme }) => theme.space[10]}px auto 0;
+  margin: ${({ theme }) => theme.space[8]}px auto 0;
   width: 100%;
   max-width: 980px;
   border: 1px solid ${({ theme }) => theme.colors.textPrimary};

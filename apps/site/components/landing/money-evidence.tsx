@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 import styled, { useTheme } from 'styled-components';
 import { drawStroke, fadeIn, fadeUp, growX, growY, play, useCountUp, useInView } from './motion';
-import { fonts } from './primitives';
+import { fonts, rhythm } from './primitives';
 
 /*
  * Evidence spreads for the Money page. Each one is a single piece of proof: a mono label, one big
@@ -14,8 +14,11 @@ import { fonts } from './primitives';
 /* ---------- the shared frame ---------- */
 
 const Block = styled.div<{ $on: boolean }>`
-  margin-top: 96px;
-  padding-top: ${({ theme }) => theme.space[5]}px;
+  margin-top: ${rhythm.block.sm}px;
+  padding-top: ${({ theme }) => theme.space[4]}px;
+  @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
+    margin-top: ${rhythm.block.lg}px;
+  }
   border-top: 2px solid ${({ theme }) => theme.colors.textPrimary};
   animation-name: ${fadeUp};
   ${({ $on }) => play($on, 0, '700ms')}
@@ -26,7 +29,7 @@ const Meta = styled.p`
   justify-content: space-between;
   align-items: baseline;
   gap: 12px;
-  margin: 0 0 ${({ theme }) => theme.space[5]}px;
+  margin: 0 0 ${({ theme }) => theme.space[4]}px;
   font-family: ${fonts.mono};
   font-size: 11px;
   letter-spacing: 0.08em;
@@ -40,16 +43,18 @@ const Meta = styled.p`
 
 const Layout = styled.div`
   display: grid;
-  gap: ${({ theme }) => theme.space[6]}px;
-  align-items: start;
+  gap: ${({ theme }) => theme.space[5]}px;
+  align-items: stretch;
   @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
-    grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
-    gap: ${({ theme }) => theme.space[10]}px;
+    grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+    gap: ${({ theme }) => theme.space[8]}px;
   }
 `;
 
 const Say = styled.div`
   min-width: 0;
+  display: flex;
+  flex-direction: column;
   & h4 {
     margin: 0;
     font-family: ${fonts.serif};
@@ -90,7 +95,9 @@ const Say = styled.div`
   }
   & .note {
     display: inline-block;
-    margin: ${({ theme }) => theme.space[5]}px 0 0;
+    /* Sinks to the foot of the column so a tall chart does not leave a hole beside it. */
+    margin: auto 0 0;
+    padding-top: ${({ theme }) => theme.space[5]}px;
     max-width: 24ch;
     font-family: ${fonts.hand};
     font-size: 21px;
@@ -102,6 +109,9 @@ const Say = styled.div`
 
 const Art = styled.div`
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 `;
 
 function Piece({
@@ -175,7 +185,7 @@ const Frame = styled.svg`
   display: block;
   width: 100%;
   height: auto;
-  max-width: 560px;
+  max-width: 640px;
 `;
 
 const inr = (v: number) => `₹${v.toLocaleString('en-IN')}`;
@@ -364,7 +374,7 @@ const Shelf = styled.ul`
   list-style: none;
   margin: 0;
   padding: 0;
-  max-width: 560px;
+  max-width: 640px;
 `;
 
 const ShelfRow = styled.li<{ $on: boolean; $d: number }>`
@@ -407,7 +417,7 @@ const ShelfFoot = styled.p`
   justify-content: space-between;
   gap: 12px;
   margin: 12px 0 0;
-  max-width: 560px;
+  max-width: 640px;
   font-family: ${fonts.mono};
   font-size: 11px;
   letter-spacing: 0.06em;
@@ -688,7 +698,7 @@ const KeepList = styled.ol`
   list-style: none;
   margin: ${({ theme }) => theme.space[4]}px 0 0;
   padding: 0;
-  max-width: 560px;
+  max-width: 640px;
   & li {
     display: grid;
     grid-template-columns: 24px minmax(0, 1fr);
@@ -831,7 +841,7 @@ export function RunwayEvidence() {
 const Strip = styled.dl<{ $on: boolean }>`
   display: grid;
   gap: ${({ theme }) => theme.space[5]}px;
-  margin-top: 72px;
+  margin-top: ${rhythm.block.lg}px;
   padding-top: ${({ theme }) => theme.space[5]}px;
   border-top: 1px solid ${({ theme }) => theme.colors.border};
   animation-name: ${fadeUp};

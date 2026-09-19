@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import styled, { useTheme } from 'styled-components';
 import { drawStroke, fadeIn, fadeUp, growX, growY, play, popIn, useCountUp, useInView, usePrefersReducedMotion } from './motion';
-import { fonts } from './primitives';
+import { fonts, rhythm } from './primitives';
 
 /*
  * The evidence spreads on the Markets page. Each cell is one small piece of evidence rather than
@@ -21,7 +21,10 @@ import { fonts } from './primitives';
 const Spread = styled.div`
   display: grid;
   gap: 0;
-  margin-top: ${({ theme }) => theme.space[10]}px;
+  margin-top: ${rhythm.block.sm}px;
+  @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
+    margin-top: ${rhythm.block.lg}px;
+  }
   border-top: 2px solid ${({ theme }) => theme.colors.textPrimary};
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
@@ -32,6 +35,10 @@ const Spread = styled.div`
 const Cell = styled.figure<{ $on: boolean; $d: number }>`
   margin: 0;
   min-width: 0;
+  /* A column, so the note and caveat sink to the bottom of a cell the grid has stretched
+     — the taller neighbour no longer leaves a hole under the shorter chart. */
+  display: flex;
+  flex-direction: column;
   padding: ${({ theme }) => theme.space[6]}px 0;
   border-top: 1px solid ${({ theme }) => theme.colors.border};
   animation-name: ${fadeUp};
@@ -44,6 +51,26 @@ const Cell = styled.figure<{ $on: boolean; $d: number }>`
     }
     &:nth-child(even) {
       padding-right: 0;
+    }
+    /* An odd number of cells would leave the last row half empty. That cell runs the full
+       width instead, with its words beside its chart rather than stacked above it. */
+    &:last-child:nth-child(odd) {
+      grid-column: 1 / -1;
+      padding-left: 0;
+      padding-right: 0;
+      border-right: none;
+      display: grid;
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+      column-gap: ${({ theme }) => theme.space[12]}px;
+      align-content: start;
+      & > *:not(.art) {
+        grid-column: 1;
+      }
+      & > .art {
+        grid-column: 2;
+        grid-row: 1 / -1;
+        align-self: center;
+      }
     }
   }
 `;
@@ -72,7 +99,7 @@ const BigFigure = styled.div`
 `;
 
 const Finding = styled.p`
-  margin: 0 0 ${({ theme }) => theme.space[5]}px;
+  margin: 0 0 ${({ theme }) => theme.space[4]}px;
   max-width: 44ch;
   font-family: ${fonts.serif};
   font-style: italic;
@@ -87,7 +114,8 @@ const Finding = styled.p`
 `;
 
 const MarginNote = styled.p`
-  margin: ${({ theme }) => theme.space[3]}px 0 0;
+  margin: auto 0 0;
+  padding-top: ${({ theme }) => theme.space[3]}px;
   font-family: ${fonts.hand};
   font-size: 19px;
   line-height: 1.2;
@@ -97,7 +125,8 @@ const MarginNote = styled.p`
 `;
 
 const Caveat = styled.p`
-  margin: ${({ theme }) => theme.space[3]}px 0 0;
+  margin: auto 0 0;
+  padding-top: ${({ theme }) => theme.space[3]}px;
   font-family: ${fonts.mono};
   font-size: 10.5px;
   line-height: 1.6;
@@ -134,9 +163,9 @@ function Evidence({
       </CellLabel>
       <BigFigure>{figure}</BigFigure>
       <Finding>{finding}</Finding>
-      {children}
+      <div className="art">{children}</div>
       {note ? <MarginNote>{note}</MarginNote> : null}
-      {caveat ? <Caveat>{caveat}</Caveat> : null}
+      {caveat ? <Caveat style={note ? { marginTop: 0 } : undefined}>{caveat}</Caveat> : null}
     </Cell>
   );
 }
@@ -175,7 +204,7 @@ const Plot = styled.svg`
   display: block;
   width: 100%;
   height: auto;
-  margin: 0 auto;
+  margin: 0;
 `;
 
 const mono = fonts.mono;
@@ -205,7 +234,7 @@ function AllocationTreemap({ on }: { on: boolean }) {
   return (
     <Plot
       viewBox="0 0 320 200"
-      style={{ maxWidth: 440 }}
+      style={{ maxWidth: 540 }}
       role="img"
       aria-label="Treemap of the folio: index funds 26 percent, large cap 18 percent and mid and small cap 14 percent make up the 58 percent equity block; debt funds 22 percent, cash 11 percent and gold 9 percent fill the rest."
     >
@@ -240,7 +269,7 @@ function XirrVsBenchmark({ on }: { on: boolean }) {
   return (
     <Plot
       viewBox={`0 0 ${w} ${h}`}
-      style={{ maxWidth: 440 }}
+      style={{ maxWidth: 540 }}
       role="img"
       aria-label="Two lines over twelve months of the same monthly investment: your folio reaching ₹10.62 lakh against ₹9.50 lakh for the same dates into a broad index, a gap of ₹1,12,400."
     >
@@ -288,7 +317,7 @@ function HarvestDial({ on }: { on: boolean }) {
   return (
     <Plot
       viewBox="0 0 200 124"
-      style={{ maxWidth: 260 }}
+      style={{ maxWidth: 340 }}
       role="img"
       aria-label="A half dial: ₹1,04,200 of the ₹1,25,000 long-term capital gains exemption is used, leaving ₹20,800 of headroom this financial year."
     >
@@ -340,7 +369,7 @@ function RebalanceSketch({ on }: { on: boolean }) {
   return (
     <Plot
       viewBox={`0 0 ${w} ${h}`}
-      style={{ maxWidth: 420 }}
+      style={{ maxWidth: 520 }}
       role="img"
       aria-label="Target against actual allocation: equity 55 target versus 58 actual, debt 25 versus 22, cash 10 versus 11, gold 10 versus 9. One trade of ₹55,300 from equity into debt brings all four back inside their bands."
     >
@@ -460,7 +489,7 @@ function EquityCurve({ on }: { on: boolean }) {
   return (
     <Plot
       viewBox={`0 0 ${w} ${h}`}
-      style={{ maxWidth: 440 }}
+      style={{ maxWidth: 540 }}
       role="img"
       aria-label="Account equity over thirteen month-ends, peaking at ₹5.66 lakh, falling to ₹4.82 lakh — a 14.8 percent drawdown shaded on the chart — and recovering four months later."
     >
@@ -522,7 +551,7 @@ function ChargesWaterfall({ on }: { on: boolean }) {
   return (
     <Plot
       viewBox={`0 0 ${w} ${h}`}
-      style={{ maxWidth: 460 }}
+      style={{ maxWidth: 560 }}
       role="img"
       aria-label="A stepped waterfall: gross ₹12,480 less brokerage ₹40, STT ₹625, exchange ₹41, SEBI ₹1, stamp duty ₹18 and GST ₹22 — ₹747 in all — leaving ₹11,733 net."
     >
@@ -727,7 +756,7 @@ function RealityCheck({ on }: { on: boolean }) {
   return (
     <Plot
       viewBox={`0 0 ${w} ${h}`}
-      style={{ maxWidth: 400 }}
+      style={{ maxWidth: 500 }}
       role="img"
       aria-label="Two bars for the same twelve months: the F&O book returned 2.1 percent after charges, a broad index 11.4 percent."
     >
@@ -865,7 +894,7 @@ function PayoffDiagram({ on }: { on: boolean }) {
   return (
     <Plot
       viewBox={`0 0 ${w} ${h}`}
-      style={{ maxWidth: 460 }}
+      style={{ maxWidth: 560 }}
       role="img"
       aria-label="Payoff diagram for an iron condor: short 24,800 put and 25,200 call, long 24,600 put and 25,400 call, for a ₹78 credit. The profit zone is shaded between break-evens at 24,722 and 25,278, with the loss capped at ₹122 beyond the long strikes. A dashed curve shows the position today against the solid line at expiry."
     >
@@ -1004,7 +1033,7 @@ function BacktestPanel({ on }: { on: boolean }) {
   return (
     <Plot
       viewBox={`0 0 ${w} ${h}`}
-      style={{ maxWidth: 460 }}
+      style={{ maxWidth: 560 }}
       role="img"
       aria-label="A walk-forward backtest: the in-sample half, where the rule was tuned, compounds at 21.4 percent a year; the out-of-sample half, where it only ran, compounds at 9.8 percent. A drawdown band sits beneath the equity line."
     >
@@ -1085,7 +1114,7 @@ function StopLadder({ on }: { on: boolean }) {
   const theme = useTheme();
   return (
     <SizeSketch>
-      <Plot viewBox="0 0 320 96" style={{ maxWidth: 400 }} role="img" aria-label="Entry at ₹1,240, stop at ₹1,196: a stop distance of ₹44. A risk budget of ₹5,000 divides into it for 113 shares.">
+      <Plot viewBox="0 0 320 96" style={{ maxWidth: 500 }} role="img" aria-label="Entry at ₹1,240, stop at ₹1,196: a stop distance of ₹44. A risk budget of ₹5,000 divides into it for 113 shares.">
         <Show $on={on} $d={200}>
           <line x1={10} x2={230} y1={22} y2={22} stroke={theme.colors.textPrimary} strokeWidth={1.6} />
           <text x={236} y={26} fontSize={9.5} fontFamily={mono} fill={theme.colors.textPrimary}>
@@ -1345,7 +1374,7 @@ function FanOut({ on }: { on: boolean }) {
     ['Telegram', 'instant', 122],
   ];
   return (
-    <Plot viewBox={`0 0 ${w} ${h}`} style={{ maxWidth: 400 }} role="img" aria-label="One rule branching to three destinations: in-app instantly, email as a six o'clock digest, and Telegram instantly.">
+    <Plot viewBox={`0 0 ${w} ${h}`} style={{ maxWidth: 500 }} role="img" aria-label="One rule branching to three destinations: in-app instantly, email as a six o'clock digest, and Telegram instantly.">
       <Show $on={on} $d={150}>
         <rect x={0} y={62} width={92} height={26} rx={3} fill="none" stroke={theme.colors.textPrimary} />
         <text x={46} y={79} textAnchor="middle" fontSize={9.5} fontFamily={mono} letterSpacing="0.05em" fill={theme.colors.textPrimary}>

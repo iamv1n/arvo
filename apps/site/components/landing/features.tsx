@@ -5,7 +5,7 @@ import styled, { css, keyframes, useTheme } from 'styled-components';
 import { AnalyticsShowcase } from './analytics-showcase';
 import { drawStroke, fadeIn, fadeUp, formatINR, growX, play, popIn, useCountUp, useInView } from './motion';
 import { CreepEvidence, PacingEvidence, SubscriptionEvidence } from './money-evidence';
-import { Container, fonts, Pill, Reveal, SectionHeading, SectionShell } from './primitives';
+import { Container, fonts, Pill, Reveal, rhythm, SectionHeading, SectionShell } from './primitives';
 
 /*
  * Five features, five different objects: a statement fed through a sorter, a sieve, a pair of
@@ -19,11 +19,11 @@ const Block = styled.article`
   padding-top: ${({ theme }) => theme.space[6]}px;
   border-top: 2px solid ${({ theme }) => theme.colors.textPrimary};
   & + & {
-    margin-top: ${({ theme }) => theme.space[16]}px;
+    margin-top: ${rhythm.section.sm}px;
   }
   @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
     & + & {
-      margin-top: 112px;
+      margin-top: ${rhythm.section.lg}px;
     }
   }
 `;
@@ -31,7 +31,7 @@ const Block = styled.article`
 const HeadGrid = styled.header<{ $center?: boolean }>`
   display: grid;
   gap: ${({ theme }) => theme.space[3]}px;
-  margin-bottom: ${({ theme }) => theme.space[8]}px;
+  margin-bottom: ${rhythm.head.sm}px;
   ${({ $center }) =>
     $center &&
     css`

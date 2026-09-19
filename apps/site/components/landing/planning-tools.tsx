@@ -235,7 +235,7 @@ const Back = styled.div`
   padding-top: ${({ theme }) => theme.space[5]}px;
   @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: ${({ theme }) => theme.space[12]}px;
+    gap: ${({ theme }) => theme.space[10]}px;
   }
 `;
 

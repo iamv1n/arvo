@@ -22,7 +22,7 @@ const Split = styled.div<{ $flip?: boolean }>`
   align-items: center;
   @media (min-width: ${({ theme }) => theme.breakpoints.lg}px) {
     grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-    gap: ${({ theme }) => theme.space[12]}px;
+    gap: ${({ theme }) => theme.space[10]}px;
     & > :first-child {
       order: ${({ $flip }) => ($flip ? 2 : 1)};
     }
@@ -94,7 +94,7 @@ const Sheet = styled.figure<{ $on: boolean }>`
 `;
 
 const NotAdvice = styled.p`
-  margin: ${({ theme }) => theme.space[8]}px 0 0;
+  margin: ${({ theme }) => theme.space[6]}px 0 0;
   padding-top: ${({ theme }) => theme.space[3]}px;
   border-top: 1px solid ${({ theme }) => theme.colors.borderSubtle};
   font-family: ${fonts.mono};
