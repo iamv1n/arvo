@@ -287,6 +287,15 @@ function ProductCard({ product, on, delay, index }: { product: Product; on: bool
   );
 }
 
+const counts: Record<number, string> = { 1: 'One product', 2: 'Two products', 3: 'Three products', 4: 'Four products' };
+
+/** "Money and Markets" for two, an Oxford list for more — so the copy survives a new product. */
+function productNames() {
+  const names = PRODUCTS.map((product) => product.name);
+  if (names.length < 2) return names.join('');
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+}
+
 export function ProductsSection() {
   const [ref, on] = useInView<HTMLDivElement>(0.15);
   return (
@@ -294,12 +303,12 @@ export function ProductsSection() {
       <Container>
         <SectionHeading
           id="products-title"
-          eyebrow="Two products, one platform"
+          eyebrow={`${counts[PRODUCTS.length] ?? `${PRODUCTS.length} products`}, one platform`}
           index="01"
           split
           title={
             <>
-              Money and Markets, <em>under one roof</em>
+              {productNames()}, <em>under one roof</em>
             </>
           }
           lead="One account, one database, one privacy model. Money handles the cash that moves through your bank. Markets handles the money you have put to work. Switch between them inside the app; each carries its own accent so you always know where you are."

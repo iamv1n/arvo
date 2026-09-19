@@ -529,11 +529,14 @@ export function Hero() {
           </H1>
           <Statement stage={stage} />
           <Below>
-            <p>Drop in the statements your bank already sends. Arvo sorts every line and shows where the month went, on a computer you control.</p>
+            <p>
+              Drop in the statements your bank already sends. Arvo sorts every line and shows where the month went — and keeps
+              your portfolio and trading journal in the same place, on a computer you control.
+            </p>
             <div className="actions">
               <OpenAppLink className="primary">Open Arvo →</OpenAppLink>
-              <a className="secondary" href="/money#how-it-works">
-                See how it works
+              <a className="secondary" href="#products">
+                See both products
               </a>
             </div>
           </Below>

@@ -733,6 +733,11 @@ const faqs = [
     a: 'Yes. Loans and credit cards are liability accounts, and SIPs, broker, EPF, PPF and deposit accounts are assets, so all of them count toward net worth. Moving money into an investment or paying down a loan principal is a transfer, not spending. Loan prepayment and what-if planning tools are on the roadmap.',
   },
   {
+    g: 'Yes — that is Markets.',
+    q: 'Can I track my portfolio and my trades?',
+    a: 'Yes, in the Markets half of Arvo: holdings and XIRR from your CAS and broker files, allocation and capital gains, and a trading journal that computes brokerage, STT, exchange, stamp duty and GST for every trade, with F&O, intraday and capital-gains tax separated and an ITR-3 export. It is record-keeping and analysis — educational, not investment advice.',
+  },
+  {
     g: 'Just email.',
     q: 'How do I get in touch?',
     a: `Email ${CONTACT_EMAIL} with questions, privacy or data requests, or security reports. If you use an instance someone else hosts, contact that instance's operator about your account and data.`,
