@@ -22,7 +22,7 @@
     "@arvo/types": "workspace:*",
     "@google/genai": "^2.23.0",
     "openai": "^7.17.0",
-    "zod": "^4.1.0"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@arvo/config": "workspace:*",
