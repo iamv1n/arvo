@@ -16,7 +16,7 @@
   "dependencies": {
     "@arvo/finance-core": "workspace:*",
     "@arvo/types": "workspace:*",
-    "zod": "^4.1.0"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@arvo/config": "workspace:*",
